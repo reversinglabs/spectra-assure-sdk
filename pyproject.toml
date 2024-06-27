@@ -1,0 +1,83 @@
+[build-system]
+    requires = ["hatchling"]
+    build-backend = "hatchling.build"
+
+[project]
+    name = "spectra-assure-sdk"
+    dynamic = ['version']
+
+    authors = [
+      { name="rl-devops" },
+    ]
+
+    maintainers = [
+      { name="Rl devops", email="55623149+rl-devops@users.noreply.github.com" },
+    ]
+
+    description = "Python package for interfacing with the Spectra Assure Portal API."
+    readme = "README.md"
+    requires-python = ">=3.10"
+    license = "MIT"
+
+    classifiers = [
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Intended Audience :: Developers",
+        "Environment :: Console",
+        "Programming Language :: Python :: 3",
+        "Topic :: Internet",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ]
+
+    keywords = [
+        "Python",
+        "Spectra Assure",
+        "ReversingLabs",
+        "Secure Software",
+    ]
+
+    dependencies = [
+        "requests",
+    ]
+
+[project.urls]
+    "Bug Tracker" = "https://github.com/reversinglabs/spectra-assure-sdk/issues"
+    "Home Page" = "https://github.com/reversinglabs/spectra-assure-sdk/"
+    "Repository" = "https://github.com/reversinglabs/spectra-assure-sdk/"
+
+[project.optional-dependencies]
+dev = [
+    "black==24.4.2",
+    "pylint==3.2.2",
+    "pylama==8.4.1",
+]
+
+[tool.hatch.version]
+    path = "spectra_assure_api_client/version.py"
+
+[tool.hatch.build]
+    only-packages = true
+
+    include = [
+        "spectra_assure_api_client/",
+    ]
+
+    exclude = [
+        "/Old/*",
+        "/OLD/*",
+        "/lib/*",
+        "/etc/*",
+        "/bin/*",
+        "/testdata/*",
+        "Makefile",
+        "makefile",
+        ".gitignore",
+        "/.gitignore",
+    ]
+
+[tool.pylama]
+    max_line_length = 120
+    skip = "*/.pytest_cache/*, */.tox/*, */mypy_cache/*, ./dist, ./docs"
+
+[tool.black]
+line-length = 120
