@@ -481,3 +481,5 @@ In those cases, contact the author(s) of the modified SDK for help.
 ## License
 
 The Spectra Assure SDK (Software Development Kit) for Python is released under [the MIT License](./LICENSE.MD).
+
+<!-- 2024-09-26: Spectra Assure CLI 2.4.0 has been released; -->

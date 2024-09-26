@@ -74,7 +74,6 @@ makeStubs:
 	rm -rf stubs out */*.pyi */*/*.pyi
 	mkdir stubs
 	stubgen $(PACKAGE_NAME) -o stubs
-	# stubgen $(PACKAGE_NAME) -o .
 
 tests: testLocalInstall
 	cd tests && make tests

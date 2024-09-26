@@ -24,6 +24,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
             "rl-checks",
             "rl-cve",
             "rl-json",
+            "rl-uri",  # new 2024-09-26
             "sarif",
             "spdx",
         ]

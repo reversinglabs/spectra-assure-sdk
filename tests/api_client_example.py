@@ -386,7 +386,8 @@ def walk_all_project_package_version(
                     project=project["name"],
                     package=package["name"],
                     version=version["version"],
-                    report_type="rl-json",
+                    report_type="rl-uri",
+                    # report_type="rl-json",
                 )
 
                 check_version(
