@@ -8,6 +8,7 @@ import time
 import logging
 import os
 import json
+import sys
 
 from spectra_assure_api_client import (
     SpectraAssureApiOperations,
@@ -15,6 +16,7 @@ from spectra_assure_api_client import (
 )
 
 log = logging.getLogger()
+logger = log
 
 
 def make_api_client() -> SpectraAssureApiOperations:
@@ -261,13 +263,26 @@ def report_version(
         version=version,
         report_type=report_type,
     )
-    if "cve" in report_type:
-        print("Report details:", report_data.text)
-        return report_data.text
-    else:
+
+    logger.debug("%s", report_data)
+
+    try:
+        print("Report details:", report_type, report_data.text)
+
+        if report_type in ["rl-cve", "rl-uri"]:
+            print("Report details:", report_data.text)
+            return report_data.text
+
+        if len(report_data.text) == 0:
+            return ""
+
         report_details = report_data.json()
         print("Report details:", json.dumps(report_details, indent=2))
         return report_details
+
+    except Exception as e:
+        print(e, report_type, file=sys.stderr)
+        return None
 
 
 # CHECK
@@ -381,7 +396,7 @@ def walk_all_project_package_version(
                     version=version["version"],
                 )
 
-                report_version(
+                r = report_version(
                     api_client=api_client,
                     project=project["name"],
                     package=package["name"],
@@ -389,6 +404,15 @@ def walk_all_project_package_version(
                     report_type="rl-uri",
                     # report_type="rl-json",
                 )
+                logger.debug("%s", r)
+                r = report_version(
+                    api_client=api_client,
+                    project=project["name"],
+                    package=package["name"],
+                    version=version["version"],
+                    report_type="rl-uri",
+                )
+                logger.debug("%s", r)
 
                 check_version(
                     api_client=api_client,

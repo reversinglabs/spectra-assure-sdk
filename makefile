@@ -20,7 +20,7 @@ PL_LINTERS			:=	eradicate,mccabe,pycodestyle,pyflakes,pylint
 # E203 whitespace before ':' [pycodestyle]
 # E402 module level import not at top of file [pycodestyle]
 
-PL_IGNORE="C0103,C0114,C0115,C0116,C0301,E203,E402"
+PL_IGNORE="C0103,C0114,C0115,C0116,C0301,E203,E402,C901"
 
 .PHONY: prep all tests black pylama mypy testLocalInstall build
 

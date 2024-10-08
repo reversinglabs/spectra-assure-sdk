@@ -16,6 +16,7 @@ Execute a report() API call for the specified `project`, `package`, `version`.
     - rl-checks
     - rl-cve
     - rl-json
+    - rl-uri
     - sarif
     - spdx
 - auto_adapt_to_throttle: bool, default False, optional.
@@ -45,7 +46,7 @@ May raise exceptions on issues with the HTTP connection or wrong parameters:
 - SpectraAssureInvalidAction: our exception.
 - any other exception from requests.get().
 
-The result data is not always in the JSON format. Specifically, the 'rl-cve' report is comma-separated (CSV) data, so don't use automatic result.json() format.
+The result data is not always in the JSON format. Specifically, the 'rl-cve' and 'rl-uri' reports are comma-separated (CSV) data, so don't use automatic result.json() format.
 
 When a new report format is introduced on the Portal, and the new report does not exist yet for the specified 'version', expect 404 as a result when requesting the new report format. You will need to rescan the uploaded file to produce a new set of reports. After the rescan, you can request the report in the new format.
 
@@ -73,11 +74,11 @@ def report_version(
         version=version,
         report_type=report_type,
     )
-    if "cve" in report_type:
+    if report_type in ['rl-cve', 'rl-uri']:
         print("Report details:", report_data.text)
         return report_data.text
-    else:
-        report_details = report_data.json()
-        print("Report details:", json.dumps(report_details, indent=2))
-        return report_details
+
+    report_details = report_data.json()
+    print("Report details:", json.dumps(report_details, indent=2))
+    return report_details
 ```

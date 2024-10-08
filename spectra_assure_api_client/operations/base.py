@@ -335,13 +335,17 @@ class SpectraAssureApiOperationsBase(
 
         fh = logging.FileHandler(file_name)
         fh.setLevel(logging.INFO)
+
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         if my_env.lower() in ["development", "testing"]:
+            formatter = logging.Formatter(
+                "%(asctime)s - %(pathname)s:%(lineno)s - %(name)s - %(levelname)s - %(message)s"
+            )
             fh.setLevel(logging.DEBUG)
 
         ch = logging.StreamHandler()
         ch.setLevel(my_level)
 
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         ch.setFormatter(formatter)
         fh.setFormatter(formatter)
 

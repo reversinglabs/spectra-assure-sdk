@@ -476,6 +476,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
 
         # from now on version is no longer None
         for version_ in info_dict:
+            logger.debug("%s/%s@%s", project, package, version_)
             self._do_status(
                 project=project,
                 package=package,

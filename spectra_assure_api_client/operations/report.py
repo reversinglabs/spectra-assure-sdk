@@ -22,9 +22,9 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
         return [
             "cyclonedx",
             "rl-checks",
-            "rl-cve",
+            "rl-cve",  # not json
             "rl-json",
-            "rl-uri",  # new 2024-09-26
+            "rl-uri",  # not json
             "sarif",
             "spdx",
         ]
@@ -65,6 +65,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
             - cyclonedx
             - rl-checks
             - rl-cve
+            - rl-uri
             - rl-json
             - sarif
             - spdx
@@ -87,7 +88,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
 
         Notes:
             The result data is not always in the JSON format.
-            Specifically, the 'rl-cve' report is in the CSV format.
+            Specifically, the 'rl-cve' and `rl-uri` report are in CSV format.
 
             When a new report format is introduced on the Portal,
             and the new report does not exist yet for this 'version'

@@ -19,12 +19,12 @@ def testReportVersion(
     reportType: str,
     **qp: Any,
 ) -> bool:
-    action = "Report Version"
+    action = f"Report Version {reportType}"
     data = aOperationsHandle.report(
         project=project,
         package=package,
         version=version,
-        reportType=reportType,
+        report_type=reportType,
         auto_adapt_to_throttle=True,
         **qp,
     )

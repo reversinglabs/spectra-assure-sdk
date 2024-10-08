@@ -128,6 +128,17 @@ def testVersionSteps(
     if r is False:
         return r
 
+    for reportName in aOperationsHandle.current_report_names():
+        qp = {}
+        r = testVersion.testReportVersion(
+            aOperationsHandle,
+            project=project,
+            package=package,
+            version=version,
+            reportType=reportName,
+            **qp,
+        )
+
     # ----------------------------------------
     r = testPackage.testListPackageOnly(
         aOperationsHandle=aOperationsHandle,
