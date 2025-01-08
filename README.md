@@ -1,4 +1,4 @@
-# Spectra Assure SDK for Python
+# Spectra Assure SDK for Python &middot; [![RL Status Badge](https://secure.software/pypi/badge/spectra-assure-sdk)](https://secure.software/pypi/packages/spectra-assure-sdk)
 
 Spectra Assure SDK for Python is the official library maintained by ReversingLabs that makes it easier to integrate with the [Spectra Assure Portal](https://docs.secure.software/portal/) and interact with it in your own applications.
 
