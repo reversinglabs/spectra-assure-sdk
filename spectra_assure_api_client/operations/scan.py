@@ -118,11 +118,11 @@ class SpectraAssureApiOperationsScan(  # pylint: disable=too-many-ancestors
 
         supported = ["version"]
         if what not in supported:
-            msg = f"'scan' is only supported for {'and '.join(supported)}"
+            msg = f"'{action}' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
         if not (os.path.isfile(file_path) and os.access(file_path, os.R_OK)):
-            msg = f"'scan' needs the specified file '{file_path}' to exist and be readable"
+            msg = f"'{action}' needs the specified file '{file_path}' to exist and be readable"
             raise SpectraAssureInvalidAction(message=msg)
 
         valid_qp: Dict[str, Any] = self.qp_scan(

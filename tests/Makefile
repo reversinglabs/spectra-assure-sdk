@@ -61,10 +61,9 @@ clean:
 	rm -rf input
 	rm -f *.log
 	rm -rf downloads*
+	rm -rf PrTestMboot-*
 
-prep:
-	rm -rf $(VENV)
-	rm -rf downloads*
+prep: clean
 	ls -l $(PACKAGE_TEST_INSTALL)
 	echo $(PACKAGE_TEST_INSTALL)
 	mkdir -p input

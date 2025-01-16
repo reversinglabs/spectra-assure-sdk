@@ -11,6 +11,37 @@ from spectra_assure_api_client import SpectraAssureApiOperations
 import testing
 
 
+def testVersionRlSafe(
+    aOperationsHandle: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    version: str,
+    **qp: Any,
+) -> bool:
+    action = "Rl-Safe"
+
+    data = aOperationsHandle.rl_safe(
+        project=project,
+        package=package,
+        version=version,
+        auto_adapt_to_throttle=True,
+        **qp,
+    )
+    print(f"{action}:: {project}/{package}@{version} :: {data}")
+
+    data2 = aOperationsHandle.rl_safe_download(
+        target_dir=".",
+        project=project,
+        package=package,
+        version=version,
+        auto_adapt_to_throttle=True,
+        **qp,
+    )
+    print(f"{action}:: {project}/{package}@{version} :: {data2}")
+
+    return testing.standardReturn(action, data)
+
+
 def testReportVersion(
     aOperationsHandle: SpectraAssureApiOperations,
     project: str,

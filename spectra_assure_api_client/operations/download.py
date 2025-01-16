@@ -578,7 +578,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         **qp: Any,
     ) -> Dict[str, Dict[str, Any]] | None:
         """
-        Action:
+        Action: download
 
         Args:
          - target_dir: str, mandatory;

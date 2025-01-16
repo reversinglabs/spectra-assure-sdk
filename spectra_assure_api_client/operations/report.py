@@ -10,7 +10,6 @@ from spectra_assure_api_client.communication.exceptions import (
 )
 from .base import SpectraAssureApiOperationsBase
 
-# logger = logging.getLogger(os.path.basename(sys.argv[0]))
 logger = logging.getLogger(__name__)
 
 
@@ -106,7 +105,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
 
         supported = ["version"]
         if what not in supported:
-            msg = f"'report' is only supported for {'and '.join(supported)}"
+            msg = f"'{action}' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
         # note not al reports are in json format some are csv
@@ -116,9 +115,16 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
             msg = f"'report_type' is not valid, must be one of: {', '.join(r_type_list)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_report(what=what, **qp)
+        valid_qp: Dict[str, Any] = self.qp_report(
+            what=what,
+            **qp,
+        )
         url = self._make_current_url(
-            action=action, project=project, package=package, version=version, report_type=report_type
+            action=action,
+            project=project,
+            package=package,
+            version=version,
+            report_type=report_type,
         )
         return self.do_it_get(
             url=url,

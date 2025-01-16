@@ -1,6 +1,7 @@
 from typing import (
     Any,
     Dict,
+    Tuple,
 )
 
 import datetime
@@ -340,6 +341,7 @@ def sync_version(
     return rr
 
 
+# APPROVE
 def approve_version(
     api_client: SpectraAssureApiOperations,
     project: str,
@@ -361,6 +363,7 @@ def approve_version(
     return rr
 
 
+# REJECT
 def reject_version(
     api_client: SpectraAssureApiOperations,
     project: str,
@@ -382,6 +385,7 @@ def reject_version(
     return rr
 
 
+# REVOKE
 def revoke_version(
     api_client: SpectraAssureApiOperations,
     project: str,
@@ -435,6 +439,51 @@ def download_versions(
             download_criteria=download_criteria,
         )
         print("Download details: ", json.dumps(download_data, indent=2))
+
+
+# RL_SAFE
+def version_rl_safe(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    version: str,
+    **qp: Any,
+) -> Any:
+    action = "Rl-Safe"
+
+    rr = api_client.rl_safe(
+        project=project,
+        package=package,
+        version=version,
+        auto_adapt_to_throttle=True,
+        **qp,
+    )
+    print("Version ", action, rr.status_code, rr.text)
+    return rr
+
+
+def version_rl_safe_with_download_and_rename(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    version: str,
+    **qp: Any,
+) -> Tuple[bool, str]:
+    action = "Rl-Safe with download and rename"
+
+    download_ok, file_path = api_client.rl_safe_download(
+        target_dir=".",
+        project=project,
+        package=package,
+        version=version,
+        auto_adapt_to_throttle=True,
+        **qp,
+    )
+
+    if download_ok is True:
+        print("Version ", action, file_path)
+
+    return download_ok, file_path
 
 
 def walk_all_project_package_version(
@@ -508,15 +557,23 @@ def walk_all_project_package_version(
                     with_download_url=False,
                 )
 
+                version_rl_safe_with_download_and_rename(
+                    api_client=api_client,
+                    target_dir=".",
+                    project=project["name"],
+                    package=package["name"],
+                    version=version["version"],
+                )
+
 
 def x_main() -> None:
     api_client = make_api_client()
     with_reject = False
     with_delete = True
 
-    new_project = "SDK test project"
-    new_package = "SDK test package"
-    new_version = "2024.1"
+    new_project = "SDKTestProject"
+    new_package = "SDKTestPackage"
+    new_version = "2025.1"
     file_path = "api_client_example.py"  # use my self as scan file
 
     create_project(

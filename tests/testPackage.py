@@ -139,6 +139,16 @@ def testListPackage(
             if r is False:
                 return r
 
+        r = testVersion.testVersionRlSafe(
+            aOperationsHandle,
+            project=project,
+            package=package,
+            version=version,
+            **qp,
+        )
+        if r is False:
+            return r
+
     return True
 
 

@@ -196,13 +196,14 @@ class SpectraAssureApiOperationsBase(
         assert version is not None
         base = base + "@" + version
         if what == "version":
-            if action != "report":
+            if action not in ["report"]:
                 return base
 
             # note report has the report_type in the middle of the url (not orthogonal)
             tail = f"/{report_type}/pkg:rl/{project}/{package}@{version}"
             return self._render_action_org_group_url(action) + tail
 
+        # https://{portalUrl}/api/public/v1/pack/safe/{organization}/{group}/pkg:rl/{project}/{package}@{version}
         msg = f"'_make_current_url' {action} with unsupported parameters: {what}"
         raise SpectraAssureInvalidAction(message=msg)
 

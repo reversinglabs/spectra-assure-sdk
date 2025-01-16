@@ -239,6 +239,11 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
         assert len(str(self.organization)) > 0, "Fatal: the organization is not set"
         assert len(str(self.group)) > 0, "Fatal: the group is not set"
 
+        # https://{portalUrl}/api/public/v1/pack/safe/{organization}/{group}/pkg:rl/{project}/{package}@{version}
+        # if action == rl-safe: action is 'pacck/safe'
+        if action == "rl_safe":
+            return f"{self._get_base_url()}/pack/safe/{self.organization}/{self.group}"
+
         return f"{self._get_base_url()}/{action}/{self.organization}/{self.group}"
 
     def _get_base_url(self) -> str:

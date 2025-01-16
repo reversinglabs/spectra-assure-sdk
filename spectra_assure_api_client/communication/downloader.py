@@ -123,8 +123,8 @@ class UrlDownloader:
         logger.info("set HTTP request timeout to: %s seconds", timeout)
 
     def _validate_chunk_size(self, chunk_size: int) -> None:
-        min_chunk = 4 * 1024  # 64k
-        max_chunk = 64 * 1024  # 4k
+        min_chunk = 4 * 1024  # 4k
+        max_chunk = 64 * 1024  # 64k
 
         chunk_size = min(max_chunk, chunk_size)
         chunk_size = max(chunk_size, min_chunk)
@@ -271,6 +271,8 @@ class UrlDownloader:
         Notes:
         """
         try:
+            logger.debug("%s", download_url, file_path)
+
             response = requests.get(
                 download_url,
                 stream=True,
@@ -370,6 +372,7 @@ class UrlDownloader:
 
         """
         try:
+            logger.debug("try rename: %s -> %s", file_path, target_path)
             fp = Path(file_path)
             fp.rename(target_path)
             # On Unix, if target exists and is a file, it will be replaced silently if the user has permission.
@@ -443,6 +446,9 @@ class UrlDownloader:
         return temp_file_path
 
     def _validate_hashes(self, hashes: Dict[str, str]) -> None:
+        if len(hashes) == 0:
+            return
+
         if self.hash_key not in hashes:
             msg = "the hash key {hash_key} is not present in the hashes dict {hashes}"
             logger.exception(msg)

@@ -1,5 +1,7 @@
 # makefile; ts=4
 
+# supported: 3.10, 3.11 3.12 3.13
+MIN_PYTHON_VERSION := python3.10
 MIN_PYTHON_VERSION := python3.10
 export MIN_PYTHON_VERSION
 

@@ -139,6 +139,16 @@ def testVersionSteps(
             **qp,
         )
 
+    r = testVersion.testVersionRlSafe(
+        aOperationsHandle,
+        project=project,
+        package=package,
+        version=version,
+        **qp,
+    )
+    if r is False:
+        return r
+
     # ----------------------------------------
     # list the version
     r = testVersion.testSyncVersion(
