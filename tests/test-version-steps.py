@@ -128,8 +128,22 @@ def testVersionSteps(
     if r is False:
         return r
 
+    is_done = False
+    while not is_done:
+        # is the analysis finished (otherwise no reports are ready)
+        z = testVersion.testStatusVersion(
+            aOperationsHandle=aOperationsHandle,
+            project=project,
+            package=package,
+            version=version,
+        )
+        print(z)
+        if z.get("analysis", {}).get("status", "") != "PROCESSING":
+            is_done = True
+
     for reportName in aOperationsHandle.current_report_names():
         qp = {}
+        print(reportName)
         r = testVersion.testReportVersion(
             aOperationsHandle,
             project=project,
@@ -138,6 +152,7 @@ def testVersionSteps(
             reportType=reportName,
             **qp,
         )
+        # print(r)
 
     r = testVersion.testVersionRlSafe(
         aOperationsHandle,

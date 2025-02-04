@@ -18,7 +18,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
 ):  # pylint: disable=too-many-instance-attributes
     @staticmethod
     def current_report_names() -> List[str]:
-        return [
+        return [  # (8)
             "cyclonedx",
             "rl-checks",
             "rl-cve",  # not json
@@ -26,6 +26,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
             "rl-uri",  # not json
             "sarif",
             "spdx",
+            "rl-summary-pdf",  # not json
         ]
 
     @staticmethod
@@ -60,7 +61,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
          - package: str, mandatory.
          - version: str, mandatory.
          - report_type: str, mandatory
-           must be one of:
+           must be one of: (8)
             - cyclonedx
             - rl-checks
             - rl-cve
@@ -68,6 +69,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
             - rl-json
             - sarif
             - spdx
+            - rl-summary-pdf
 
          - auto_adapt_to_throttle: bool, default False, optional.
          - qp: Dict[str,Any] , optional.

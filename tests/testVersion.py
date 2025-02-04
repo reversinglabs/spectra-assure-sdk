@@ -69,8 +69,8 @@ def testStatusVersion(
     package: str,
     version: str,
     **qp: Any,
-) -> bool:
-    action = "Status Version"
+) -> Any:
+    # action = "Status Version"
 
     qp = {
         "download": True,
@@ -84,16 +84,8 @@ def testStatusVersion(
         **qp,
     )
 
-    r = testing.standardReturn(action, data)
-    if r is False:
-        return r
-
-    # "analysis/report/info/portal/download"
     jData = data.json()
-    download = jData.get("analysis", {}).get("report", {}).get("info", {}).get("portal", {}).get("download", None)
-    print(action, "DOWNLOAD", f"{download}")
-
-    return True
+    return jData
 
 
 def testChecksVersion(

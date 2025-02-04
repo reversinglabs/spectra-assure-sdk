@@ -7,11 +7,11 @@
     dynamic = ['version']
 
     authors = [
-      { name="rl-devops" },
+      { name="ReversingLabs" },
     ]
 
     maintainers = [
-      { name="Rl devops", email="55623149+rl-devops@users.noreply.github.com" },
+      { name="ReversingLabs", email="support@reversinglabs.com" },
     ]
 
     description = "Python package for interfacing with the Spectra Assure Portal API."
@@ -80,4 +80,4 @@ dev = [
     skip = "*/.pytest_cache/*, */.tox/*, */mypy_cache/*, ./dist, ./docs"
 
 [tool.black]
-line-length = 120
+    line-length = 120

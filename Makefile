@@ -2,7 +2,6 @@
 
 # supported: 3.10, 3.11 3.12 3.13
 MIN_PYTHON_VERSION := python3.10
-MIN_PYTHON_VERSION := python3.10
 export MIN_PYTHON_VERSION
 
 VENV := ./vtmp/
@@ -90,9 +89,11 @@ tests: testLocalInstall
 testLocalInstall: build
 	./testLocalWhl.sh
 
-build:
+build: clean
 	$(COMMON_VENV) \
-	pip3 install build; \
+	python3 --version ; \
+	which $(MIN_PYTHON_VERSION) ; \
+	pip3 install --no-cache-dir build; \
 	$(MIN_PYTHON_VERSION) -m build;
 	ls -l dist
 

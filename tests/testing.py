@@ -10,5 +10,5 @@ def standardReturn(action: str, data: Any) -> bool:
         print(action, data.status_code, data.text)
         return False
 
-    print(action, data.text)
+    print(action)
     return True

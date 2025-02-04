@@ -60,7 +60,7 @@ clean:
 	rm -rf $(VENV)
 	rm -rf input
 	rm -f *.log
-	rm -rf downloads*
+	rm -rf downloads* SDKTestProject 'SDK test project' mbootTestProject
 	rm -rf PrTestMboot-*
 
 prep: clean

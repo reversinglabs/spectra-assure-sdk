@@ -19,6 +19,7 @@ Execute a report() API call for the specified `project`, `package`, `version`.
     - rl-uri
     - sarif
     - spdx
+    - rl-summary-pdf
 - auto_adapt_to_throttle: bool, default False, optional.
 - qp: Dict[str,Any], optional.
 
