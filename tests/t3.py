@@ -9,17 +9,20 @@ logger = logging.getLogger()
 SpectraAssureApiOperations.make_logger(my_logger=logger)
 
 prefix = "RLPORTAL_"
+
 host = os.getenv(f"{prefix}HOST")  # may be None
 server = os.getenv(f"{prefix}SERVER")  # may be None
+
 organization = os.getenv(f"{prefix}ORG", "")
 group = os.getenv(f"{prefix}GROUP", "")
 token = os.getenv(f"{prefix}ACCESS_TOKEN", "")
 
+configFile = "./myConfig.json"
 msg = f"host: {host}, server: {server}"
 logger.info(msg)
 
 try:
-    # use only args
+    # combine a config file with arguments
     aHandle = SpectraAssureApiOperations(
         host=host,
         server=server,
@@ -27,13 +30,10 @@ try:
         group=group,
         token=token,
         no_ssl_verify=True,
+        config_file=configFile,
     )
     print(f"SpectraAssureApiOperations: {aHandle}")
-    if 0:  # 2025-03-14 not yet in the api
-        r = aHandle.usage()
-        print(r)
-        r = aHandle.usage(group=group)
-        print(r)
+
 except Exception as e:
     print(f"exception: {e}")
     traceback.print_exc()

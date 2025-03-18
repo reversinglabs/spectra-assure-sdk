@@ -72,7 +72,9 @@ class MyProgramStarter(SpectraAssureProgramStarter):
         )
 
 
-def basicStarter() -> SpectraAssureApiOperations:
+def basicStarter(
+    configFileJson: str = "myConfig.json",
+) -> SpectraAssureApiOperations:
     """The minimal start of a program
     with a config file
     but without any customzations.
@@ -90,7 +92,7 @@ def basicStarter() -> SpectraAssureApiOperations:
     """
     # create a config file handle
     aConfigFileHandle = SpectraAssureConfigFileJson(
-        configFileJson="myConfig.json",
+        configFileJson=configFileJson,
     )
 
     # create a program starter with a config file
@@ -101,7 +103,7 @@ def basicStarter() -> SpectraAssureApiOperations:
     # parse and merge all arguments and return a apiConfig and any additional configuration options
     apiConfig, additionalConfig = aProgramStarter.getConfig()
 
-    # create a operations handle for all operations and pass all additiona args also
+    # create a operations handle for all operations and pass all additional args also
     aOperationsHandle = SpectraAssureApiOperations(
         **vars(apiConfig),
         **additionalConfig,
@@ -116,6 +118,10 @@ def makeMyEnvVarOPtions() -> Dict[str, Dict[str, Any]]:
     pprefix = "RLSECURE_PROXY_"
 
     externalEnvVarsInfo: Dict[str, Dict[str, Any]] = {
+        "host": {
+            "env": f"{prefix}HOST",
+            "vType": "str",
+        },
         "server": {
             "env": f"{prefix}SERVER",
             "vType": "str",
@@ -154,7 +160,9 @@ def makeMyEnvVarOPtions() -> Dict[str, Dict[str, Any]]:
     return externalEnvVarsInfo
 
 
-def prepConfigFile() -> SpectraAssureConfigFileJson:
+def prepConfigFile(
+    configFileJson: str = "myConfig.json",
+) -> SpectraAssureConfigFileJson:
     """prepConfigFile
     sets up a config file with additional arguments just as we did with MyProgramStarter.
     We add the same arguments also to the config file,
@@ -163,7 +171,7 @@ def prepConfigFile() -> SpectraAssureConfigFileJson:
 
     # prepare a config file
     configFileHandle = SpectraAssureConfigFileJson(
-        configFileJson="myConfig.json",
+        configFileJson=configFileJson,
     )
 
     # and add additional arguments with type enforcement
@@ -184,27 +192,30 @@ def prepConfigFile() -> SpectraAssureConfigFileJson:
     return configFileHandle
 
 
-def customizedStarter() -> SpectraAssureApiOperations:
+def customizedStarter(
+    configFileJson: str = "myConfig.json",
+) -> SpectraAssureApiOperations:
     """A custom starter
     that modifies:
 
     - the Environment parser
     - the config file
     - cli args
-
     """
 
-    strategyLoadConfigParams = ["CLI", "ENV", "CONFIGFILE"]  # change the load order, do config file last
+    strategyLoadConfigParams = [
+        "CLI",
+        "ENV",
+    ]  # change the load order, do config file last
 
     # override default env vars
     externalEnvVarsInfo = makeMyEnvVarOPtions()
 
     # use customized config file
-    configFileHandle = prepConfigFile()
+    # configFileHandle = prepConfigFile(configFileJson=configFileJson)
 
     aProgramStarter = MyProgramStarter(
         externalEnvVarsInfo=externalEnvVarsInfo,
-        configFileHandle=configFileHandle,
     )
 
     # add additional cli args before processing
@@ -220,24 +231,19 @@ def customizedStarter() -> SpectraAssureApiOperations:
     additionalConfig = vv["additionalArgs"]  # additionalArgs
     logger.debug(f"additional arguments: {additionalConfig}")
 
-    token = vv.get("token")  # token is coming from the environment
-    configFile = "./myConfig.json"  # the config file has no token so we get it from elsewhere
+    # token = vv.get("token")  # token is coming from the environment
+    # configFile = "./myConfig.json"  # the config file has no token so we get it from elsewhere
+    # configFile = None
 
     aOperationsHandle = SpectraAssureApiOperations(
-        token=token,
-        config_file=configFile,
-        **additionalConfig,
+        **vv,
     )
 
     return aOperationsHandle
 
 
-def startProg() -> SpectraAssureApiOperations:
-    useAdditional = True
-
+def startProg(useAdditional: bool = True) -> SpectraAssureApiOperations:
     if useAdditional is True:
-        aOperationsHandle = customizedStarter()
-    else:
-        aOperationsHandle = basicStarter()
+        return customizedStarter()
 
-    return aOperationsHandle
+    return basicStarter()

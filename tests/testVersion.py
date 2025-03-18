@@ -30,7 +30,7 @@ def testVersionRlSafe(
     print(f"{action}:: {project}/{package}@{version} :: {data}")
 
     data2 = aOperationsHandle.rl_safe_download(
-        target_dir=".",
+        target_dir="./downloads",
         project=project,
         package=package,
         version=version,

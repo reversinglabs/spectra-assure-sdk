@@ -271,7 +271,7 @@ class UrlDownloader:
         Notes:
         """
         try:
-            logger.debug("%s", download_url, file_path)
+            logger.debug("%s %s", download_url, file_path)
 
             response = requests.get(
                 download_url,

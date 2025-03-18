@@ -25,22 +25,28 @@ def make_api_client() -> SpectraAssureApiOperations:
     os.environ["ENVIRONMENT"] = "testing"  # in testing mode the log file uses DEBUG level
 
     prefix = "RLPORTAL_"
+    host = os.getenv(f"{prefix}HOST")
+    server = os.getenv(f"{prefix}SERVER")
+    organization = os.getenv(f"{prefix}ORG")
+    group = os.getenv(f"{prefix}GROUP")
+    token = os.getenv(f"{prefix}ACCESS_TOKEN")
+
     api_client = SpectraAssureApiOperations(
-        server=os.getenv(f"{prefix}SERVER"),
-        organization=os.getenv(f"{prefix}ORG"),
-        group=os.getenv(f"{prefix}GROUP"),
-        token=os.getenv(f"{prefix}ACCESS_TOKEN"),
+        host=host,
+        server=server,
+        organization=organization,
+        group=group,
+        token=token,
         auto_adapt_to_throttle=True,
         timeout=60,
+        no_ssl_verify=True,
     )
     api_client.make_logger(my_logger=log)  # use a build in default logger to file and stderr
-
+    print(f"host: {host}, server: {server}, organization: {organization}, group: {group}")
     return api_client
 
 
 # CREATE
-
-
 def create_project(
     api_client: SpectraAssureApiOperations,
     project: str,
@@ -102,8 +108,6 @@ def scan_version(
 
 
 # DELETE
-
-
 def delete_project(
     api_client: SpectraAssureApiOperations,
     project: str,
@@ -141,8 +145,6 @@ def delete_version(
 
 
 # LIST
-
-
 def list_projects(
     api_client: SpectraAssureApiOperations,
 ) -> Any:
@@ -195,8 +197,6 @@ def list_version(
 
 
 # EDIT/UPDATE
-
-
 def edit_project(
     api_client: SpectraAssureApiOperations,
     project: str,
@@ -273,6 +273,9 @@ def report_version(
         if report_type in ["rl-cve", "rl-uri"]:
             print("Report details:", report_data.text)
             return report_data.text
+
+        if report_type.endswith("pdf"):
+            return ""
 
         if len(report_data.text) == 0:
             return ""
@@ -463,7 +466,9 @@ def version_rl_safe(
 
 
 def version_rl_safe_with_download_and_rename(
+    *,
     api_client: SpectraAssureApiOperations,
+    target_dir: str,
     project: str,
     package: str,
     version: str,
@@ -472,7 +477,7 @@ def version_rl_safe_with_download_and_rename(
     action = "Rl-Safe with download and rename"
 
     download_ok, file_path = api_client.rl_safe_download(
-        target_dir=".",
+        target_dir=target_dir,
         project=project,
         package=package,
         version=version,
@@ -488,19 +493,34 @@ def version_rl_safe_with_download_and_rename(
 
 def walk_all_project_package_version(
     api_client: SpectraAssureApiOperations,
+    limit_projects: int = 2,
+    limit_packages: int = 2,
+    limit_versions: int = 2,
 ) -> None:
     # read only
     data = list_projects(
         api_client=api_client,
     )
 
+    project_n = 0
     for project in data["projects"]:
+        if project_n > limit_projects:
+            break
+
+        project_n += 1
+
         project_data = list_project(
             api_client=api_client,
             project=project["name"],
         )
 
+        package_n = 0
         for package in project_data["packages"]:
+            if package_n > limit_packages:
+                break
+
+            package_n += 1
+
             package_data = list_package(
                 api_client=api_client,
                 project=project["name"],
@@ -508,14 +528,18 @@ def walk_all_project_package_version(
             )
 
             # package level
-
             download_versions(
                 api_client=api_client,
                 project=project["name"],
                 package=package["name"],
             )
 
+            version_n = 0
             for version in package_data["versions"]:
+                if version_n > limit_versions:
+                    break
+                version_n += 1
+
                 # version level
                 list_version(
                     api_client=api_client,
@@ -530,15 +554,15 @@ def walk_all_project_package_version(
                     package=package["name"],
                     version=version["version"],
                     report_type="rl-uri",
-                    # report_type="rl-json",
                 )
                 logger.debug("%s", r)
+
                 r = report_version(
                     api_client=api_client,
                     project=project["name"],
                     package=package["name"],
                     version=version["version"],
-                    report_type="rl-uri",
+                    report_type="rl-json",
                 )
                 logger.debug("%s", r)
 
@@ -559,7 +583,7 @@ def walk_all_project_package_version(
 
                 version_rl_safe_with_download_and_rename(
                     api_client=api_client,
-                    target_dir=".",
+                    target_dir="./downloads",
                     project=project["name"],
                     package=package["name"],
                     version=version["version"],

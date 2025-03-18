@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 class SpectraAssureEnvironmentVars:
     ENVNAMESDEFAULT: Dict[str, Dict[str, Any]] = {
+        "host": {
+            "env": f"{prefix}HOST",
+            "vType": "str",
+        },
         "server": {
             "env": f"{prefix}SERVER",
             "vType": "str",
@@ -63,7 +67,13 @@ class SpectraAssureEnvironmentVars:
         self._prepEnvironmentVars(externalEnvVarsInfo)
 
     @staticmethod
-    def coerceType(value: Any, valueType: str) -> Any:
+    def coerceType(
+        value: Any,
+        valueType: str,
+    ) -> Any:
+        if value is None:
+            return None
+
         # convert enforce values str, int, bool
         if valueType == "str":
             return str(value)
@@ -85,7 +95,6 @@ class SpectraAssureEnvironmentVars:
             self.envVarsInfo = externalEnvVarsInfo
 
     # PUBLIC
-
     def processEnvironmentVars(self) -> Dict[str, Any]:
         envDict: Dict[str, Any] = {}
 
@@ -97,19 +106,24 @@ class SpectraAssureEnvironmentVars:
             if k is None:
                 continue
 
-            z = os.getenv(str(k))
+            assert k is not None
+            z = os.getenv(k)
             if z is None:
                 continue
 
-            value = str(z)
+            assert z is not None
+            value = z
 
             valueType = inf.get("vType")
             if valueType is None:
                 valueType = "str"
-            valueType = str(valueType)
 
-            envDict[name] = self.coerceType(value, str(valueType))
+            assert valueType is not None
+            try:
+                envDict[name] = self.coerceType(value, valueType)
+            except Exception as e:
+                logger.error("cannot coerce value: %s to type: %s for key: %s; %s", value, valueType, k, e)
+                continue
 
-        logger.info(f"Env: {envDict}")
-
+        logger.debug("%s", envDict)
         return envDict

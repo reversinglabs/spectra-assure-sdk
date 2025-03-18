@@ -106,7 +106,8 @@ from spectra_assure_api_client import SpectraAssureApiOperations
 
 prefix = "RLPORTAL_"
 
-server = str(os.getenv(f"{prefix}SERVER"))
+host = os.getenv(f"{prefix}HOST")
+server = os.getenv(f"{prefix}SERVER")
 organization = str(os.getenv(f"{prefix}ORG"))
 group = str(os.getenv(f"{prefix}GROUP"))
 token = str(os.getenv(f"{prefix}ACCESS_TOKEN"))
@@ -118,6 +119,7 @@ for what in [1, 2, 3]:
         if what == 1:
             # Use only named arguments
             aHandle = SpectraAssureApiOperations(
+                host=host,
                 server=server,
                 organization=organization,
                 group=group,
@@ -145,6 +147,7 @@ for what in [1, 2, 3]:
 ```
 {
   "SpectraAssureApi" : {
+    "host": "my.secure.software",
     "server": "test",
     "organization": "Test",
     "group": "Default",
@@ -161,7 +164,7 @@ The SDK uses logging internally. You can interface with the logging functions in
 
 **Logging example**
 
-```
+```python
 import os
 import logging
 import sys
@@ -201,9 +204,7 @@ if __name__ == "__main__":
 
 The following parameters are mandatory for all operations:
 
-- **server** - Name of the Portal instance to use in requests.
-The Portal instance name usually matches the subdirectory of my.secure.software in your Portal URL.
-For example, if your portal URL is 'my.secure.software/demo', the instance name to use with this parameter is 'demo'.
+
 - **organization** - Name of a Portal organization to use in requests.
 The user account that is sending the request must be a member of the specified organization and have the appropriate
 permissions to perform the requested operation. Organization names are case-sensitive.
@@ -213,15 +214,23 @@ Group names are case-sensitive.
 
 The following parameters are optional:
 
-- **timeout** - The request timeout to be used for HTTPS requests to the Portal API, specified in seconds.
-The default is 10 seconds.
+- **host** - Name of the host instance to use in requests.
+<br> The host name is usually `my.secure.software` and this the default if `host` is not specified.
+<br> Any other host will be explicitly communicated to customers.
+<br> Note that `host` and `server` cannot both be empty.
+- **server** - Name of the Portal instance (tenant) to use in requests.
+<br> The Portal instance name usually matches the subdirectory of my.secure.software in your Portal URL.
+<br> For example, if your portal URL is 'my.secure.software/demo', the instance name to use with this parameter is 'demo'.
+<br>Note that `host` and `server` cannot both be empty.
 
-- **auto_adapt_to_throttle** - Some requests may be
-[throttled](#rate-limiting)
+- **timeout** - The request timeout to be used for HTTPS requests to the Portal API, specified in seconds.
+<br>The default is 10 seconds.
+
+- **auto_adapt_to_throttle** - Some requests may be [throttled](#rate-limiting)
 and require a minimal wait time before the next request.
-With this option, you can automatically wait for the data to become available and for the required time to pass.
-By default, this option is disabled (set to `false`).
-This parameter can also be specified on each individual operation.
+<br> With this option, you can automatically wait for the data to become available and for the required time to pass.
+<br> By default, this option is disabled (set to `false`).
+<br> This parameter can also be specified on each individual operation.
 
 
 Some operations support multiple targets (project, package, version) that have to be provided as named arguments.
@@ -271,14 +280,14 @@ If a parameter is specified more than once, the latest stage overrides all previ
 In other words, if a parameter is set in the configuration file and as a argument,
 the SDK will use the value from the argument.
 
-The configuration file must be in JSON format.
-The file name is arbitrary.
-The file structure requires that all configuration parameters are placed as keys in the top-level `SpectraAssureApi`
-object like in the following example:
+- The configuration file must be in JSON format.
+- The file name is arbitrary.
+- The file structure requires that all configuration parameters are placed as keys in the top-level `SpectraAssureApi` object like in the following example:
 
-```
+```json
 {
   "SpectraAssureApi" : {
+    "host": "my.secure.software",
     "server": "test",
     "organization": "Test",
     "group": "Default",
@@ -292,13 +301,14 @@ The configuration file supports the following parameters:
 
 **Mandatory**
 
-- server: `string`
 - organization: `string`
 - group: `string`
 - token: `string`
 
 **Optional**
 
+- host: `string`
+- server: `string`
 - proxy_server: `string`
 - proxy_port: `int`
 - proxy_user: `string`
@@ -306,6 +316,7 @@ The configuration file supports the following parameters:
 - timeout: `int`
 - auto_adapt_to_throttle: `bool`
 
+**Important: host and server cannot both be empty.**
 
 All `proxy_*` parameters are optional.
 However, if you're using `proxy_server`, then you must also use `proxy_port`.
@@ -522,6 +533,9 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
-| v1.0.2  | add version actions: `sync`, `approve`, `reject`, `revoke`  |
-| v1.0.1  | add `rl-uri` report |
-| v1.0.0  | initial     |
+| v1.0.5  | add support for a different hosts than the default `my.secure.software. |
+| v1.0.4  | add rl-summary-pdf report. |
+| v1.0.3  | add rl-safe support. |
+| v1.0.2  | add version actions: `sync`, `approve`, `reject`, `revoke`. |
+| v1.0.1  | add `rl-uri` report. |
+| v1.0.0  | initial. |

@@ -58,8 +58,12 @@ installFromDistWhl()
         exit 101
     }
 
-    pip3 install "${PACKAGE_FILE}"
-    pip3 list # show the currently installed packages
+    pip3 \
+        --require-virtualenv \
+        --disable-pip-version-check \
+        --no-color \
+        --no-cache-dir \
+        install "${PACKAGE_FILE}"
 }
 
 main()

@@ -14,6 +14,7 @@ from spectra_assure_api_client.operations.approve import SpectraAssureApiOperati
 from spectra_assure_api_client.operations.reject import SpectraAssureApiOperationsReject
 from spectra_assure_api_client.operations.revoke import SpectraAssureApiOperationsRevoke
 from spectra_assure_api_client.operations.rl_safe import SpectraAssureApiOperationsRlSafe
+from spectra_assure_api_client.operations.usage import SpectraAssureApiOperationsUsage
 
 # pseudo operation
 from spectra_assure_api_client.operations.download import SpectraAssureApiOperationsDownload
@@ -36,5 +37,6 @@ class SpectraAssureApiOperations(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsReject,  # reject a version
     SpectraAssureApiOperationsRevoke,  # revoke a previously accepted version
     SpectraAssureApiOperationsRlSafe,  # create a rl-safe download link
+    SpectraAssureApiOperationsUsage,  # list usage information
 ):
     """A class that combines all operations"""

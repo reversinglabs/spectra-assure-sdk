@@ -4,6 +4,7 @@ from typing import (
     Any,
 )
 
+import os
 import logging
 import time
 import requests
@@ -30,6 +31,7 @@ class Executor:
         headers: Dict[str, str],
         url_params: Dict[str, str] | None,
         request_callable: Callable[..., requests.Response] | None = None,
+        no_ssl_verify: bool = False,
     ):
         self.url = url
         self.proxies = proxies
@@ -38,11 +40,15 @@ class Executor:
         self.headers = headers
         self.url_params = url_params
         self.request_callable = request_callable
+        self.no_ssl_verify = no_ssl_verify
 
     # note actually not used during post
 
     def execute(self) -> requests.Response:
         assert self.request_callable is not None
+        if self.no_ssl_verify is True:
+            os.environ["REQUESTS_CA_BUNDLE"] = ""
+
         return self.request_callable(
             self.url,
             params=self.url_params,
@@ -66,6 +72,8 @@ class SpectraAssureApiCore:
         proxy_port: int | None = None,
         proxy_user: str | None = None,
         proxy_password: str | None = None,
+        #
+        no_ssl_verify: bool = False,
     ) -> None:
         self.token = token
         self.timeout = timeout
@@ -84,9 +92,12 @@ class SpectraAssureApiCore:
             user=self.proxy_user,
             password=self.proxy_password,
         )
+
         if len(self.proxies) == 0:
             # also parse for default proxies using case insensitive http(s)_proxy
             self.proxies = urllib.request.getproxies()
+
+        self.no_ssl_verify = no_ssl_verify
 
     @staticmethod
     def _get_throttle_delay(
@@ -178,14 +189,15 @@ class SpectraAssureApiCore:
         if 200 <= response.status_code < 300:
             logger.info(
                 "%s %s",
+                url,
                 response.status_code,
-                response.text,
             )
             return response
 
         if response.status_code == 404:  # Not found
             logger.info(
-                "NotFound: %s %s",
+                "NotFound: %s %s %s",
+                url,
                 response.status_code,
                 response.text,
             )
@@ -193,7 +205,8 @@ class SpectraAssureApiCore:
 
         if 400 <= response.status_code < 500:
             logger.warning(
-                "%s %s",
+                "%s %s %s",
+                url,
                 response.status_code,
                 response.text,
             )
@@ -201,14 +214,16 @@ class SpectraAssureApiCore:
 
         if response.status_code >= 500:
             logger.critical(
-                "%s %s",
+                "%s %s %s",
+                url,
                 response.status_code,
                 response.text,
             )
             return response
 
         logger.warning(
-            "unexpected: %s %s",
+            "unexpected: %s %s %s",
+            url,
             response.status_code,
             response.text,
         )
@@ -246,4 +261,5 @@ class SpectraAssureApiCore:
                 )
                 time.sleep(delay_time)
                 continue
+
         return response

@@ -23,6 +23,7 @@ class SpectraAssureConfigFile(
     ABC,
 ):
     configOptions: Dict[str, Dict[str, str]] = {
+        "host": {"vType": "str"},
         "server": {"vType": "str"},
         "organization": {"vType": "str"},
         "group": {"vType": "str"},

@@ -1,6 +1,5 @@
 # makefile; ts=4
-
-# supported: 3.10, 3.11 3.12 3.13
+# supported: 3.10, 3.11, 3.12, 3.13
 MIN_PYTHON_VERSION := python3.10
 export MIN_PYTHON_VERSION
 
@@ -13,7 +12,6 @@ PY_FILES := examples tests $(PACKAGE_NAME)
 
 DOC_DIR := ./doc/
 STUBS_DIR := ./stubs/
-
 
 PL_LINTERS := eradicate,mccabe,pycodestyle,pyflakes,pylint
 
@@ -31,11 +29,17 @@ COMMON_VENV := rm -rf $(VENV); \
 	$(MIN_PYTHON_VERSION) -m venv $(VENV); \
 	source ./$(VENV)/bin/activate;
 
+PIP_INSTALL := pip3 -q \
+	--require-virtualenv \
+	--disable-pip-version-check \
+	--no-color install --no-cache-dir
 
 .PHONY: prep all tests black pylama mypy testLocalInstall build
 
 all: prep tests
 
+# ========================================
+# ========================================
 prep: clean black pylama mypy makeStubs pyreverse
 
 clean: cleanupVenv
@@ -46,7 +50,7 @@ clean: cleanupVenv
 	rm -f *.1 *.2
 	rm -f classes.dot
 	rm -f *.pyi */*.pyi */*/*.pyi
-	cd tests; make clean
+	(cd tests; make test_clean)
 
 cleanupVenv:
 	rm -rf $(VENV)
@@ -54,14 +58,14 @@ cleanupVenv:
 
 black:
 	$(COMMON_VENV) \
-	pip3 install black; \
+	$(PIP_INSTALL) black; \
 	black \
 		--line-length $(LINE_LENGTH) \
 		$(PY_FILES)
 
 pylama:
 	$(COMMON_VENV) \
-	pip3 install pylama; \
+	$(PIP_INSTALL) pylama; \
 	pylama \
 		--max-line-length $(LINE_LENGTH) \
 		--linters "${PL_LINTERS}" \
@@ -70,43 +74,50 @@ pylama:
 
 mypy:
 	$(COMMON_VENV) \
-	pip3 install mypy; \
-	pip3 install types-requests; \
+	$(PIP_INSTALL) mypy; \
+	$(PIP_INSTALL) types-requests; \
 	mypy --strict --no-incremental $(PACKAGE_NAME)
 
 makeStubs:
 	rm -rf $(STUBS_DIR) out */*.pyi */*/*.pyi
 	mkdir $(STUBS_DIR)
 	$(COMMON_VENV) \
-	pip3 install mypy; \
-	pip3 install types-requests; \
+	$(PIP_INSTALL) mypy; \
+	$(PIP_INSTALL) types-requests; \
 	stubgen $(PACKAGE_NAME) -o $(STUBS_DIR)
 
-tests: testLocalInstall
-	cd tests && make tests
-	cp tests/api_client_example.py examples/
-
-testLocalInstall: build
-	./testLocalWhl.sh
-
-build: clean
+pyreverse:
 	$(COMMON_VENV) \
-	python3 --version ; \
-	which $(MIN_PYTHON_VERSION) ; \
-	pip3 install --no-cache-dir build; \
-	$(MIN_PYTHON_VERSION) -m build;
-	ls -l dist
+	$(PIP_INSTALL) pylint; \
+	$(PIP_INSTALL) types-requests; \
+	pyreverse $(PACKAGE_NAME); \
+	pyreverse -o svg $(PACKAGE_NAME); \
+	mv *.svg *.dot $(DOC_DIR)
 
+# ========================================
+# ========================================
 testpypi: build
 	twine upload \
 		--config-file=$${HOME}/.pypirc_testing \
 		--repository=testpypi \
 		dist/*
 
-pyreverse:
+# ========================================
+# ========================================
+build: clean
 	$(COMMON_VENV) \
-	pip3 install pylint; \
-	pip3 install types-requests; \
-	pyreverse $(PACKAGE_NAME); \
-	pyreverse -o svg $(PACKAGE_NAME); \
-	mv *.svg *.dot $(DOC_DIR)
+	python3 --version ; \
+	which $(MIN_PYTHON_VERSION) ; \
+	$(PIP_INSTALL) build; \
+	$(MIN_PYTHON_VERSION) -m build;
+	ls -l dist
+
+testLocalInstall: build
+	./testLocalWhl.sh
+
+tests: testLocalInstall
+	( cd tests && TEST_MY=1 		 make tests )
+	( cd tests && TEST_PLAYGROUND1=1 make tests )
+	( cd tests && TEST_PLAYGROUND2=1 make tests )
+	( cd tests && TEST_CANADA=1 	 make tests )
+	cp tests/api_client_example.py examples/

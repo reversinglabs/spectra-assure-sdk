@@ -150,9 +150,15 @@ class SpectraAssureProgramStarter:
 
         # Mandatory Portal access parameters
         self.parser.add_argument(
+            "--host",
+            dest="host",
+            help=f"the 'host' name for the {sap}, {env}",
+        )
+        # Mandatory Portal access parameters
+        self.parser.add_argument(
             "--server",
             dest="server",
-            help=f"the mandatory 'server' name for the {sap}, {env}",
+            help=f"the 'server' (tenant) name for the {sap}, {env}",
         )
         self.parser.add_argument(
             "--organization",
@@ -252,20 +258,20 @@ class SpectraAssureProgramStarter:
         strategyLoadConfigParams: List[str],
     ) -> Dict[str, Any]:
         if strategyLoadConfigParams == []:
-            strategyLoadConfigParams = ["CONFIGFILE", "CLI", "ENV"]
+            strategyLoadConfigParams = ["CLI", "ENV"]
+        logger.debug("%s", strategyLoadConfigParams)
 
         paramsDict: Dict[str, Any] = {}
-
         for what in strategyLoadConfigParams:
-            if what.upper() == "CONFIGFILE":
-                self.updateParamsDict(paramsDict, self._applyConfigFileNow())
-            elif what.upper() == "CLI":
+            if what.upper() == "CLI":
                 self.updateParamsDict(paramsDict, self._parseProcessCliArgs())
-            elif what.upper() == "ENV":
-                self.updateParamsDict(paramsDict, self.envVars.processEnvironmentVars())
-            else:
-                logger.warning(f"skip: the parameter-load-strategy requested is unknown: {what}")
+                continue
 
+            if what.upper() == "ENV":
+                self.updateParamsDict(paramsDict, self.envVars.processEnvironmentVars())
+                continue
+
+        logger.debug("%s", paramsDict)
         return paramsDict
 
     # PUBLIC
@@ -277,7 +283,7 @@ class SpectraAssureProgramStarter:
     def getConfig(
         self,
         *,
-        strategyLoadConfigParams: List[str] = ["CONFIGFILE", "CLI", "ENV"],
+        strategyLoadConfigParams: List[str] = ["CLI", "ENV"],
     ) -> Tuple[SpectraAssureApiConfig, Dict[str, Any]]:
         """getConfig processes all parameter sources and produces a merged result according to the chosen strategy
 

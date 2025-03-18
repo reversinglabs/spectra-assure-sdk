@@ -38,7 +38,7 @@ class SpectraAssureApiPost(
 
         logger.debug("%s", url)
         logger.debug("%s", qp)
-        logger.debug("%s", headers)
+        # logger.debug("%s", headers)
 
         while current_try < max_try:
             current_try += 1

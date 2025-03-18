@@ -15,12 +15,12 @@ class SpectraAssureApiConfig:
     def __init__(
         self,
         *,
+        host: str | None = None,
         server: str | None = None,
         organization: str | None = None,
         group: str | None = None,
         token: str | None = None,
         #
-        host: str = "my.secure.software",
         apiVersion: str = "v1",
         #
         proxy_server: str | None = None,
@@ -32,12 +32,13 @@ class SpectraAssureApiConfig:
         autoAdaptToThrottle: bool = False,
         **additionalArgs: Any,
     ) -> None:
+        self.host = host
         self.server = server
         self.organization = organization
         self.group = group
+        #
         self.token = token
         #
-        self.host = host
         self.apiVersion = apiVersion
         #
         self.proxy_server = proxy_server
@@ -70,7 +71,7 @@ class SpectraAssureApiConfig:
         """
 
         tests = [
-            self.server is None,
+            self.server is None and self.host is None,
             self.organization is None,
             self.group is None,
             self.token is None,
@@ -78,10 +79,10 @@ class SpectraAssureApiConfig:
 
         if any(tests):  # test if any of the tests is True
             ll = [
-                f"SERVER: {self.server}",
-                f"ORGANIZATION: {self.organization}",
-                f"GROUP: {self.group}",
-                f"TOKEN is None: {self.token is None}",
+                f"HOST, optional: {self.host}; SERVER, optional: {self.server}; cannot be both empty.",
+                f"ORGANIZATION, mandatory: {self.organization}; cannot be empty.",
+                f"GROUP, mandatory: {self.group}; cannot be emptry.",
+                f"TOKEN is None, mandatory: {self.token is None}; cannot be True.",
             ]
             msg = "FATAL: minimal required parameters are not set properly; " + ", ".join(ll)
             return False, msg

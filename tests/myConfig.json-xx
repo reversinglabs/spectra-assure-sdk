@@ -3,10 +3,8 @@
     "server": "test",
     "organization": "Test",
     "group": "Default",
-
     "timeout": 60,
     "autoAdaptToThrottle": true
   },
-
   "sthisWillBeIgnored": true
 }
