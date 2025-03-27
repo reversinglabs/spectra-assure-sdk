@@ -11,6 +11,7 @@ SpectraAssureApiOperations.make_logger(my_logger=logger)
 prefix = "RLPORTAL_"
 host = os.getenv(f"{prefix}HOST")  # may be None
 server = os.getenv(f"{prefix}SERVER")  # may be None
+
 organization = os.getenv(f"{prefix}ORG", "")
 group = os.getenv(f"{prefix}GROUP", "")
 token = os.getenv(f"{prefix}ACCESS_TOKEN", "")
@@ -29,11 +30,13 @@ try:
         no_ssl_verify=True,
     )
     print(f"SpectraAssureApiOperations: {aHandle}")
-    if 0:  # 2025-03-14 not yet in the api
+    if 1:  # 2025-03-14 not yet in the api
         r = aHandle.usage()
-        print(r)
+        print("ORG", r.status_code, r.text)
+
         r = aHandle.usage(group=group)
-        print(r)
+        print("GROUP", r.status_code, r.text)
+
 except Exception as e:
     print(f"exception: {e}")
     traceback.print_exc()

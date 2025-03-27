@@ -18,6 +18,7 @@ group = os.getenv(f"{prefix}GROUP", "")
 token = os.getenv(f"{prefix}ACCESS_TOKEN", "")
 
 configFile = "./myConfig.json"
+
 msg = f"host: {host}, server: {server}"
 logger.info(msg)
 

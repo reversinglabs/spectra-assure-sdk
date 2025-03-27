@@ -53,8 +53,13 @@ ifdef TEST_CANADA
 	ENV_NAME	:=	ca
 endif
 
+# install a config file if we have one for this environment
+ZZ := myConfig.json
+CONF_FILE 	:= $(shell rm -f $(ZZ) ; [ -f $(ZZ)-$(ENV_NAME) ] && cp $(ZZ)-$(ENV_NAME) $(ZZ) )
+
 export ENV_FILE
 export ENV_NAME
+# export CONF_FILE
 
 # ---------------------------------------
 TESTS := t1 t2 t3 api_client_example test-list-all test-project-steps test-package-steps test-version-steps test-download

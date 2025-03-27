@@ -20,16 +20,16 @@ log = logging.getLogger()
 logger = log
 
 
-def make_api_client() -> SpectraAssureApiOperations:
+def make_api_client(
+    *,
+    organization: str,
+    group: str,
+    token: str,
+    host: str | None = None,
+    server: str | None = None,
+) -> SpectraAssureApiOperations:
     os.environ["LOG_LEVEL"] = "INFO"  # set the default log level to INFO
     os.environ["ENVIRONMENT"] = "testing"  # in testing mode the log file uses DEBUG level
-
-    prefix = "RLPORTAL_"
-    host = os.getenv(f"{prefix}HOST")
-    server = os.getenv(f"{prefix}SERVER")
-    organization = os.getenv(f"{prefix}ORG")
-    group = os.getenv(f"{prefix}GROUP")
-    token = os.getenv(f"{prefix}ACCESS_TOKEN")
 
     api_client = SpectraAssureApiOperations(
         host=host,
@@ -444,6 +444,28 @@ def download_versions(
         print("Download details: ", json.dumps(download_data, indent=2))
 
 
+# USAGE
+def usage_organization(
+    api_client: SpectraAssureApiOperations,
+) -> Any:
+    response = api_client.usage()
+    data = response.json()
+    print("ORG USAGE: ", json.dumps(data, indent=2))
+    return data
+
+
+def usage_group(
+    api_client: SpectraAssureApiOperations,
+    group: str,
+) -> Any:
+    response = api_client.usage(
+        group=group,
+    )
+    data = response.json()
+    print("GROUP USAGE: ", json.dumps(data, indent=2))
+    return data
+
+
 # RL_SAFE
 def version_rl_safe(
     api_client: SpectraAssureApiOperations,
@@ -591,9 +613,31 @@ def walk_all_project_package_version(
 
 
 def x_main() -> None:
-    api_client = make_api_client()
+    prefix = "RLPORTAL_"
+
+    host = os.getenv(f"{prefix}HOST")
+    server = os.getenv(f"{prefix}SERVER")
+    organization = os.getenv(f"{prefix}ORG")
+    group = os.getenv(f"{prefix}GROUP")
+    token = os.getenv(f"{prefix}ACCESS_TOKEN")
+
+    api_client = make_api_client(
+        host=host,
+        server=server,
+        organization=organization,
+        group=group,
+        token=token,
+    )
     with_reject = False
     with_delete = True
+
+    usage_organization(
+        api_client=api_client,
+    )
+    usage_group(
+        api_client=api_client,
+        group=group,
+    )
 
     new_project = "SDKTestProject"
     new_package = "SDKTestPackage"

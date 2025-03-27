@@ -39,14 +39,14 @@ With the Spectra Assure Portal, you can:
 - [Installation](#installation)
 - [Authentication](#authentication)
 - [Quick start](#quick-start)
-   - [Logging](#logging)
+    - [Logging](#logging)
 - [Usage](#usage)
-   - [Rate limiting](#rate-limiting)
-   - [Configuration](#configuration)
-   - [Validation](#validation)
-   - [Exceptions](#exceptions)
+    - [Rate limiting](#rate-limiting)
+    - [Configuration](#configuration)
+    - [Validation](#validation)
+    - [Exceptions](#exceptions)
 - [Reference](#reference)
-   - [Operations](#operations)
+    - [Operations](#operations)
 - [Support](#support)
 - [License](#license)
 - [Versioning](#versioning)
@@ -513,6 +513,14 @@ the API responds with an error and the download capacity remains unaffected.
 | Targets |      |         |         | ✔️      |
 | Query parameters |    |  |         | ✔️      |
 
+[`SpectraAssureApiOperationsRevoke`](./doc/usage.md)
+
+**List the current analysis capacity usage for the organization or group .**
+
+|        | Group | Project | Package | Version |
+| --     | --    |    --   |  --     |    --   |
+| Targets | ✔️ (optional)  |         |         |         |
+| Query parameters |    |  |         |         |
 
 ## Support
 
@@ -533,9 +541,10 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
-| v1.0.5  | add support for a different hosts than the default `my.secure.software. |
-| v1.0.4  | add rl-summary-pdf report. |
-| v1.0.3  | add rl-safe support. |
+| v1.0.6  | add support for usage. |
+| v1.0.5  | add support for different hosts than the default `my.secure.software. |
+| v1.0.4  | add `rl-summary-pdf` report. |
+| v1.0.3  | add `rl-safe` support. |
 | v1.0.2  | add version actions: `sync`, `approve`, `reject`, `revoke`. |
 | v1.0.1  | add `rl-uri` report. |
 | v1.0.0  | initial. |

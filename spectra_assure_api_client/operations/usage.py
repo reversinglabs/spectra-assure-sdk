@@ -1,7 +1,7 @@
+# base_url: https://{portalUrl}/api/public/v1/
 # "<self.base_url>/usage/<ORGANIZATION_NAME>"
 # "<self.base_url>/usage/<ORGANIZATION_NAME>/<GROUP_NAME>"
-# self.organization , self.group
-# we can say usage, usage_org, usage_org_group
+
 
 from typing import (
     Any,

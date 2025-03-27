@@ -1,3 +1,4 @@
+import os
 import logging
 import traceback
 
@@ -8,12 +9,16 @@ logger = logging.getLogger()
 
 SpectraAssureApiOperations.make_logger(my_logger=logger)
 
+prefix = "RLPORTAL_"
+token = os.getenv(f"{prefix}ACCESS_TOKEN", "")
 configFile = "./myConfig.json"
 
 try:
     # use only a config file
     aHandle = SpectraAssureApiOperations(
         config_file=configFile,
+        token=token,
+        no_ssl_verify=True,
     )
     print(f"SpectraAssureApiOperations: {aHandle}")
 except Exception as e:
