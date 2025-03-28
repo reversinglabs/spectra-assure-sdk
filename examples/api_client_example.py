@@ -145,6 +145,15 @@ def delete_version(
 
 
 # LIST
+def list_groups(
+    api_client: SpectraAssureApiOperations,
+) -> Any:
+    response = api_client.listGroups()
+    data = response.json()
+    print("listGroups: ", json.dumps(data, indent=2))
+    return data
+
+
 def list_projects(
     api_client: SpectraAssureApiOperations,
 ) -> Any:
@@ -630,6 +639,10 @@ def x_main() -> None:
     )
     with_reject = False
     with_delete = True
+
+    list_groups(
+        api_client=api_client,
+    )
 
     usage_organization(
         api_client=api_client,

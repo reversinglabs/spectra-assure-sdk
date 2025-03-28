@@ -513,13 +513,22 @@ the API responds with an error and the download capacity remains unaffected.
 | Targets |      |         |         | ✔️      |
 | Query parameters |    |  |         | ✔️      |
 
-[`SpectraAssureApiOperationsRevoke`](./doc/usage.md)
+[`SpectraAssureApiOperationsUsage`](./doc/usage.md)
 
 **List the current analysis capacity usage for the organization or group .**
 
 |        | Group | Project | Package | Version |
 | --     | --    |    --   |  --     |    --   |
 | Targets | ✔️ (optional)  |         |         |         |
+| Query parameters |    |  |         |         |
+
+[`SpectraAssureApiOperationsListGroups`](./doc/istGroups.md)
+
+**List the groups you have access to in the current organization .**
+
+|        | Group | Project | Package | Version |
+| --     | --    |    --   |  --     |    --   |
+| Targets |      |         |         |         |
 | Query parameters |    |  |         |         |
 
 ## Support
@@ -541,6 +550,7 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
+| v1.0.7  | add support for listGroups. |
 | v1.0.6  | add support for usage. |
 | v1.0.5  | add support for different hosts than the default `my.secure.software. |
 | v1.0.4  | add `rl-summary-pdf` report. |
