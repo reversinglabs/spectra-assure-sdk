@@ -107,6 +107,45 @@ def scan_version(
     return int(rr.status_code)
 
 
+def url_import_version(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    version: str,
+    url: str,
+    auth_user: str | None = None,
+    auth_pass: str | None = None,
+    bearer_token: str | None = None,
+) -> int:
+    # url: https://www.7-zip.org/a/7z2500-x64.exe
+    qp: Dict[str, Any] = {
+        "replace": False,
+        "force": True,
+        "publisher": "ReversingLabs Testing",
+        "product": "a reversingLabs test",
+        "category": "Development",
+        "license": "MIT License Modern Variant",
+        "platform": "Containers",
+        "release_date": f"{datetime.datetime.now()}",
+        "build": "version",
+    }
+
+    # create a version with upload via url (url_import)
+    rr = api_client.url_import(
+        project=project,
+        package=package,
+        version=version,
+        url=url,
+        auth_user=auth_user,
+        auth_pass=auth_pass,
+        bearer_token=bearer_token,
+        **qp,
+    )
+
+    print("url_import Version", rr.status_code, rr.text)
+    return int(rr.status_code)
+
+
 # DELETE
 def delete_project(
     api_client: SpectraAssureApiOperations,
@@ -654,7 +693,7 @@ def x_main() -> None:
 
     new_project = "SDKTestProject"
     new_package = "SDKTestPackage"
-    new_version = "2025.1"
+    new_version = "2025.7.29"
     file_path = "api_client_example.py"  # use my self as scan file
 
     create_project(
@@ -676,6 +715,14 @@ def x_main() -> None:
         file_path=file_path,
     )
 
+    status_code = url_import_version(
+        api_client=api_client,
+        project=new_project,
+        package="7-zip",
+        version="25.00-x64",
+        url="https://www.7-zip.org/a/7z2500-x64.exe",
+    )
+
     n = 0
     while True:
         m = 10
@@ -695,6 +742,7 @@ def x_main() -> None:
     # if we created it in this test we can delete it safely
     delete_test_data = True  # by default we delete what we create
     exists_test_data = status_code == 409  # version already exists this results to True
+
     if exists_test_data is True:
         delete_test_data = False  # but we will not delete previously existing data
 

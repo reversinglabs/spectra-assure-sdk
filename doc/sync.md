@@ -1,6 +1,6 @@
 # SpectraAssureApiOperationsSync
 
-Execute a sync() API call.
+Execute a sync() API call. (Rescan a version.)
 
 ## Targets
 

@@ -16,6 +16,7 @@ from spectra_assure_api_client.operations.revoke import SpectraAssureApiOperatio
 from spectra_assure_api_client.operations.rl_safe import SpectraAssureApiOperationsRlSafe
 from spectra_assure_api_client.operations.usage import SpectraAssureApiOperationsUsage
 from spectra_assure_api_client.operations.listGroups import SpectraAssureApiOperationsListGroups
+from spectra_assure_api_client.operations.url_import import SpectraAssureApiOperationsUrlImport
 
 # pseudo operation
 from spectra_assure_api_client.operations.download import SpectraAssureApiOperationsDownload
@@ -40,5 +41,6 @@ class SpectraAssureApiOperations(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsRlSafe,  # create a rl-safe download link
     SpectraAssureApiOperationsUsage,  # list usage information
     SpectraAssureApiOperationsListGroups,  # list the groups in this organization that we have access to
+    SpectraAssureApiOperationsUrlImport,  # scan a file (create a version) via a url
 ):
     """A class that combines all operations"""

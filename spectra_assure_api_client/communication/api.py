@@ -298,6 +298,9 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
         if action == "rl_safe":
             action = "pack/safe"
 
+        if action == "url_import":
+            action = "url-import"
+
         return f"{self._get_base_url()}/{action}/{self.organization}/{self.group}"
 
     def _get_base_url(self) -> str:

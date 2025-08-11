@@ -38,7 +38,6 @@ class SpectraAssureApiPost(
 
         logger.debug("%s", url)
         logger.debug("%s", qp)
-        # logger.debug("%s", headers)
 
         while current_try < max_try:
             current_try += 1
@@ -134,11 +133,15 @@ class SpectraAssureApiPost(
         url: str,
         auto_adapt_to_throttle: bool,
         file_path: str | None = None,
+        post_data: Dict[str, Any] | None = None,
         **qp: Any,
     ) -> requests.Response:
         logger.debug(url)
 
-        # post comes in 2 forms: create and scan: upload a file
+        # post comes in 3 forms currently:
+        #  1: create/sync/
+        #  2: scan: use file_path
+        #  3: url-import: use post_data
         if action == "scan":
             if file_path is None:
                 msg = "'scan' needs a filename, none was given"
@@ -152,6 +155,10 @@ class SpectraAssureApiPost(
             }
             headers = self._make_headers(h)
             payload = None
+        elif action == "url_import":
+            assert post_data is not None
+            headers = self._make_headers()
+            payload = post_data
         else:
             payload = qp
             headers = self._make_headers()

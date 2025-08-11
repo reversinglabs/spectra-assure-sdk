@@ -37,7 +37,7 @@
     ]
 
     dependencies = [
-        "requests",
+        "requests==2.32.2",
     ]
 
 [project.urls]
@@ -47,9 +47,9 @@
 
 [project.optional-dependencies]
 dev = [
-    "black==24.4.2",
-    "pylint==3.2.2",
-    "pylama==8.4.1",
+    "black>=24.4.2",
+    "pylint>=3.2.2",
+    "pylama>=8.4.1",
 ]
 
 [tool.hatch.version]

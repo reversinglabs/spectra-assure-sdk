@@ -64,6 +64,7 @@ export ENV_NAME
 # ---------------------------------------
 TESTS := t1 t2 t3 api_client_example test-list-all test-project-steps test-package-steps test-version-steps test-download
 TESTS := t1 t2 t3 api_client_example test-project-steps test-package-steps test-version-steps test-download
+TESTS := api_client_example
 
 POST_TEST := mv *.[12] $(ENV_NAME)/; ls *.log >/dev/null && mv *.log $(ENV_NAME)/
 

@@ -79,7 +79,7 @@ class SpectraAssureApiOperationsScan(  # pylint: disable=too-many-ancestors
          - project: str, mandatory.
          - package: str, mandatory.
          - version: str, mandatory.
-         - file_path: str, mandatory, must exist
+         - file_path: str, mandatory, must exist for files, but not for url or purl.
          - auto_adapt_to_throttle: bool, default False, optional.
          - qp: Dict[str,Any] , optional.
 

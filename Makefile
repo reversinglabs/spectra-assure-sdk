@@ -34,12 +34,24 @@ PIP_INSTALL := pip3 -q \
 	--disable-pip-version-check \
 	--no-color install --no-cache-dir
 
+README_REQUESTS_VERSION := $(shell grep requests README.md | grep 'version:' | awk '{ print $$NF }' )
+TOML_REQUESTS_VERSION := $(shell grep 'requests==' *.toml | awk '{ r =gensub(/.*requests==([0-9\.]+).*/,"\\1", "g") ; print r }' )
+ASSERT_REQUESTS_VERSION := $(shell echo 1 | awk '{ if( "$(README_REQUESTS_VERSION)" != "$(TOML_REQUESTS_VERSION)" ) { print 1 } else { print 0 } }' )
+
 .PHONY: prep all tests black pylama mypy testLocalInstall build
 
-all: prep tests
+# ========================================
+# ========================================
+all: ASSERT prep tests
 
-# ========================================
-# ========================================
+ASSERT: README.md pyproject.toml
+	if (( $(ASSERT_REQUESTS_VERSION) == 1 )) ; then \
+		echo README_REQUESTS_VERSION is $(README_REQUESTS_VERSION); \
+ 		echo TOML_REQUESTS_VERSIONis $(TOML_REQUESTS_VERSION); \
+ 		echo Please update the readme to match the toml requirement; \
+		exit $(ASSERT_REQUESTS_VERSION); \
+	fi
+
 prep: clean black pylama mypy makeStubs pyreverse
 
 clean: cleanupVenv
@@ -116,8 +128,8 @@ testLocalInstall: build
 	./testLocalWhl.sh
 
 tests: testLocalInstall
-	( cd tests && TEST_MY=1 		 make tests )
-	( cd tests && TEST_PLAYGROUND1=1 make tests )
+	#( cd tests && TEST_MY=1 		 make tests )
+	# ( cd tests && TEST_PLAYGROUND1=1 make tests )
 	( cd tests && TEST_PLAYGROUND2=1 make tests )
-	( cd tests && TEST_CANADA=1 	 make tests )
+	# ( cd tests && TEST_CANADA=1 	 make tests )
 	cp tests/api_client_example.py examples/

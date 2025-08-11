@@ -55,7 +55,7 @@ With the Spectra Assure Portal, you can:
 ## Requirements and dependencies
 
 - Python (minimal version: 3.10)
-- [requests](https://pypi.org/project/requests/) (version not critical)
+- [requests](https://pypi.org/project/requests/); version: 2.32.2
 - An active Spectra Assure Portal account. If you don't already have a Portal account, you may need to contact the administrator of your Portal organization to [invite you](https://docs.secure.software/portal/members#invite-a-new-member). Alternatively, if you're not a Spectra Assure customer yet, you can [contact ReversingLabs](https://docs.secure.software/portal/#get-access-to-securesoftware-portal) to sign up for a Portal account.
 - A [Personal Access Token](https://docs.secure.software/api/generate-api-token) generated for your Spectra Assure Portal account.
 
@@ -470,7 +470,7 @@ the API responds with an error and the download capacity remains unaffected.
 
 [`SpectraAssureApiOperationsSync`](./doc/sync.md)
 
-**Sync a version.**
+**Sync a version.** (Rescan a version)
 
 |        | Group | Project | Package | Version |
 | --     | --    |    --   |  --     |    --   |
@@ -522,7 +522,7 @@ the API responds with an error and the download capacity remains unaffected.
 | Targets | ✔️ (optional)  |         |         |         |
 | Query parameters |    |  |         |         |
 
-[`SpectraAssureApiOperationsListGroups`](./doc/istGroups.md)
+[`SpectraAssureApiOperationsListGroups`](./doc/listGroups.md)
 
 **List the groups you have access to in the current organization .**
 
@@ -530,6 +530,15 @@ the API responds with an error and the download capacity remains unaffected.
 | --     | --    |    --   |  --     |    --   |
 | Targets |      |         |         |         |
 | Query parameters |    |  |         |         |
+
+[`SpectraAssureApiOperationsUrlImport`](./doc/urlImport.md)
+
+**Import and scan a new version from a URL.**
+
+|        | Group | Project | Package | Version |
+| --     | --    |    --   |  --     |    --   |
+| Targets |      |         |         | ✔️      |
+| Query parameters |    |  |         | ✔️      |
 
 ## Support
 
@@ -550,6 +559,7 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
+| v1.0.8  | add support for url-import. |
 | v1.0.7  | add support for listGroups. |
 | v1.0.6  | add support for usage. |
 | v1.0.5  | add support for different hosts than the default `my.secure.software. |
