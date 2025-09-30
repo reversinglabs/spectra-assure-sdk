@@ -55,7 +55,7 @@ With the Spectra Assure Portal, you can:
 ## Requirements and dependencies
 
 - Python (minimal version: 3.10)
-- [requests](https://pypi.org/project/requests/); version: 2.32.2
+- [requests](https://pypi.org/project/requests/); version: 2.32.5
 - An active Spectra Assure Portal account. If you don't already have a Portal account, you may need to contact the administrator of your Portal organization to [invite you](https://docs.secure.software/portal/members#invite-a-new-member). Alternatively, if you're not a Spectra Assure customer yet, you can [contact ReversingLabs](https://docs.secure.software/portal/#get-access-to-securesoftware-portal) to sign up for a Portal account.
 - A [Personal Access Token](https://docs.secure.software/api/generate-api-token) generated for your Spectra Assure Portal account.
 

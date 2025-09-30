@@ -37,7 +37,7 @@
     ]
 
     dependencies = [
-        "requests==2.32.2",
+        "requests==2.32.5",
     ]
 
 [project.urls]
@@ -45,12 +45,12 @@
     "Home Page" = "https://github.com/reversinglabs/spectra-assure-sdk/"
     "Repository" = "https://github.com/reversinglabs/spectra-assure-sdk/"
 
-[project.optional-dependencies]
-dev = [
-    "black>=24.4.2",
-    "pylint>=3.2.2",
-    "pylama>=8.4.1",
-]
+# [project.optional-dependencies]
+# dev = [
+#     "black>=25.1.0",
+#     "pylint>=3.3.8",
+#     "pylama>=8.4.1",
+# ]
 
 [tool.hatch.version]
     path = "spectra_assure_api_client/version.py"
