@@ -1,6 +1,7 @@
 from typing import (
     Any,
     Dict,
+    List,
     Tuple,
 )
 
@@ -10,6 +11,7 @@ import logging
 import os
 import json
 import sys
+import uuid
 
 from spectra_assure_api_client import (
     SpectraAssureApiOperations,
@@ -561,6 +563,130 @@ def version_rl_safe_with_download_and_rename(
     return download_ok, file_path
 
 
+def makeFindQueries():
+    queries = {}
+
+    # ==================================
+    myUuid = str(uuid.uuid4())
+    myPurl = "pkg:pypi/numpy@2.3.5"
+    query: Dict[str, str] = {
+        "uuid": myUuid,
+        "purl": myPurl,
+    }
+    queries["FindByPurlOne"] = {
+        "query": query,
+        "qp": {},
+    }
+
+    # ==================================
+    myUuid = str(uuid.uuid4())
+    myPurl = "pkg:pypi/numpy"
+    query: Dict[str, str] = {
+        "uuid": myUuid,
+        "purl": myPurl,
+    }
+    queries["FindByPurlMany"] = {
+        "query": query,
+        "qp": {
+            "offset": 1,
+            "limit": 1,
+            "compact": False,
+        },
+    }
+
+    # ==================================
+    myUuid = str(uuid.uuid4())
+    sha256Hash = "fffe29a1ef00883599d1dc2c51aa2e5d80afe49523c261a74933df395c15c520"
+    query: Dict[str, str] = {
+        "uuid": "1.2.3",
+        "sha256": sha256Hash,
+    }
+    queries["FindBySha256"] = {
+        "query": query,
+        "qp": {},
+    }
+
+    return queries
+
+
+def community_find_packages(
+    api_client: SpectraAssureApiOperations,
+):
+    print("community_find_packages")
+
+    for qName, query in makeFindQueries().items():
+
+        post_data: List[Any] = [query["query"]]
+        qp = query["qp"]
+
+        print(f"qp: {qp}; post_data: {post_data}")
+
+        result = api_client.community_find_packages(
+            auto_adapt_to_throttle=True,
+            post_data=post_data,
+            **qp,
+        )
+
+        s = f"query: {qName} {query} gives:"
+        print(s)
+
+        if result.status_code == 200:
+            print(json.dumps(json.loads(result.text), indent=2))
+
+    return None
+
+
+def community_report_package(
+    api_client: SpectraAssureApiOperations,
+):
+    qp: Any = None
+    repository = "pypi"
+    package = "numpy"
+    namespace = ""
+    # version = "2.3.5"
+    print(f"query: pkg:{repository}/{namespace}/{package}")
+
+    result = api_client.community_report_package(
+        repository=repository,
+        package=package,
+        namespace=namespace,
+        # version=version,
+        qp=qp,
+        auto_adapt_to_throttle=True,
+    )
+
+    if result.status_code == 200:
+        print(json.dumps(json.loads(result.text), indent=2))
+
+    return None
+
+
+def community_report_version(
+    api_client: SpectraAssureApiOperations,
+):
+    qp: Any = None
+    repository = "pypi"
+    package = "numpy"
+    namespace = ""
+    version = "2.3.5"
+
+    print(f"query: pkg:{repository}/{namespace}/{package}@{version}")
+
+    result = api_client.community_report_version(
+        repository=repository,
+        package=package,
+        namespace=namespace,
+        version=version,
+        qp=qp,
+        auto_adapt_to_throttle=True,
+    )
+
+    if result.status_code == 200:
+        print(json.dumps(json.loads(result.text), indent=2))
+
+    return None
+
+
 def walk_all_project_package_version(
     api_client: SpectraAssureApiOperations,
     limit_projects: int = 2,
@@ -665,9 +791,9 @@ def x_main() -> None:
 
     host = os.getenv(f"{prefix}HOST")
     server = os.getenv(f"{prefix}SERVER")
-    organization = os.getenv(f"{prefix}ORG")
-    group = os.getenv(f"{prefix}GROUP")
-    token = os.getenv(f"{prefix}ACCESS_TOKEN")
+    organization = str(os.getenv(f"{prefix}ORG"))
+    group = str(os.getenv(f"{prefix}GROUP"))
+    token = str(os.getenv(f"{prefix}ACCESS_TOKEN"))
 
     api_client = make_api_client(
         host=host,
@@ -851,6 +977,16 @@ def x_main() -> None:
             api_client=api_client,
             project=new_project,
         )
+
+    community_find_packages(
+        api_client=api_client,
+    )
+    community_report_package(
+        api_client=api_client,
+    )
+    community_report_version(
+        api_client=api_client,
+    )
 
     print("Done")
 

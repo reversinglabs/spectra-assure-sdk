@@ -172,40 +172,77 @@ class SpectraAssureApiOperationsBase(
         version: str | None = None,
         report_type: str | None = None,
     ) -> str:
-        what = self._what(
+        what = self._what(  # enum: 'group', 'project', 'package', 'version'
             project=project,
             package=package,
             version=version,
         )
-        # action_base + /pkg:rl/{project}/{package}@{version}
+        # action_base + tail:
+        # tail = /pkg:rl/{project}/{package}@{version}
+        # note when using namespace here the namespace is already part of the package parameter
+
+        # https://{portalUrl}/{community-api}/find/packages
+        #   with: community-api: 'api/public/v1/community'
 
         base = self._render_action_org_group_url(action)
+        tail = ""
         if what == "group":
             return base
 
         assert project is not None
-        base = base + "/pkg:rl/" + project
+        tail = tail + "/pkg:rl/" + project  # now we have: /pkg:rl/{project}
         if what == "project":
-            return base
+            return base + tail
 
         assert package is not None
-        base = base + "/" + package
+        # namespace is embedded in package when using a namespace
+
+        tail = tail + "/" + package  # now we have: /pkg:rl/{project}/{package}
         if what == "package":
-            return base
+            return base + tail
 
         assert version is not None
-        base = base + "@" + version
+        tail = tail + "@" + version  # now we have: /pkg:rl/{project}/{package}@{version}
+
         if what == "version":
             if action not in ["report"]:
-                return base
+                return base + tail
+            else:
+                # note report has the report_type in the middle of the url (not orthogonal)
+                tail = f"/{report_type}{tail}"
+                return base + tail
 
-            # note report has the report_type in the middle of the url (not orthogonal)
-            tail = f"/{report_type}/pkg:rl/{project}/{package}@{version}"
-            return self._render_action_org_group_url(action) + tail
-
-        # https://{portalUrl}/api/public/v1/pack/safe/{organization}/{group}/pkg:rl/{project}/{package}@{version}
         msg = f"'_make_current_url' {action} with unsupported parameters: {what}"
         raise SpectraAssureInvalidAction(message=msg)
+
+    def _make_current_url_community(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        action: str,
+        repository: str | None = None,  # mandatory for community_report_*
+        package: str | None = None,  # mandatory, may have a namespace embedded
+        version: str | None = None,  # optional
+    ) -> str:
+        # action_base + tail:
+        base = self._render_action_org_group_url(action)
+        tail = ""
+
+        if repository is None:
+            return base + tail
+
+        assert repository is not None
+        tail = tail + f"/pkg:{repository}"  # now we have: /pkg:{repo}
+
+        assert package is not None
+        tail = tail + f"/{package}"  # now we have: /pkg:{repo}/{package} with a optional namespace in front of package.
+
+        if version is None:
+            return base + tail
+
+        assert version is not None
+        tail = tail + "@" + version  # now we have: /pkg:{repo}/{package}@{version}
+
+        return base + tail
 
     # Public
 

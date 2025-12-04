@@ -128,8 +128,8 @@ testLocalInstall: build
 	./testLocalWhl.sh
 
 tests: testLocalInstall
-	#( cd tests && TEST_MY=1 		 make tests )
-	# ( cd tests && TEST_PLAYGROUND1=1 make tests )
+	( cd tests && TEST_MY=1 		 make tests )
+	( cd tests && TEST_PLAYGROUND1=1 make tests )
 	( cd tests && TEST_PLAYGROUND2=1 make tests )
-	# ( cd tests && TEST_CANADA=1 	 make tests )
+	( cd tests && TEST_CANADA=1 	 make tests )
 	cp tests/api_client_example.py examples/

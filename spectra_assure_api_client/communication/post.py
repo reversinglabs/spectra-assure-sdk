@@ -25,7 +25,7 @@ class SpectraAssureApiPost(
         self,
         *,
         url: str,
-        payload: Dict[str, Any] | None,
+        payload: Any,
         headers: Dict[str, str],
         auto_adapt_to_throttle: bool = False,
         file_path: Any | None = None,
@@ -36,8 +36,9 @@ class SpectraAssureApiPost(
         if auto_adapt_to_throttle or self.auto_adapt_to_throttle:
             max_try = 5
 
-        logger.debug("%s", url)
-        logger.debug("%s", qp)
+        logger.debug("url: %s", url)
+        logger.debug("query params: %s", qp)
+        logger.debug("payload %s", payload)
 
         while current_try < max_try:
             current_try += 1
@@ -59,7 +60,7 @@ class SpectraAssureApiPost(
                     headers=headers,
                     timeout=self.timeout,
                     proxies=self.proxies,
-                    json=payload,  # payload here is dict
+                    json=payload,  # payload here is dict/list
                 )
 
             if response.status_code != 429:
@@ -83,7 +84,8 @@ class SpectraAssureApiPost(
         self,
         *,
         url: str,
-        payload: Dict[str, Any] | None,
+        # payload: Dict[str, Any] | None,
+        payload: Any,
         headers: Dict[str, str],
         auto_adapt_to_throttle: bool = False,
         file_path: Any | None = None,
@@ -107,7 +109,8 @@ class SpectraAssureApiPost(
         *,
         url: str,
         headers: Dict[str, str],
-        payload: Dict[str, Any],
+        # payload: Dict[str, Any] | None,
+        payload: Any,
         auto_adapt_to_throttle: bool = False,
         file_path: str | None = None,
         **qp: Any,
@@ -133,7 +136,8 @@ class SpectraAssureApiPost(
         url: str,
         auto_adapt_to_throttle: bool,
         file_path: str | None = None,
-        post_data: Dict[str, Any] | None = None,
+        # post_data: Dict[str, Any] | None = None,
+        post_data: Any = None,
         **qp: Any,
     ) -> requests.Response:
         logger.debug(url)
@@ -156,6 +160,10 @@ class SpectraAssureApiPost(
             headers = self._make_headers(h)
             payload = None
         elif action == "url_import":
+            assert post_data is not None
+            headers = self._make_headers()
+            payload = post_data
+        elif action == "community_find_packages":
             assert post_data is not None
             headers = self._make_headers()
             payload = post_data

@@ -61,10 +61,17 @@ export ENV_FILE
 export ENV_NAME
 # export CONF_FILE
 
-# ---------------------------------------
-TESTS := t1 t2 t3 api_client_example test-list-all test-project-steps test-package-steps test-version-steps test-download
-TESTS := t1 t2 t3 api_client_example test-project-steps test-package-steps test-version-steps test-download
-TESTS := api_client_example
+BASIC_TESTS		:= t1 t2 t3
+COMMUNITY_TESTS := test-community-find-packages test-community-report-package test-community-report-version
+STEPS_TESTS 	:= test-project-steps test-package-steps test-version-steps
+LIST_ALL 		:= list_all # a very long test not normally needed
+DOWNLOAD_TESTS 	:= test-download
+
+TESTS 			:= $(BASIC_TESTS) \
+					$(STEPS_TESTS) \
+					$(TEST_DOWNLOAD) \
+					$(COMMUNITY_TESTS) \
+					api_client_example
 
 POST_TEST := mv *.[12] $(ENV_NAME)/; ls *.log >/dev/null && mv *.log $(ENV_NAME)/
 
@@ -85,8 +92,10 @@ test_clean:
 	mkdir -p ./downloads
 	mkdir -p ./input
 
+# this breaks under globalprotext use a local file
 ./input/$(ARTIFACT_ERR):
-	curl -o ./input/$(ARTIFACT_ERR) -sS https://secure.eicar.org/$(ARTIFACT_ERR)
+	cp ~/Downloads/eicar/$(ARTIFACT_ERR) ./input/
+	# curl -o ./input/$(ARTIFACT_ERR) -sS https://secure.eicar.org/$(ARTIFACT_ERR)
 
 # test using the generated stubs
 mypy-stubs:
@@ -151,6 +160,21 @@ test-version-steps:
 	$(POST_TEST)
 
 test-download:
+	rm -rf $(VENV)
+	./test-one.sh $@.py 2>$@.2 | tee $@.1
+	$(POST_TEST)
+
+test-community-find-packages:
+	rm -rf $(VENV)
+	./test-one.sh $@.py 2>$@.2 | tee $@.1
+	$(POST_TEST)
+
+test-community-report-package:
+	rm -rf $(VENV)
+	./test-one.sh $@.py 2>$@.2 | tee $@.1
+	$(POST_TEST)
+
+test-community-report-version:
 	rm -rf $(VENV)
 	./test-one.sh $@.py 2>$@.2 | tee $@.1
 	$(POST_TEST)

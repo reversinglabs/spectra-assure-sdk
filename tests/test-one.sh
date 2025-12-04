@@ -50,6 +50,7 @@ run_test()
     eval source ${ENV_FILE}
 
     ARGS="--autoAdaptToThrottle --downloadPath=./${ddd} --project=mbootTestProject --package=myPackage"
+    ARGS="--autoAdaptToThrottle"
 
     python3 $1 ${ARGS}
     exit $?

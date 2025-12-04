@@ -15,6 +15,7 @@ server = os.getenv(f"{prefix}SERVER")  # may be None
 
 organization = os.getenv(f"{prefix}ORG", "")
 group = os.getenv(f"{prefix}GROUP", "")
+
 token = os.getenv(f"{prefix}ACCESS_TOKEN", "")
 
 configFile = "./myConfig.json"

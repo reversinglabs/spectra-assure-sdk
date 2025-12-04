@@ -17,6 +17,14 @@ from spectra_assure_api_client.operations.rl_safe import SpectraAssureApiOperati
 from spectra_assure_api_client.operations.usage import SpectraAssureApiOperationsUsage
 from spectra_assure_api_client.operations.listGroups import SpectraAssureApiOperationsListGroups
 from spectra_assure_api_client.operations.url_import import SpectraAssureApiOperationsUrlImport
+from spectra_assure_api_client.operations.community_find_packages import SpectraAssureApiOperationsCommunityFindPackages
+from spectra_assure_api_client.operations.community_report_package import (
+    SpectraAssureApiOperationsCommunityReportPackage,
+)
+from spectra_assure_api_client.operations.community_report_version import (
+    SpectraAssureApiOperationsCommunityReportVersion,
+)
+
 
 # pseudo operation
 from spectra_assure_api_client.operations.download import SpectraAssureApiOperationsDownload
@@ -42,5 +50,8 @@ class SpectraAssureApiOperations(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsUsage,  # list usage information
     SpectraAssureApiOperationsListGroups,  # list the groups in this organization that we have access to
     SpectraAssureApiOperationsUrlImport,  # scan a file (create a version) via a url
+    SpectraAssureApiOperationsCommunityFindPackages,  # community find packages
+    SpectraAssureApiOperationsCommunityReportPackage,  # Community report on a [Namespace/]Package[@version]
+    SpectraAssureApiOperationsCommunityReportVersion,  # Community report on a [Namespace/]Package[@version]
 ):
     """A class that combines all operations"""

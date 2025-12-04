@@ -382,7 +382,7 @@ Any invalid parameters will be automatically filtered out.
 
 |        | Group | Project | Package | Version |
 | --     | --    |    --   |  --     |    --   |
-| Targets |  |  |  | ✔️ |
+| Targets |  |  |  | &#10003; |
 | Query parameters |  |  |  |  |
 
 
@@ -392,8 +392,8 @@ Any invalid parameters will be automatically filtered out.
 
 |        | Group | Project | Package | Version |
 | --     | --    |    --   |  --     |    --   |
-| Targets |  | ✔️ | ✔️ |  |
-| Query parameters |  | ✔️ | ✔️ |  |
+| Targets |  | &#10003; | &#10003; |  |
+| Query parameters |  | &#10003; | &#10003; |  |
 
 
 [`SpectraAssureApiOperationsDelete`](./doc/delete.md)
@@ -402,8 +402,8 @@ Any invalid parameters will be automatically filtered out.
 
 |        | Group | Project | Package | Version |
 | --     | --    |    --   |  --     |    --   |
-| Targets |  | ✔️ | ✔️ | ✔️ |
-| Query parameters |  |  |  | ✔️ |
+| Targets |  | &#10003; | &#10003; | &#10003; |
+| Query parameters |  |  |  | &#10003; |
 
 
 [`SpectraAssureApiOperationsDownload`](./doc/download.md)
@@ -423,122 +423,166 @@ the API responds with an error and the download capacity remains unaffected.
 
 **Edit details for a project, package, or version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  | ✔️ | ✔️ | ✔️ |
-| Query parameters |  | ✔️ | ✔️ | ✔️ |
+|                  | Group | Project  | Package  | Version  |
+| --               | --    |    --    |  --      |    --    |
+| Targets          |       | &#10003; | &#10003; | &#10003; |
+| Query parameters |       | &#10003; | &#10003; | &#10003; |
 
 
 [`SpectraAssureApiOperationsList`](./doc/list.md)
 
 **List all groups, projects, packages, and versions.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets | ✔️ | ✔️ | ✔️ | ✔️ |
-| Query parameters |  |  |  |  |
+|                  | Group    | Project  | Package  | Version  |
+| --               | --       |    --    |  --      |    --    |
+| Targets          | &#10003; | &#10003; | &#10003; | &#10003; |
+| Query parameters |          |          |          |          |
 
 
 [`SpectraAssureApiOperationsReport`](./doc/report.md)
 
 **Download analysis report for a version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  |  |  | ✔️ |
-| Query parameters |  |  |  | ✔️ |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         | &#10003; |
 
 
 [`SpectraAssureApiOperationsScan`](./doc/scan.md)
 
 **Upload and scan a new version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  |  |  | ✔️ |
-| Query parameters |  |  |  | ✔️ |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         | &#10003; |
 
 
 [`SpectraAssureApiOperationsStatus`](./doc/status.md)
 
 **Show analysis status for a version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  |  |  | ✔️ |
-| Query parameters |  |  |  | ✔️ |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         | &#10003; |
 
 [`SpectraAssureApiOperationsSync`](./doc/sync.md)
 
 **Sync a version.** (Rescan a version)
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  |  |  | ✔️ |
-| Query parameters |  |  |  |  |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         |          |
 
 [`SpectraAssureApiOperationsApprove`](./doc/approve.md)
 
 **Approve a version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |      |         |         | ✔️      |
-| Query parameters |    |  |         | ✔️      |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         | &#10003; |
 
 [`SpectraAssureApiOperationsReject`](./doc/reject.md)
 
 **Reject a version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |      |         |         | ✔️      |
-| Query parameters |    |  |         | ✔️      |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         | &#10003; |
 
 [`SpectraAssureApiOperationsRevoke`](./doc/revoke.md)
 
 **Revoke a previously approved version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |      |         |         | ✔️      |
-| Query parameters |    |  |         | ✔️      |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         | &#10003; |
 
 [`SpectraAssureApiOperationsRlSafe`](./doc/rl_safe.md)
 
 **Create a download link for the [RL-SAFE archive](https://docs.secure.software/concepts/analysis-reports#rl-safe-archive).**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |      |         |         | ✔️      |
-| Query parameters |    |  |         | ✔️      |
+|                  | Group | Project | Package | Version  |
+| --               | --    |    --   |  --     |    --    |
+| Targets          |       |         |         | &#10003; |
+| Query parameters |       |         |         | &#10003; |
 
 [`SpectraAssureApiOperationsUsage`](./doc/usage.md)
 
 **List the current analysis capacity usage for the organization or group .**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets | ✔️ (optional)  |         |         |         |
-| Query parameters |    |  |         |         |
+|                  | Group | Project | Package | Version |
+| --               | --    |    --   |  --     |    --   |
+| Targets          | &#10003; (optional) |  |  |         |
+| Query parameters |       |         |         |         |
 
 [`SpectraAssureApiOperationsListGroups`](./doc/listGroups.md)
 
 **List the groups you have access to in the current organization .**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |      |         |         |         |
-| Query parameters |    |  |         |         |
+|                  | Group | Project | Package | Version |
+| --               | --    |    --   |  --     |    --   |
+| Targets          |       |         |         |         |
+| Query parameters |       |         |         |         |
 
 [`SpectraAssureApiOperationsUrlImport`](./doc/urlImport.md)
 
 **Import and scan a new version from a URL.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |      |         |         | ✔️      |
-| Query parameters |    |  |         | ✔️      |
+|                  | Group | Package | Version |
+| --               | --    |  --     |    --   |
+| Targets          |       |         |         |
+| Query parameters |  &#10003; | &#10003; | &#10003;      |
+
+
+[`SpectraAssureApiOperationsCommunityFindPackages`](./doc/community-find-packages.md)
+
+**Find Secure.Software Community information regarding packages.**
+
+|                  | Group | Package | Version | Community |
+| --               | --    |  --     |    --   | --        |
+| Targets          |       |         |         | &#10003;  |
+| Query parameters |       |         |         | &#10003;  |
+
+
+[`SpectraAssureApiOperationsCommunityReportPackage`](./doc/community-report-package.md)
+
+**Find Secure.Software Community information regarding packages.**
+
+|                  | Group | Package | Version | Community |
+| --               | --    |  --     |    --   | --        |
+| Targets          |       |         |         | &#10003;  |
+| Query parameters |       |         |         | &#10003;  |
+
+
+[`SpectraAssureApiOperationsCommunityReportVersion`](./doc/community-report-version.md)
+
+**Find Secure.Software Community information regarding versions.**
+
+|                  | Group | Package | Version | Community |
+| --               | --    |  --     |    --   | --        |
+| Targets          |       |         |         | &#10003;  |
+| Query parameters |       |         |         | &#10003;  |
+
+
+## Community repositories
+
+Current (Dec. 2025) repository names are:
+
+- `gem`
+- `npm`
+- `nuget`
+- `psgallery`
+- `pypi`
+- `vsx`
+
+See [communities](https://secure.software/communities)
 
 ## Support
 
@@ -559,6 +603,8 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
+| v1.0.10 | add support for community queries. |
+| v1.0.9  | update to the latest python `requests` version. |
 | v1.0.8  | add support for url-import. |
 | v1.0.7  | add support for listGroups. |
 | v1.0.6  | add support for usage. |

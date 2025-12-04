@@ -271,6 +271,9 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
 
         tail = f"api/public/{self.api_version}"
 
+        # https://{portalUrl}/api/public/v1/create/{organization}/{group}/pkg:rl/{project}/{package}
+        # https://{portalUrl}/api/public/v1/community/...
+
         # first the special cases
         if self.server in ["trial", "playground"]:
             return f"{self.api_proto}://{self.server}.{self.api_domain}/{tail}"
@@ -292,6 +295,20 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
         action: str,
     ) -> str:
         assert len(str(action)) > 0, "Fatal: the action cannot be empty"
+
+        transl: Dict[str, str] = {
+            "community_find_packages": "community/find/packages",
+            "community_report_version": "community/report/version",
+            "community_report_package": "community/report/package",
+        }
+
+        if action in transl.keys():
+            t = transl[action]
+            s = f"{self.base_url}/{t}"
+            logger.debug("base url is now: %s", s)
+            return s
+
+        # community needs no organization or group params
         assert len(str(self.organization)) > 0, "Fatal: the organization is not set"
         assert len(str(self.group)) > 0, "Fatal: the group is not set"
 
