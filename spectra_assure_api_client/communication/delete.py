@@ -1,15 +1,13 @@
 import logging
 from typing import (
     Any,
-    Dict,
-    Tuple,
 )
 
 import requests
 
 from .core import (
-    SpectraAssureApiCore,
     Executor,
+    SpectraAssureApiCore,
 )
 
 logger = logging.getLogger(__name__)
@@ -18,13 +16,12 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiDelete(
     SpectraAssureApiCore,
 ):
-
     def _delete_with_retry(
         self,
         *,
         url: str,
-        payload: Dict[str, Any] | None,
-        headers: Dict[str, str],
+        payload: dict[str, Any] | None,
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
     ) -> requests.Response | None:
         executor = Executor(
@@ -47,7 +44,7 @@ class SpectraAssureApiDelete(
         self,
         *,
         url: str,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> requests.Response:
@@ -71,10 +68,10 @@ class SpectraAssureApiDelete(
         self,
         *,
         url: str,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
-    ) -> Tuple[int, Any]:
+    ) -> tuple[int, Any]:
         try:
             r = self._basic_delete(
                 url=url,

@@ -37,20 +37,13 @@
     ]
 
     dependencies = [
-        "requests==2.32.5",
+        "requests==2.33.1",
     ]
 
 [project.urls]
     "Bug Tracker" = "https://github.com/reversinglabs/spectra-assure-sdk/issues"
     "Home Page" = "https://github.com/reversinglabs/spectra-assure-sdk/"
     "Repository" = "https://github.com/reversinglabs/spectra-assure-sdk/"
-
-# [project.optional-dependencies]
-# dev = [
-#     "black>=25.1.0",
-#     "pylint>=3.3.8",
-#     "pylama>=8.4.1",
-# ]
 
 [tool.hatch.version]
     path = "spectra_assure_api_client/version.py"
@@ -75,9 +68,51 @@
         "/.gitignore",
     ]
 
-[tool.pylama]
-    max_line_length = 120
-    skip = "*/.pytest_cache/*, */.tox/*, */mypy_cache/*, ./dist, ./docs"
-
-[tool.black]
+[tool.ruff]
+    target-version = "py310"
     line-length = 120
+    exclude = [
+        ".direnv",
+        ".eggs",
+        ".git",
+        ".git-rewrite",
+        ".mypy_cache",
+        ".nox",
+        ".pants.d",
+        ".pytype",
+        ".ruff_cache",
+        ".svn",
+        ".tox",
+        ".venv",
+        "__pypackages__",
+        "_build",
+        "buck-out",
+        "build",
+        "dist",
+        "node_modules",
+        "venv",
+        "vtmp",
+    ]
+
+[tool.ruff.lint]
+    select = [
+        "E",      # pycodestyle errors
+        "W",      # pycodestyle warnings
+        "F",      # Pyflakes
+        "UP",     # pyupgrade
+        "B",      # flake8-bugbear
+        "C4",     # flake8-comprehensions
+        "I",      # isort
+        "S",      # flake8-bandit
+        "T20",    # flake8-print
+        "PT",     # flake8-pytest-style
+        "Q",      # flake8-quotes
+        # "N",      # pep8-naming
+        # "D",      # pydocstyle
+    ]
+    ignore = [
+        "T201", # print found
+        "PT028", # Test function parameter has default argument
+        "S101", # Use of `assert` detected
+        "S324", # Probable use of insecure hash functions in `hashlib`: `sha1`
+    ]

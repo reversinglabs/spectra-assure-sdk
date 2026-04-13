@@ -1,23 +1,19 @@
 #! /usr/bin/env python3
 
+# import os
+import json
+import logging
+import sys
+import uuid
 from typing import (
-    Dict,
-    List,
     Any,
 )
 
-import sys
-
-# import os
-import json
-import uuid
-import logging
+import startProg
 
 from spectra_assure_api_client import (
     SpectraAssureApiOperations,
 )
-
-import startProg
 
 logger = logging.getLogger()
 
@@ -33,24 +29,24 @@ query types (all need uuid as a param)
 """
 
 
-def makeFindQueries():
-    queries = {}
+def makeFindQueries() -> dict:
+    queries: dict = {}
 
     # ==================================
-    myUuid = str(uuid.uuid4())
-    myPurl = "pkg:pypi/numpy@2.3.5"
-    query: Dict[str, str] = {
-        "uuid": myUuid,
-        "purl": myPurl,
+    myuuid = str(uuid.uuid4())
+    mypurl = "pkg:pypi/numpy@2.3.5"
+    query: dict[str, str] = {
+        "uuid": myuuid,
+        "purl": mypurl,
     }
     # queries["FindByPurlOne"] = { "query": query,        "qp": {},    }
 
     # ==================================
-    myUuid = str(uuid.uuid4())
-    myPurl = "pkg:pypi/numpy"
-    query: Dict[str, str] = {
-        "uuid": myUuid,
-        "purl": myPurl,
+    myuuid = str(uuid.uuid4())
+    mypurl = "pkg:pypi/numpy"
+    query: dict[str, str] = {
+        "uuid": myuuid,
+        "purl": mypurl,
     }
     queries["FindByPurlMany"] = {
         "query": query,
@@ -62,11 +58,11 @@ def makeFindQueries():
     }
 
     # ==================================
-    myUuid = str(uuid.uuid4())
-    sha256Hash = "fffe29a1ef00883599d1dc2c51aa2e5d80afe49523c261a74933df395c15c520"
-    query: Dict[str, str] = {
+    myuuid = str(uuid.uuid4())
+    sha256hash = "fffe29a1ef00883599d1dc2c51aa2e5d80afe49523c261a74933df395c15c520"
+    query: dict[str, str] = {
         "uuid": "1.2.3",
-        "sha256": sha256Hash,
+        "sha256": sha256hash,
     }
     # queries["FindBySha256"] = {"query": query,"qp": {},}
 
@@ -76,8 +72,8 @@ def makeFindQueries():
 def testCommunityFind(
     aOperationsHandle: SpectraAssureApiOperations,
 ) -> bool:
-    for qName, query in makeFindQueries().items():
-        post_data: List[Any] = [query["query"]]
+    for qname, query in makeFindQueries().items():
+        post_data: list[Any] = [query["query"]]
         qp = query["qp"]
         logger.debug(f"qp: {qp}; post_data: {post_data}")
 
@@ -87,7 +83,7 @@ def testCommunityFind(
             **qp,
         )
 
-        s = f"query: {qName} {query} gives: {result.text}"
+        s = f"query: {qname} {query} gives: {result.text}"
         logger.debug(s)
         print(json.dumps(json.loads(result.text), indent=2))
 
@@ -96,9 +92,9 @@ def testCommunityFind(
 
 def main() -> None:
     SpectraAssureApiOperations.make_logger(my_logger=logger)
-    aOperationsHandle = startProg.startProg()
+    aoh = startProg.startProg()
 
-    r = testCommunityFind(aOperationsHandle)
+    r = testCommunityFind(aoh)
     if r is False:
         sys.exit(1)
     sys.exit(0)

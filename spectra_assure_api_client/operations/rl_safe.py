@@ -1,12 +1,12 @@
 import logging
 from pathlib import Path
+from typing import Any
 
-from typing import Any, Dict, Tuple
-
+from spectra_assure_api_client.communication.downloader import UrlDownloader
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
-from spectra_assure_api_client.communication.downloader import UrlDownloader
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
@@ -19,8 +19,8 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
     def qp_report(
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
         if what in ["version"]:
             for k in ["build"]:
                 if k in qp:
@@ -36,8 +36,7 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        https://docs.secure.software/api-reference/#tag/Version/operation/getRlSafeVersionArchive
+        """https://docs.secure.software/api-reference/#tag/Version/operation/getRlSafeVersionArchive
 
         Action:
             Execute a pack/safe api call
@@ -67,8 +66,8 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
 
         Notes:
             This will return a download url for the rl-safe archive (with limited validity)
-        """
 
+        """
         action = "rl_safe"
         what = self._what(
             project=project,
@@ -81,7 +80,7 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
             msg = f"'{action}' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_report(
+        valid_qp: dict[str, Any] = self.qp_report(
             what=what,
             **qp,
         )
@@ -107,9 +106,8 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         rename_archive: bool = True,
         **qp: Any,
-    ) -> Tuple[bool, str]:
-        """
-        Download a rl-safe archive
+    ) -> tuple[bool, str]:
+        """Download a rl-safe archive
 
         - by default rename it to <project>/<package>@<version>.rl-safe in the target_dir
         - always overwrite
@@ -122,7 +120,6 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
 
         return the path of the archive
         """
-
         data = self.rl_safe(
             project=project,
             package=package,
@@ -157,7 +154,10 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
         z = f"{target_dir}/{project}"
         p = Path(z)
         if p.exists() and not p.is_dir():
-            return False, f"item {z} exists but is not a directory, cannot create {new_file_name}"
+            return (
+                False,
+                f"item {z} exists but is not a directory, cannot create {new_file_name}",
+            )
 
         if not p.exists():
             p.mkdir()

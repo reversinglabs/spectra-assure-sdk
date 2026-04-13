@@ -1,6 +1,7 @@
 import logging
-import traceback
 import os
+import traceback
+
 from spectra_assure_api_client import SpectraAssureApiOperations
 
 logger = logging.getLogger()
@@ -18,23 +19,23 @@ group = os.getenv(f"{prefix}GROUP", "")
 
 token = os.getenv(f"{prefix}ACCESS_TOKEN", "")
 
-configFile = "./myConfig.json"
+configfile = "./myConfig.json"
 
 msg = f"host: {host}, server: {server}"
 logger.info(msg)
 
 try:
     # combine a config file with arguments
-    aHandle = SpectraAssureApiOperations(
+    ah = SpectraAssureApiOperations(
         host=host,
         server=server,
         organization=organization,
         group=group,
         token=token,
         no_ssl_verify=True,
-        config_file=configFile,
+        config_file=configfile,
     )
-    print(f"SpectraAssureApiOperations: {aHandle}")
+    print(f"SpectraAssureApiOperations: {ah}")
 
 except Exception as e:
     print(f"exception: {e}")

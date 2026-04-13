@@ -5,13 +5,10 @@
 # 'Revoked' package versions cannot have their status changed to 'Rejected'.
 # note: mostlikely 'Accepted' packages also cannot change to 'Rejected'.
 
+import logging
 from typing import (
     Any,
-    List,
-    Dict,
 )
-
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
@@ -19,23 +16,21 @@ from spectra_assure_api_client.communication.exceptions import (
 
 from .base import SpectraAssureApiOperationsBase
 
-
 logger = logging.getLogger(__name__)
 
 
 class SpectraAssureApiOperationsReject(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_reject(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
 
-        version_qp: List[str] = [
+        version_qp: list[str] = [
             "reason",
         ]
 
@@ -55,8 +50,7 @@ class SpectraAssureApiOperationsReject(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a reject() API call.
 
         Args:
@@ -79,7 +73,6 @@ class SpectraAssureApiOperationsReject(  # pylint: disable=too-many-ancestors
              - reason: str
 
         """
-
         action = "reject"
         what = self._what(
             project=project,
@@ -101,7 +94,7 @@ class SpectraAssureApiOperationsReject(  # pylint: disable=too-many-ancestors
             version=version,
         )
 
-        valid_qp: Dict[str, Any] = self.qp_reject(
+        valid_qp: dict[str, Any] = self.qp_reject(
             what=what,
             **qp,
         )

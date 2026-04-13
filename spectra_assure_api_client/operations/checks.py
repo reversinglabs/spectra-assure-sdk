@@ -6,6 +6,7 @@ from typing import (
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,6 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsChecks(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     def checks(
         self,
         *,
@@ -24,8 +24,7 @@ class SpectraAssureApiOperationsChecks(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,  # not actually used in checks
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a checks() API call
             for the specified 'project/package@version'.
 
@@ -48,7 +47,6 @@ class SpectraAssureApiOperationsChecks(  # pylint: disable=too-many-ancestors
             'checks' does not use any query parameters.
 
         """
-
         action = "checks"
         what = self._what(
             project=project,

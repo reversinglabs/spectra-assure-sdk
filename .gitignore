@@ -169,3 +169,4 @@ out/
 stubs/
 doc/.dot
 OLD/
+tests/export_profile.*.json

@@ -1,19 +1,14 @@
+import logging
+import os
 from typing import (
     Any,
-    Dict,
-    List,
 )
-
-import os
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
 
-
 from .base import SpectraAssureApiOperationsBase
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +16,15 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsScan(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_scan(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
 
-        version_qp: List[str] = [
+        version_qp: list[str] = [
             "build",
             "replace",
             "force",
@@ -69,8 +63,7 @@ class SpectraAssureApiOperationsScan(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             execute a scan() API call
             to upload a file and scan it, creating a version
             in a Portal project and package.
@@ -107,8 +100,8 @@ class SpectraAssureApiOperationsScan(  # pylint: disable=too-many-ancestors
             If re-scanning the same file/version, use 'replace'.
             If you have reached the max amount of versions allowed on the Portal,
               use 'force' to delete the oldest version and make room for the new one.
-        """
 
+        """
         action = "scan"
         what = self._what(
             project=project,
@@ -125,7 +118,7 @@ class SpectraAssureApiOperationsScan(  # pylint: disable=too-many-ancestors
             msg = f"'{action}' needs the specified file '{file_path}' to exist and be readable"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_scan(
+        valid_qp: dict[str, Any] = self.qp_scan(
             what=what,
             **qp,
         )

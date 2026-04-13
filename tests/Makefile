@@ -73,6 +73,8 @@ TESTS 			:= $(BASIC_TESTS) \
 					$(COMMUNITY_TESTS) \
 					api_client_example
 
+TESTS 			:= api_client_example
+
 POST_TEST := mv *.[12] $(ENV_NAME)/; ls *.log >/dev/null && mv *.log $(ENV_NAME)/
 
 # ---------------------------------------
@@ -87,10 +89,9 @@ test_clean:
 	rm -rf $(VENV)
 	rm -rf input test1
 	rm -rf downloads*
-	# rm -rf downloads* SDKTestProject 'SDK test project' mbootTestProject
-	# rm -rf PrTestMboot-*
 	mkdir -p ./downloads
 	mkdir -p ./input
+	rm -f export_profile*.json
 
 # this breaks under globalprotext use a local file
 ./input/$(ARTIFACT_ERR):

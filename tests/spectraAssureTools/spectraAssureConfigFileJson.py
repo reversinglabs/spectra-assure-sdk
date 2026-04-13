@@ -1,15 +1,12 @@
 # python 3
 
+import json
+import logging
 from typing import (
-    Dict,
     Any,
 )
 
-import json
-
 from .spectraAssureConfigFile import SpectraAssureConfigFile
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -20,20 +17,20 @@ class SpectraAssureConfigFileJson(
     def __init__(
         self,
         *,
-        configOptions: Dict[str, Dict[str, str]] | None = None,
+        configOptions: dict[str, dict[str, str]] | None = None,
         configFileJson: str | None = None,
     ) -> None:
         super().__init__(configOptions=configOptions)
 
         self._addConfigFile(configFileJson)
 
-    def _loadConfig(self) -> Dict[str, Any]:
-        data: Dict[str, Any] = {}
+    def _loadConfig(self) -> dict[str, Any]:
+        data: dict[str, Any] = {}
         if self.configFile is None:
             return data
 
         try:
-            with open(str(self.configFile), "r") as f:
+            with open(str(self.configFile)) as f:
                 d = json.load(f)
                 for k, v in d.items():
                     data[k] = v

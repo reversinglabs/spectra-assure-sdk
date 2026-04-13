@@ -1,18 +1,16 @@
 # https://{portalUrl}/api/public/v1/sync/{organization}/{group}/pkg:rl/{project}/{package}@{version}
 # no qp
 
+import logging
 from typing import (
     Any,
 )
-
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
 
 from .base import SpectraAssureApiOperationsBase
-
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +27,7 @@ class SpectraAssureApiOperationsSync(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,  # not actually used in sync
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a sync() API call.
 
         Args:
@@ -52,7 +49,6 @@ class SpectraAssureApiOperationsSync(  # pylint: disable=too-many-ancestors
             'sync' has no query parameters.
 
         """
-
         action = "sync"
         what = self._what(
             project=project,

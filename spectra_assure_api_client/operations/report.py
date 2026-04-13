@@ -1,13 +1,12 @@
 import logging
 from typing import (
     Any,
-    Dict,
-    List,
 )
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
@@ -17,24 +16,11 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
     @staticmethod
-    def current_report_names() -> List[str]:
-        return [  # (8)
-            "cyclonedx",
-            "rl-checks",
-            "rl-cve",  # not json
-            "rl-json",
-            "rl-uri",  # not json
-            "sarif",
-            "spdx",
-            "rl-summary-pdf",  # not json
-        ]
-
-    @staticmethod
     def qp_report(
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
         if what in ["version"]:
             for k in ["build"]:
                 if k in qp:
@@ -51,8 +37,7 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a report() API call
             for the specified 'project/package@version'
 
@@ -61,16 +46,6 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
          - package: str, mandatory.
          - version: str, mandatory.
          - report_type: str, mandatory
-           must be one of: (8)
-            - cyclonedx
-            - rl-checks
-            - rl-cve
-            - rl-uri
-            - rl-json
-            - sarif
-            - spdx
-            - rl-summary-pdf
-
          - auto_adapt_to_throttle: bool, default False, optional.
          - qp: Dict[str,Any] , optional.
 
@@ -96,8 +71,8 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
             expect 404 as a result when requesting the new report format.
             You will need to rescan the uploaded file to produce a new set of reports.
             After the rescan, you can request the report in the new format.
-        """
 
+        """
         action = "report"
         what = self._what(
             project=project,
@@ -111,13 +86,9 @@ class SpectraAssureApiOperationsReport(  # pylint: disable=too-many-ancestors
             raise SpectraAssureInvalidAction(message=msg)
 
         # note not al reports are in json format some are csv
-        r_type_list = sorted(self.current_report_names())
+        report_type = report_type.lower()
 
-        if report_type not in r_type_list:
-            msg = f"'report_type' is not valid, must be one of: {', '.join(r_type_list)}"
-            raise SpectraAssureInvalidAction(message=msg)
-
-        valid_qp: Dict[str, Any] = self.qp_report(
+        valid_qp: dict[str, Any] = self.qp_report(
             what=what,
             **qp,
         )

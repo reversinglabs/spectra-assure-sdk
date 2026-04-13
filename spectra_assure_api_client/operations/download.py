@@ -3,20 +3,20 @@ import os
 import time
 from typing import (
     Any,
-    Dict,
-    List,
-    Tuple,
 )
 
-from spectra_assure_api_client.communication.download_criteria import SpectraAssureDownloadCriteria
+from spectra_assure_api_client.communication.download_criteria import (
+    SpectraAssureDownloadCriteria,
+)
 from spectra_assure_api_client.communication.downloader import UrlDownloader
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
     SpectraAssureInvalidPath,
-    SpectraAssureUnexpectedNoDataFound,
     SpectraAssureNoDownloadUrlInResult,
+    SpectraAssureUnexpectedNoDataFound,
     SpectraAssureUnsupportedStrategy,
 )
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):
-
     def _prep_criteria(
         self,
         download_criteria: SpectraAssureDownloadCriteria | None = None,
@@ -62,10 +61,10 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         package: str,
         version: str,
         ud: UrlDownloader,
-        info: Dict[str, Dict[str, Any]],
+        info: dict[str, dict[str, Any]],
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
 
         what = self._what(
             project=project,
@@ -117,11 +116,11 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         *,
         project: str,
         package: str,
-        chosen: Dict[str, Dict[str, Any]],
+        chosen: dict[str, dict[str, Any]],
         target_dir: str,
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         # create a UrlDownloader to do the actual download
         ud = UrlDownloader(
             target_dir=target_dir,
@@ -156,7 +155,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         version: str | None = None,
         with_sort: bool = True,
         auto_adapt_to_throttle: bool = False,
-    ) -> List[str]:
+    ) -> list[str]:
 
         data = self.list(
             project=project,
@@ -182,8 +181,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         project: str,
         package: str,
         auto_adapt_to_throttle: bool = False,
-    ) -> List[str]:
-        version_list: List[str] = []
+    ) -> list[str]:
+        version_list: list[str] = []
 
         for version in self._list(
             project=project,
@@ -201,8 +200,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         package: str,
         version: str | None = None,
         auto_adapt_to_throttle: bool = False,
-    ) -> Dict[str, Dict[str, Any]]:
-        info_dict: Dict[str, Dict[str, Any]] = {}
+    ) -> dict[str, dict[str, Any]]:
+        info_dict: dict[str, dict[str, Any]] = {}
 
         if version is not None:
             logger.debug("we have a version as argument, return that")
@@ -227,8 +226,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         project: str,
         package: str,
         version: str,
-        skip: List[str],
-        info_dict: Dict[str, Dict[str, Any]],
+        skip: list[str],
+        info_dict: dict[str, dict[str, Any]],
     ) -> None:
         if info_dict[version]["analysis"].lower() != "done":
             # waiting on 'done', was already completed while fetching the VersionStatus data
@@ -257,7 +256,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         current_time += step_time
         return current_time
 
-    def _get_start_times_for_repeat(self) -> Tuple[int, int, int]:
+    def _get_start_times_for_repeat(self) -> tuple[int, int, int]:
         # prep time settings
         max_time = self.download_criteria.max_wait_time_for_scan_done
 
@@ -277,8 +276,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         package: str,
         version: str,
         auto_adapt_to_throttle: bool = False,
-    ) -> Dict[str, Any]:
-        a_dict: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        a_dict: dict[str, Any] = {}
 
         current_time, step_time, max_time = self._get_start_times_for_repeat()
 
@@ -293,7 +292,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
                 msg = f"NO DATA FOUND with status({project},{package},{version}) :: {data.status_code} {data.text}"
                 raise SpectraAssureUnexpectedNoDataFound(msg)
 
-            path_info: Dict[str, str] = {
+            path_info: dict[str, str] = {
                 "analysis": "analysis/status",  # we are looking for "done"
                 "quality": "analysis/report/info/statistics/quality/status",
                 "hashes": "analysis/report/info/file/hashes",
@@ -327,8 +326,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         project: str,
         package: str,
         version: str,
-        skip: List[str],  # pylint: disable=unused-argument
-        info_dict: Dict[str, Dict[str, Any]],
+        skip: list[str],  # pylint: disable=unused-argument
+        info_dict: dict[str, dict[str, Any]],
         auto_adapt_to_throttle: bool = False,
     ) -> None:
         a_dict = self._get_info_status(
@@ -344,10 +343,10 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _remove_skipped_versions_from_result(
         self,
         *,
-        info_dict: Dict[str, Any],
-        skip: List[str],
-    ) -> Dict[str, Dict[str, Any]]:
-        result_dict: Dict[str, Dict[str, Any]] = {}
+        info_dict: dict[str, Any],
+        skip: list[str],
+    ) -> dict[str, dict[str, Any]]:
+        result_dict: dict[str, dict[str, Any]] = {}
 
         for version, info in info_dict.items():
             if version in skip:
@@ -371,8 +370,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         project: str,
         package: str,
         version: str,
-        skip: List[str],  # pylint: disable=unused-argument
-        info_dict: Dict[str, Dict[str, Any]],
+        skip: list[str],  # pylint: disable=unused-argument
+        info_dict: dict[str, dict[str, Any]],
         auto_adapt_to_throttle: bool = False,
     ) -> None:
         # get the data
@@ -387,13 +386,13 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             raise SpectraAssureUnexpectedNoDataFound(msg)
 
         # process the data
-        path_info: Dict[str, str] = {
+        path_info: dict[str, str] = {
             "approved": "approval_status",  # we are looking for "approved"
             "approval-stamp": "approval_information/timestamp",
             "released": "is_released",
         }
 
-        a_dict: Dict[str, Any] = {}
+        a_dict: dict[str, Any] = {}
         for k, path in path_info.items():
             a_dict[k] = self._get_path(path=path, data=data.json())
             if a_dict[k] is not None and isinstance(a_dict[k], str):
@@ -405,16 +404,16 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _filter_latest_approved_version(
         self,
         *,
-        temp_result_dict: Dict[str, Dict[str, Any]],
+        temp_result_dict: dict[str, dict[str, Any]],
     ) -> str:
         # sort by latest approval timestamp
 
-        tt: Dict[str, str] = {}
+        tt: dict[str, str] = {}
         for version, info in temp_result_dict.items():
             for k, v in info.items():
                 if k == "approval-stamp" and v is not None:
                     tt[v] = version
-        sorted_by_time = list(sorted(tt.keys()))
+        sorted_by_time = sorted(tt.keys())
 
         latest_most_recent = sorted_by_time[-1]  # let's assume this is actually unique
         latest_version_string = tt[latest_most_recent]
@@ -427,8 +426,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _select_version_from_result(
         self,
         *,
-        result_dict: Dict[str, Dict[str, Any]],
-    ) -> Dict[str, Dict[str, Any]] | None:
+        result_dict: dict[str, dict[str, Any]],
+    ) -> dict[str, dict[str, Any]] | None:
         assert self.download_criteria is not None
 
         if len(result_dict) == 0:
@@ -464,8 +463,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         version: str | None = None,
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
-    ) -> Dict[str, Dict[str, Any]] | None:
-        skip: List[str] = []
+    ) -> dict[str, dict[str, Any]] | None:
+        skip: list[str] = []
 
         info_dict = self._make_initial_info_dict_on_all_versions_in_this_package(
             project=project,
@@ -523,7 +522,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         version: str | None = None,
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
-    ) -> Dict[str, Dict[str, Any]] | None:
+    ) -> dict[str, dict[str, Any]] | None:
 
         assert self.download_criteria is not None
         self.download_criteria.must_be_approved = True  # Force True, we only currently support approved versions
@@ -539,7 +538,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             msg = f"'download' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_download(
+        valid_qp: dict[str, Any] = self.qp_download(
             what=what,
             **qp,
         )
@@ -558,8 +557,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
         if what in ["version"]:
             for k in ["build"]:
                 if k in qp:
@@ -576,9 +575,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         download_criteria: SpectraAssureDownloadCriteria | None = None,
         **qp: Any,
-    ) -> Dict[str, Dict[str, Any]] | None:
-        """
-        Action: download
+    ) -> dict[str, dict[str, Any]] | None:
+        """Action: download
 
         Args:
          - target_dir: str, mandatory;

@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 
+import logging
 import sys
 import uuid
-import logging
+
+import startProg
+import testProject
 
 from spectra_assure_api_client import SpectraAssureApiOperations
-
-import testProject
-import startProg
 
 
 def testProjectSteps(
@@ -44,27 +44,27 @@ def testProjectSteps(
         return r
 
     tail = "-1234"
-    newName = project + tail
+    newname = project + tail
 
     r = testProject.testEditProject(
         aOperationsHandle=aOperationsHandle,
         project=project,
         description="Just changing the name here",
-        newName=newName,
+        newName=newname,
     )
     if r is False:
         return r
 
     r = testProject.testListProject(
         aOperationsHandle,
-        newName,
+        newname,
     )
     if r is False:
         return r
 
     r = testProject.testDeleteProject(
         aOperationsHandle,
-        newName,
+        newname,
     )
     if r is False:
         return r
@@ -78,8 +78,8 @@ logger = logging.getLogger()
 def main() -> None:
     SpectraAssureApiOperations.make_logger(my_logger=logger)
 
-    aOperationsHandle = startProg.startProg()
-    r = testProjectSteps(aOperationsHandle)
+    aoh = startProg.startProg()
+    r = testProjectSteps(aoh)
     if r is False:
         sys.exit(1)
     sys.exit(0)

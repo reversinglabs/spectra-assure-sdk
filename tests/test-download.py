@@ -1,24 +1,22 @@
 #! /usr/bin/env python3
 
+import logging
+import os
+import sys
+import uuid
 from typing import (
-    Dict,
     Any,
 )
 
-import sys
-import os
-import uuid
-import logging
+import startProg
+import testPackage
+import testProject
+import testVersion
 
 from spectra_assure_api_client import (
     SpectraAssureApiOperations,
     SpectraAssureDownloadCriteria,
 )
-
-import testProject
-import testPackage
-import testVersion
-import startProg
 
 logger = logging.getLogger()
 INPUT_PATH = os.getenv("INPUT_PATH", None)
@@ -81,7 +79,7 @@ def makeVersions(
     project: str,
     package: str,
 ) -> bool:
-    filePath = str(INPUT_PATH)
+    filepath = str(INPUT_PATH)
 
     for z in ["a", "b", "c", "d"]:
         version = f"v-{uuid.uuid4()}-{z}"
@@ -100,7 +98,7 @@ def makeVersions(
                 project=project,
                 package=package,
                 version=version,
-                filePath=filePath,
+                filePath=filepath,
             )
             if r is False:
                 return r
@@ -115,9 +113,9 @@ def doDownload(
     project: str,
     package: str,
     version: str | None = None,
-) -> Dict[str, Dict[str, Any]] | None:
+) -> dict[str, dict[str, Any]] | None:
 
-    downloadCriteria = SpectraAssureDownloadCriteria(
+    downloadcriteria = SpectraAssureDownloadCriteria(
         with_overwrite_existing_files=False,
         with_verify_existing_files=True,
         with_verify_after_download=True,
@@ -132,7 +130,7 @@ def doDownload(
         package=package,
         version=version,
         target_dir=targetDir,
-        download_criteria=downloadCriteria,
+        download_criteria=downloadcriteria,
     )
 
 
@@ -157,15 +155,15 @@ def testVersionSteps(
         return r
 
     aa = aOperationsHandle.get_additional_args()
-    targetDir = aa.get("downloadPath")
-    if targetDir is None:
-        targetDir = "."
+    targetdir = aa.get("downloadPath")
+    if targetdir is None:
+        targetdir = "."
 
     version = None
 
     what = doDownload(
         aOperationsHandle=aOperationsHandle,
-        targetDir=targetDir,
+        targetDir=targetdir,
         project=project,
         package=package,
         version=version,
@@ -194,8 +192,8 @@ def main() -> None:
         print("FATAL: environment var 'INPUT_PATH' is not set", file=sys.stderr)
         sys.exit(1)
 
-    aOperationsHandle = startProg.startProg()
-    r = testVersionSteps(aOperationsHandle)
+    aoh = startProg.startProg()
+    r = testVersionSteps(aoh)
     if r is False:
         sys.exit(1)
     sys.exit(0)

@@ -1,10 +1,7 @@
+import logging
 from typing import (
     Any,
-    Dict,
-    List,
 )
-
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
@@ -18,15 +15,14 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsEdit(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_edit(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
 
-        r: Dict[str, Any] = {}
+        r: dict[str, Any] = {}
         if what in ["project", "package"]:
             for k in ["name", "description"]:
                 if k in qp:
@@ -34,7 +30,7 @@ class SpectraAssureApiOperationsEdit(  # pylint: disable=too-many-ancestors
             return r
 
         if what in ["version"]:
-            version_qp: List[str] = [
+            version_qp: list[str] = [
                 "is_released",
                 "product",
                 "publisher",
@@ -59,8 +55,7 @@ class SpectraAssureApiOperationsEdit(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute an edit() API call
             to modify the details for the specified item.
 
@@ -98,8 +93,8 @@ class SpectraAssureApiOperationsEdit(  # pylint: disable=too-many-ancestors
                 Renaming your project
                 will also change the report URL for all versions inside it.
                 If you shared the old link, it will no longer work after the rename.
-        """
 
+        """
         action = "edit"
         what = self._what(
             project=project,
@@ -116,7 +111,7 @@ class SpectraAssureApiOperationsEdit(  # pylint: disable=too-many-ancestors
             msg = f"'edit' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_edit(what=what, **qp)
+        valid_qp: dict[str, Any] = self.qp_edit(what=what, **qp)
 
         url = self._make_current_url(action=action, project=project, package=package, version=version)
         return self.do_it_patch(

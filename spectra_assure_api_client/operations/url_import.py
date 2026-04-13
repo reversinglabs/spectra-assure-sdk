@@ -1,5 +1,4 @@
-"""
-# URL-IMPORT
+"""# URL-IMPORT
 
 - https://{portalUrl}/api/public/v1/url-import/{organization}/{group}/pkg:rl/{project}/{package}@{version}
 
@@ -79,21 +78,16 @@ If token-based authentication is required for downloading the software package f
 Cannot be used with auth-user and auth-pass.
 """
 
+import logging
 from typing import (
     Any,
-    Dict,
-    List,
 )
-
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
 
-
 from .base import SpectraAssureApiOperationsBase
-
 
 logger = logging.getLogger(__name__)
 
@@ -101,16 +95,15 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsUrlImport(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_url_import(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
 
-        version_qp: List[str] = [
+        version_qp: list[str] = [
             "max_size",
             "replace",
             "force",
@@ -147,8 +140,7 @@ class SpectraAssureApiOperationsUrlImport(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             execute a url-import() API call
             to import a file from a url and scan it, creating a version
             in a Portal project and package.
@@ -192,8 +184,8 @@ class SpectraAssureApiOperationsUrlImport(  # pylint: disable=too-many-ancestors
             If you have reached the max amount of versions allowed on the Portal,
               use 'force' to delete the oldest version and make room for the new one.
               Will be ignored if build=repro.
-        """
 
+        """
         action = "url_import"
         what = self._what(
             project=project,
@@ -210,7 +202,7 @@ class SpectraAssureApiOperationsUrlImport(  # pylint: disable=too-many-ancestors
             msg = f"'{action}' no '://' in '{url}'; url must be in uri format '<proto>://<host>[:<port>]/<path>'"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_url_import(
+        valid_qp: dict[str, Any] = self.qp_url_import(
             what=what,
             **qp,
         )
@@ -227,7 +219,7 @@ class SpectraAssureApiOperationsUrlImport(  # pylint: disable=too-many-ancestors
         auth-pass string; optional;
         bearer-token string; optional;
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "url": url,
         }
 

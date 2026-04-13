@@ -1,38 +1,38 @@
 #! /usr/bin/env python3
 
+import logging
 import sys
 import uuid
-import logging
 
-from spectra_assure_api_client import SpectraAssureApiOperations
-
+import startProg
 import testPackage
 import testProject
-import startProg
+
+from spectra_assure_api_client import SpectraAssureApiOperations
 
 
 def testPackageSteps(
     aOperationsHandle: SpectraAssureApiOperations,
 ) -> bool:
     project = f"ProjTestMboot-{uuid.uuid4()}"
-    projectDescription = "just a test Project"
+    projectdescription = "just a test Project"
 
     r = testProject.testCreateProject(
         aOperationsHandle=aOperationsHandle,
         project=project,
-        description=projectDescription,
+        description=projectdescription,
     )
     if r is False:
         return r
 
     package = f"PackTestMboot-{uuid.uuid4()}"
-    packageDescription = "just a test Package"
+    packagedescription = "just a test Package"
 
     r = testPackage.testCreatePackage(
         aOperationsHandle=aOperationsHandle,
         project=project,
         package=package,
-        description=packageDescription,
+        description=packagedescription,
     )
     if r is False:
         return r
@@ -61,17 +61,18 @@ def testPackageSteps(
     )
 
     tail = "-1234"
-    newName = package + tail
+    newname = package + tail
+
     r = testPackage.testEditPackage(
         aOperationsHandle=aOperationsHandle,
         project=project,
         package=package,
-        newName=newName,
+        newName=newname,
     )
     if r is False:
         return r
 
-    package = newName
+    package = newname
     r = testPackage.testListPackage(
         aOperationsHandle,
         project=project,
@@ -104,8 +105,8 @@ logger = logging.getLogger()
 def main() -> None:
     SpectraAssureApiOperations.make_logger(my_logger=logger)
 
-    aOperationsHandle = startProg.startProg()
-    r = testPackageSteps(aOperationsHandle)
+    aoh = startProg.startProg()
+    r = testPackageSteps(aoh)
     if r is False:
         sys.exit(1)
     sys.exit(0)

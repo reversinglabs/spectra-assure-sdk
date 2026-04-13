@@ -1,15 +1,13 @@
+import logging
 from typing import (
     Any,
 )
-
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
 
 from .base import SpectraAssureApiOperationsBase
-
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +24,7 @@ class SpectraAssureApiOperationsList(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,  # not actually used in list
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a list() API call.
 
         Args:
@@ -53,8 +50,8 @@ class SpectraAssureApiOperationsList(  # pylint: disable=too-many-ancestors
             When 'package' is not specified, we list all packages in the current project.
             When 'version' is not specified, we list all versions in the current package.
             When a 'version' is specified, we list the details of this version.
-        """
 
+        """
         action = "list"
         what = self._what(
             project=project,

@@ -11,15 +11,7 @@ Execute a report() API call for the specified `project`, `package`, `version`.
 - project: str, mandatory.
 - package: str, mandatory.
 - version: str, mandatory.
-- report_type: str, mandatory, must be one of:
-    - cyclonedx
-    - rl-checks
-    - rl-cve
-    - rl-json
-    - rl-uri
-    - sarif
-    - spdx
-    - rl-summary-pdf
+- report_type: str, mandatory.
 - auto_adapt_to_throttle: bool, default False, optional.
 - qp: Dict[str,Any], optional.
 

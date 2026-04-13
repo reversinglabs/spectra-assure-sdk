@@ -1,11 +1,7 @@
+import logging
 from typing import (
     Any,
-    Dict,
 )
-
-
-import logging
-
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
@@ -13,14 +9,12 @@ from spectra_assure_api_client.communication.exceptions import (
 
 from .base import SpectraAssureApiOperationsBase
 
-
 logger = logging.getLogger(__name__)
 
 
 class SpectraAssureApiOperationsStatus(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     def status(
         self,
         *,
@@ -30,8 +24,7 @@ class SpectraAssureApiOperationsStatus(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a status() API call
             for the specified 'project/package@version'.
 
@@ -57,8 +50,8 @@ class SpectraAssureApiOperationsStatus(  # pylint: disable=too-many-ancestors
 
         Notes:
             Using the download query parameter has direct influence on your Spectra Assure Portal download capacity.
-        """
 
+        """
         action = "status"
         what = self._what(
             project=project,
@@ -71,7 +64,7 @@ class SpectraAssureApiOperationsStatus(  # pylint: disable=too-many-ancestors
             msg = f"'status' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_status(
+        valid_qp: dict[str, Any] = self.qp_status(
             what=what,
             **qp,
         )  # see spectraAssureApiOperationsBase

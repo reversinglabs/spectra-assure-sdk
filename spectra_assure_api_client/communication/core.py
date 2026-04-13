@@ -1,21 +1,19 @@
+import logging
+import os
+import time
+import urllib.request
+from collections.abc import Callable
 from typing import (
-    Dict,
-    Callable,
     Any,
 )
 
-import os
-import logging
-import time
 import requests
-import urllib.request
+
+from spectra_assure_api_client.version import VERSION
 
 from .exceptions import (
     SpectraAssureInvalidAction,
 )
-
-from spectra_assure_api_client.version import VERSION
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +23,11 @@ class Executor:
         self,
         *,
         url: str,
-        proxies: Dict[str, str],
+        proxies: dict[str, str],
         timeout: int,
-        payload: Dict[str, Any] | None,
-        headers: Dict[str, str],
-        url_params: Dict[str, str] | None,
+        payload: dict[str, Any] | None,
+        headers: dict[str, str],
+        url_params: dict[str, str] | None,
         request_callable: Callable[..., requests.Response] | None = None,
         no_ssl_verify: bool = False,
     ):
@@ -84,7 +82,7 @@ class SpectraAssureApiCore:
         self.proxy_user = proxy_user
         self.proxy_password = proxy_password
 
-        self.proxies: Dict[str, str] = {}
+        self.proxies: dict[str, str] = {}
 
         self._set_proxy(
             server=self.proxy_server,
@@ -156,13 +154,13 @@ class SpectraAssureApiCore:
 
     def _make_headers(
         self,
-        a_dict: Dict[str, str] | None = None,
-    ) -> Dict[str, str]:
+        a_dict: dict[str, str] | None = None,
+    ) -> dict[str, str]:
         assert self.token is not None
         assert len(self.token) > 0
 
         # common defaults
-        headers: Dict[str, str] = {
+        headers: dict[str, str] = {
             "Authorization": f"Bearer {self.token}",
             "User-Agent": f"Spectra Assure SDK {VERSION}",
             "Content-Type": "application/json",

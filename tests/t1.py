@@ -1,6 +1,7 @@
 import logging
-import traceback
 import os
+import traceback
+
 from spectra_assure_api_client import SpectraAssureApiOperations
 
 logger = logging.getLogger()
@@ -21,7 +22,7 @@ logger.info(msg)
 
 try:
     # use only args
-    aHandle = SpectraAssureApiOperations(
+    ah = SpectraAssureApiOperations(
         host=host,
         server=server,
         organization=organization,
@@ -29,12 +30,12 @@ try:
         token=token,
         no_ssl_verify=True,
     )
-    print(f"SpectraAssureApiOperations: {aHandle}")
+    print(f"SpectraAssureApiOperations: {ah}")
     if 1:  # 2025-03-14 not yet in the api
-        r = aHandle.usage()
+        r = ah.usage()
         print("ORG", r.status_code, r.text)
 
-        r = aHandle.usage(group=group)
+        r = ah.usage(group=group)
         print("GROUP", r.status_code, r.text)
 
 except Exception as e:

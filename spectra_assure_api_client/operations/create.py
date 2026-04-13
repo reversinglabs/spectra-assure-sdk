@@ -1,12 +1,12 @@
 import logging
 from typing import (
     Any,
-    Dict,
 )
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
@@ -15,14 +15,13 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsCreate(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_create(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
         if what in ["project", "package"]:
             k = "description"
             if k in qp:
@@ -37,8 +36,7 @@ class SpectraAssureApiOperationsCreate(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a create() API call
             to create a new 'project' or a new 'package'.
             ( For creating a 'version', see scan() )
@@ -64,8 +62,8 @@ class SpectraAssureApiOperationsCreate(  # pylint: disable=too-many-ancestors
         Notes:
             If we only specify 'project', we create a new 'project' in the specified 'group'.
             If we specify 'project' and 'package', we create a new 'package' in that 'project'.
-        """
 
+        """
         action = "create"
         what = self._what(project=project, package=package)
 
@@ -77,7 +75,7 @@ class SpectraAssureApiOperationsCreate(  # pylint: disable=too-many-ancestors
             msg = f"'create' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_create(what=what, **qp)
+        valid_qp: dict[str, Any] = self.qp_create(what=what, **qp)
         url = self._make_current_url(action=action, project=project, package=package)
 
         return self.do_it_post(

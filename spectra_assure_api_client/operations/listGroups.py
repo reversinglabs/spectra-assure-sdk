@@ -3,14 +3,12 @@
 # "<self.base_url>/usage/<ORGANIZATION_NAME>/<GROUP_NAME>"
 
 
+import logging
 from typing import (
     Any,
 )
 
-import logging
-
 from .base import SpectraAssureApiOperationsBase
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +22,7 @@ class SpectraAssureApiOperationsListGroups(  # pylint: disable=too-many-ancestor
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a list() api call, with not group only organization
 
         Args:
@@ -45,8 +42,8 @@ class SpectraAssureApiOperationsListGroups(  # pylint: disable=too-many-ancestor
 
         Notes:
             We list groups in the organization that the authenticated user has access to
-        """
 
+        """
         url = f"{self.base_url}/list/{self.organization}"
         qp = {}
         return self.do_it_get(

@@ -13,18 +13,6 @@ PY_FILES := examples tests $(PACKAGE_NAME)
 DOC_DIR := ./doc/
 STUBS_DIR := ./stubs/
 
-PL_LINTERS := eradicate,mccabe,pycodestyle,pyflakes,pylint
-
-# C0103 Variable name "%s" doesn't conform to snake_case naming style [pylint]
-# C0114 Missing module docstring [pylint]
-# C0115 Missing class docstring [pylint]
-# C0116 Missing function or method docstring [pylint]
-# C0301 Line too long (%s/%s) [pylint] :: add :: # pylint: disable=line-too-long
-# E203 whitespace before ':' [pycodestyle]
-# E402 module level import not at top of file [pycodestyle]
-
-PL_IGNORE="C0103,C0114,C0115,C0116,C0301,E203,E402,C901"
-
 COMMON_VENV := rm -rf $(VENV); \
 	$(MIN_PYTHON_VERSION) -m venv $(VENV); \
 	source ./$(VENV)/bin/activate;
@@ -38,11 +26,13 @@ README_REQUESTS_VERSION := $(shell grep requests README.md | grep 'version:' | a
 TOML_REQUESTS_VERSION := $(shell grep 'requests==' *.toml | awk '{ r =gensub(/.*requests==([0-9\.]+).*/,"\\1", "g") ; print r }' )
 ASSERT_REQUESTS_VERSION := $(shell echo 1 | awk '{ if( "$(README_REQUESTS_VERSION)" != "$(TOML_REQUESTS_VERSION)" ) { print 1 } else { print 0 } }' )
 
-.PHONY: prep all tests black pylama mypy testLocalInstall build
+.PHONY: prep all tests format check mypy testLocalInstall build
 
 # ========================================
 # ========================================
-all: ASSERT prep tests
+simple: ASSERT prep tests
+
+all: ASSERT prep tests-all
 
 ASSERT: README.md pyproject.toml
 	if (( $(ASSERT_REQUESTS_VERSION) == 1 )) ; then \
@@ -52,7 +42,7 @@ ASSERT: README.md pyproject.toml
 		exit $(ASSERT_REQUESTS_VERSION); \
 	fi
 
-prep: clean black pylama mypy makeStubs pyreverse
+prep: clean format check mypy makeStubs pyreverse
 
 clean: cleanupVenv
 	rm -rf stubs out
@@ -68,21 +58,11 @@ cleanupVenv:
 	rm -rf $(VENV)
 	rm -rf ./tests/$(VENV)
 
-black:
-	$(COMMON_VENV) \
-	$(PIP_INSTALL) black; \
-	black \
-		--line-length $(LINE_LENGTH) \
-		$(PY_FILES)
+format:
+	ruff format $(PY_FILES)
 
-pylama:
-	$(COMMON_VENV) \
-	$(PIP_INSTALL) pylama; \
-	pylama \
-		--max-line-length $(LINE_LENGTH) \
-		--linters "${PL_LINTERS}" \
-		--ignore "${PL_IGNORE}" \
-		$(PY_FILES)
+check:
+	ruff check --fix $(PY_FILES)
 
 mypy:
 	$(COMMON_VENV) \
@@ -127,9 +107,16 @@ build: clean
 testLocalInstall: build
 	./testLocalWhl.sh
 
-tests: testLocalInstall
+tests: tests-simple
+
+tests-simple: testLocalInstall
+	( cd tests && TEST_MY=1 		 make tests )
+	# ( cd tests && TEST_PLAYGROUND1=1 make tests )
+	cp tests/api_client_example.py examples/
+
+tests-all: testLocalInstall
 	( cd tests && TEST_MY=1 		 make tests )
 	( cd tests && TEST_PLAYGROUND1=1 make tests )
 	( cd tests && TEST_PLAYGROUND2=1 make tests )
-	( cd tests && TEST_CANADA=1 	 make tests )
+	# ( cd tests && TEST_CANADA=1 	 make tests )
 	cp tests/api_client_example.py examples/

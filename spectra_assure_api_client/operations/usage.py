@@ -3,14 +3,12 @@
 # "<self.base_url>/usage/<ORGANIZATION_NAME>/<GROUP_NAME>"
 
 
+import logging
 from typing import (
     Any,
 )
 
-import logging
-
 from .base import SpectraAssureApiOperationsBase
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +23,7 @@ class SpectraAssureApiOperationsUsage(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a usage() api call
 
         Args:
@@ -47,8 +44,8 @@ class SpectraAssureApiOperationsUsage(  # pylint: disable=too-many-ancestors
 
         Notes:
             When 'group' is not specified, we list usage of the organization
-        """
 
+        """
         url = f"{self.base_url}/usage/{self.organization}"
         if group is not None:
             url = f"{url}/{group}"

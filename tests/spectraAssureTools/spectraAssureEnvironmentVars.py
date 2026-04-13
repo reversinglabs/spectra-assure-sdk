@@ -1,13 +1,10 @@
 # python 3
 
+import logging
+import os
 from typing import (
-    Dict,
     Any,
 )
-
-import os
-import logging
-
 
 prefix = "RLPORTAL_"
 pprefix = "RLSECURE_PROXY_"
@@ -17,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class SpectraAssureEnvironmentVars:
-    ENVNAMESDEFAULT: Dict[str, Dict[str, Any]] = {
+    ENVNAMESDEFAULT: dict[str, dict[str, Any]] = {
         "host": {
             "env": f"{prefix}HOST",
             "vType": "str",
@@ -60,7 +57,7 @@ class SpectraAssureEnvironmentVars:
     def __init__(
         self,
         *,
-        externalEnvVarsInfo: Dict[str, Dict[str, Any]] | None = None,
+        externalEnvVarsInfo: dict[str, dict[str, Any]] | None = None,
     ):
         super().__init__()
 
@@ -88,15 +85,15 @@ class SpectraAssureEnvironmentVars:
 
     def _prepEnvironmentVars(
         self,
-        externalEnvVarsInfo: Dict[str, Dict[str, Any]] | None = None,
+        externalEnvVarsInfo: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         self.envVarsInfo = self.ENVNAMESDEFAULT
         if externalEnvVarsInfo:
             self.envVarsInfo = externalEnvVarsInfo
 
     # PUBLIC
-    def processEnvironmentVars(self) -> Dict[str, Any]:
-        envDict: Dict[str, Any] = {}
+    def processEnvironmentVars(self) -> dict[str, Any]:
+        envDict: dict[str, Any] = {}
 
         if self.envVarsInfo is None:
             return envDict
@@ -122,7 +119,13 @@ class SpectraAssureEnvironmentVars:
             try:
                 envDict[name] = self.coerceType(value, valueType)
             except Exception as e:
-                logger.error("cannot coerce value: %s to type: %s for key: %s; %s", value, valueType, k, e)
+                logger.error(
+                    "cannot coerce value: %s to type: %s for key: %s; %s",
+                    value,
+                    valueType,
+                    k,
+                    e,
+                )
                 continue
 
         logger.debug("%s", envDict)

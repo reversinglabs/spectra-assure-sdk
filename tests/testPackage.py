@@ -1,12 +1,12 @@
 # python3
 from typing import (
-    Dict,
     Any,
 )
 
-from spectra_assure_api_client import SpectraAssureApiOperations
-import testVersion
 import testing
+import testVersion
+
+from spectra_assure_api_client import SpectraAssureApiOperations
 
 
 def testEditPackage(
@@ -82,8 +82,8 @@ def testListPackage(
     if r is False:
         return r
 
-    jData = data.json()
-    for p in jData.get("versions"):
+    jd = data.json()
+    for p in jd.get("versions"):
         version = p.get("version")
 
         r = testVersion.testListVersion(
@@ -104,7 +104,7 @@ def testListPackage(
         if r is False:
             return r
 
-        qp: Dict[str, Any] = {}
+        qp: dict[str, Any] = {}
         r = testVersion.testStatusVersion(
             aOperationsHandle,
             project=project,
@@ -126,14 +126,14 @@ def testListPackage(
         if r is False:
             return r
 
-        for reportName in aOperationsHandle.current_report_names():
+        for report_name in aOperationsHandle.current_report_names():
             qp = {}
             r = testVersion.testReportVersion(
                 aOperationsHandle,
                 project=project,
                 package=package,
                 version=version,
-                reportType=reportName,
+                reportType=report_name,
                 **qp,
             )
             if r is False:

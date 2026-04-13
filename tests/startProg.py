@@ -1,22 +1,19 @@
 # python 3
 
 
+import logging
 from typing import (
-    Dict,
     Any,
 )
 
-import logging
+from spectraAssureTools import (
+    SpectraAssureConfigFileJson,
+    SpectraAssureProgramStarter,
+)
 
 from spectra_assure_api_client import (
     SpectraAssureApiOperations,
 )
-
-from spectraAssureTools import (
-    SpectraAssureProgramStarter,
-    SpectraAssureConfigFileJson,
-)
-
 
 logger = logging.getLogger()
 
@@ -112,12 +109,12 @@ def basicStarter(
     return aOperationsHandle
 
 
-def makeMyEnvVarOPtions() -> Dict[str, Dict[str, Any]]:
+def makeMyEnvVarOPtions() -> dict[str, dict[str, Any]]:
 
     prefix = "RLPORTAL_"
     pprefix = "RLSECURE_PROXY_"
 
-    externalEnvVarsInfo: Dict[str, Dict[str, Any]] = {
+    externalEnvVarsInfo: dict[str, dict[str, Any]] = {
         "host": {
             "env": f"{prefix}HOST",
             "vType": "str",
@@ -163,14 +160,14 @@ def makeMyEnvVarOPtions() -> Dict[str, Dict[str, Any]]:
 def prepConfigFile(
     configFileJson: str = "myConfig.json",
 ) -> SpectraAssureConfigFileJson:
-    """prepConfigFile
+    """PrepConfigFile.
+
     sets up a config file with additional arguments just as we did with MyProgramStarter.
     We add the same arguments also to the config file,
     so they will be processed in combination with the minimal required arguments.
     """
-
     # prepare a config file
-    configFileHandle = SpectraAssureConfigFileJson(
+    config_file_handle = SpectraAssureConfigFileJson(
         configFileJson=configFileJson,
     )
 
@@ -184,62 +181,54 @@ def prepConfigFile(
     }
 
     for k, t in additions.items():
-        configFileHandle.addConfigOption(
+        config_file_handle.addConfigOption(
             key=k,
             typeName=t,
         )
 
-    return configFileHandle
+    return config_file_handle
 
 
 def customizedStarter(
     configFileJson: str = "myConfig.json",
 ) -> SpectraAssureApiOperations:
-    """A custom starter
-    that modifies:
-
-    - the Environment parser
-    - the config file
-    - cli args
-    """
-
-    strategyLoadConfigParams = [
+    strategy_load_config_params = [
         "CLI",
         "ENV",
     ]  # change the load order, do config file last
 
     # override default env vars
-    externalEnvVarsInfo = makeMyEnvVarOPtions()
+    envvars = makeMyEnvVarOPtions()
 
     # use customized config file
     # configFileHandle = prepConfigFile(configFileJson=configFileJson)
 
-    aProgramStarter = MyProgramStarter(
-        externalEnvVarsInfo=externalEnvVarsInfo,
+    aps = MyProgramStarter(
+        externalEnvVarsInfo=envvars,
     )
 
     # add additional cli args before processing
-    aProgramStarter.addMyArgs()
+    aps.addMyArgs()
 
-    apiConfig, additionalConfig = aProgramStarter.getConfig(
-        strategyLoadConfigParams=strategyLoadConfigParams,
+    api_config, additional_config = aps.getConfig(
+        strategyLoadConfigParams=strategy_load_config_params,
     )
 
-    vv = dict(**vars(apiConfig))
+    vv = dict(**vars(api_config))
     logger.debug(f"actual arguments: {vv}")
 
-    additionalConfig = vv["additionalArgs"]  # additionalArgs
-    logger.debug(f"additional arguments: {additionalConfig}")
+    additional_config = vv["additionalArgs"]  # additionalArgs
+    logger.debug(f"additional arguments: {additional_config}")
 
     # token = vv.get("token")  # token is coming from the environment
     # configFile = "./myConfig.json"  # the config file has no token so we get it from elsewhere
     # configFile = None
 
-    aOperationsHandle = SpectraAssureApiOperations(
+    aoh = SpectraAssureApiOperations(
         **vv,
     )
 
-    return aOperationsHandle
+    return aoh
 
 
 def startProg(useAdditional: bool = True) -> SpectraAssureApiOperations:

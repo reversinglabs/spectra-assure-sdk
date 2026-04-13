@@ -1,18 +1,14 @@
-import os
 import json
 import logging
+import os
 from typing import (
-    List,
-    Tuple,
-    Dict,
     Any,
 )
 
+from .delete import SpectraAssureApiDelete
 from .exceptions import (
     SpectraAssureInvalidAction,
 )
-
-from .delete import SpectraAssureApiDelete
 from .get import SpectraAssureApiGet
 from .patch import SpectraAssureApiPatch
 from .post import SpectraAssureApiPost
@@ -74,8 +70,7 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
         #
         **additional_args: Any,
     ) -> None:
-        """
-        Action:
+        """Action:
           Initialize an instance of 'SpectraAssureApi'
           and validate all mandatory parameters.
 
@@ -147,10 +142,10 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
            - organization: str;
            - group: str:
            - token: str:
-        """
 
+        """
         # merge args given and args from optional config file into new_args
-        old_args: Dict[str, Any] = {
+        old_args: dict[str, Any] = {
             "host": host,
             "server": server,
             "organization": organization,
@@ -207,14 +202,14 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
 
         self.base_url = self._set_base_url()
 
-        self.additional_args: Dict[str, Any] = {}
+        self.additional_args: dict[str, Any] = {}
         for k, v in additional_args.items():
             self.additional_args[k] = v
         logger.debug("additional args: %s", self.additional_args)
 
     def show_debug(
         self,
-        args: Dict[str, Any],
+        args: dict[str, Any],
         text: str,
     ) -> None:
         if os.getenv("LOG_LEVEL", "") == "DEBUG":
@@ -233,8 +228,8 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
     def _get_config_file(
         self,
         config_file: str | None,
-        args: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        args: dict[str, Any],
+    ) -> dict[str, Any]:
 
         if config_file is None:
             logger.info("no config file provided; using the specified keyword args")
@@ -244,9 +239,9 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
             logger.error(f"the config file must end in '.json'; currently you have {config_file}")
             return args
 
-        new_args: Dict[str, Any] = {}
+        new_args: dict[str, Any] = {}
 
-        with open(config_file, "r", encoding="utf-8") as f:
+        with open(config_file, encoding="utf-8") as f:
             data = json.load(f)
 
             conf_key = "SpectraAssureApi"  # we need a subsection called: "SpectraAssureApi"
@@ -296,10 +291,17 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
     ) -> str:
         assert len(str(action)) > 0, "Fatal: the action cannot be empty"
 
-        transl: Dict[str, str] = {
+        # A) GET https://{portalUrl}/api/public/v1/profile/{organization_name}/export
+        # B) GET https://{portalUrl}/api/public/v1/profile/{organization_name}/{group_name}/export
+
+        transl: dict[str, str] = {
             "community_find_packages": "community/find/packages",
             "community_report_version": "community/report/version",
             "community_report_package": "community/report/package",
+            "export_org_profile": "profile",  # the rest will be done by the caller
+            "export_group_profile": "profile",  # the rest will be done by the caller
+            "import_org_profile": "profile",  # the rest will be done by the caller
+            "import_group_profile": "profile",  # the rest will be done by the caller
         }
 
         if action in transl.keys():
@@ -314,9 +316,10 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
 
         if action == "rl_safe":
             action = "pack/safe"
-
         if action == "url_import":
             action = "url-import"
+        if action == "purl_import":
+            action = "purl-import"
 
         return f"{self._get_base_url()}/{action}/{self.organization}/{self.group}"
 
@@ -325,14 +328,14 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
 
     def _validate_minimal_config_complete(
         self,
-        args: Dict[str, Any],
+        args: dict[str, Any],
     ) -> None:
         """Validate if the minimal mandatory parameters have been provided.
 
         Note:
             exits the program if not all mandatory parameters have been provided
-        """
 
+        """
         server = args.get("server")
         host = args.get("host")
         has_server = server is not None and len(str(server)) > 0
@@ -364,20 +367,20 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
         return f"{self.server}:{self.organization}:{self.group}"
 
     @staticmethod
-    def extract_purl_components(package_url: str) -> Tuple[str, str, str]:
+    def extract_purl_components(package_url: str) -> tuple[str, str, str]:
         # Project/Package@Version
 
         if "@" not in package_url:
             msg = "Package URLs must use the format 'project/package@version': missing '@'"
             raise SpectraAssureInvalidAction(message=msg)
 
-        l1: List[str] = package_url.split("@")
+        l1: list[str] = package_url.split("@")
 
         if "/" not in l1[0]:
             msg = "Package URLs must use the format 'project/package@version': missing '/'"
             raise SpectraAssureInvalidAction(message=msg)
 
-        l2: List[str] = l1[0].split("/")
+        l2: list[str] = l1[0].split("/")
 
         version: str = l1[1]
         project: str = l2[0]

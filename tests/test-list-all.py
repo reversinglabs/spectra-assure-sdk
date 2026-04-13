@@ -1,13 +1,12 @@
 #! /usr/bin/env python3
 
-import sys
 import logging
+import sys
 
-import testGroup
 import startProg
+import testGroup
 
 from spectra_assure_api_client import SpectraAssureApiOperations
-
 
 logger = logging.getLogger()
 
@@ -15,8 +14,8 @@ logger = logging.getLogger()
 def main() -> None:
     SpectraAssureApiOperations.make_logger(my_logger=logger)
 
-    aOperationsHandle = startProg.startProg()
-    r = testGroup.testListGroup(aOperationsHandle)
+    aoh = startProg.startProg()
+    r = testGroup.testListGroup(aoh)
     if r is False:
         sys.exit(1)
     sys.exit(0)

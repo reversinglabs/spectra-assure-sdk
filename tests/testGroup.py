@@ -1,9 +1,9 @@
 # python3
 
-from spectra_assure_api_client import SpectraAssureApiOperations
+import testing
 import testProject
 
-import testing
+from spectra_assure_api_client import SpectraAssureApiOperations
 
 
 def testListGroup(
@@ -17,8 +17,8 @@ def testListGroup(
     if r is False:
         return r
 
-    jData = data.json()
-    for p in jData.get("projects"):
+    jd = data.json()
+    for p in jd.get("projects"):
         project = p.get("name")
         print(action, f"Project = {project}")
 

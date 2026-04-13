@@ -1,12 +1,12 @@
 import logging
 from typing import (
     Any,
-    Dict,
 )
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
 )
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
@@ -15,14 +15,13 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsDelete(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_delete(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
 
         # only version supports qp
         if what in ["version"]:
@@ -41,8 +40,7 @@ class SpectraAssureApiOperationsDelete(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute delete() API call
 
         Args:
@@ -67,8 +65,8 @@ class SpectraAssureApiOperationsDelete(  # pylint: disable=too-many-ancestors
             If we only specify 'project', we delete that 'project' and all its 'packages' and 'versions'.
             If we specify 'project' and 'package', we delete that 'package' and all its 'versions'.
             If we specify 'project', 'package' and 'version', we delete only that 'version'.
-        """
 
+        """
         action = "delete"
         what = self._what(
             project=project,
@@ -85,7 +83,7 @@ class SpectraAssureApiOperationsDelete(  # pylint: disable=too-many-ancestors
             msg = f"'delete' is only supported for {'and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: Dict[str, Any] = self.qp_delete(what=what, **qp)
+        valid_qp: dict[str, Any] = self.qp_delete(what=what, **qp)
         url = self._make_current_url(action=action, project=project, package=package, version=version)
 
         return self.do_it_delete(

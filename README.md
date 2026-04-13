@@ -55,7 +55,7 @@ With the Spectra Assure Portal, you can:
 ## Requirements and dependencies
 
 - Python (minimal version: 3.10)
-- [requests](https://pypi.org/project/requests/); version: 2.32.5
+- [requests](https://pypi.org/project/requests/); version: 2.33.1
 - An active Spectra Assure Portal account. If you don't already have a Portal account, you may need to contact the administrator of your Portal organization to [invite you](https://docs.secure.software/portal/members#invite-a-new-member). Alternatively, if you're not a Spectra Assure customer yet, you can [contact ReversingLabs](https://docs.secure.software/portal/#get-access-to-securesoftware-portal) to sign up for a Portal account.
 - A [Personal Access Token](https://docs.secure.software/api/generate-api-token) generated for your Spectra Assure Portal account.
 
@@ -537,8 +537,17 @@ the API responds with an error and the download capacity remains unaffected.
 
 |                  | Group | Package | Version |
 | --               | --    |  --     |    --   |
-| Targets          |       |         |         |
-| Query parameters |  &#10003; | &#10003; | &#10003;      |
+| Targets          |       |         | &#10003; |
+| Query parameters |       |         | &#10003; |
+
+[`SpectraAssureApiOperationsPurlImport`](./doc/purlImport.md)
+
+**Import and scan a new version from a package URL (PURL).**
+
+|                  | Group | Package | Version |
+| --               | --    |  --     |    --   |
+| Targets          |       |         | &#10003; |
+| Query parameters |       |         | &#10003; |
 
 
 [`SpectraAssureApiOperationsCommunityFindPackages`](./doc/community-find-packages.md)
@@ -569,6 +578,24 @@ the API responds with an error and the download capacity remains unaffected.
 | --               | --    |  --     |    --   | --        |
 | Targets          |       |         |         | &#10003;  |
 | Query parameters |       |         |         | &#10003;  |
+
+[`SpectraAssureApiOperationsExportProfile`](./doc/export-profile.md)
+
+**Export the profile configuration for a Portal organization or group as a JSON file .**
+
+|                  | Group | Package | Version |
+| --               | --    |  --     |    --   |
+| Targets          |       |         |         |
+| Query parameters |       |         |         |
+
+[`SpectraAssureApiOperationsImportProfile`](./doc/import-profile.md)
+
+**Import profile configuration settings for a Portal organization or group from a JSON file.**
+
+|                  | Group | Package | Version |
+| --               | --    |  --     |    --   |
+| Targets          |       |         |         |
+| Query parameters |       |         |         |
 
 
 ## Community repositories
@@ -603,6 +630,7 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
+| v1.0.11 | add import/export, purl-import, reports now all supported by api. |
 | v1.0.10 | add support for community queries. |
 | v1.0.9  | update to the latest python `requests` version. |
 | v1.0.8  | add support for url-import. |

@@ -1,15 +1,13 @@
 import logging
 from typing import (
     Any,
-    Dict,
-    Tuple,
 )
 
 import requests
 
 from .core import (
-    SpectraAssureApiCore,
     Executor,
+    SpectraAssureApiCore,
 )
 
 logger = logging.getLogger(__name__)
@@ -22,8 +20,8 @@ class SpectraAssureApiPut(
         self,
         *,
         url: str,
-        payload: Dict[str, Any] | None,
-        headers: Dict[str, str],
+        payload: dict[str, Any] | None,
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
     ) -> requests.Response | None:
         executor = Executor(
@@ -46,7 +44,7 @@ class SpectraAssureApiPut(
         self,
         *,
         url: str,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> requests.Response:
@@ -68,10 +66,10 @@ class SpectraAssureApiPut(
         self,
         *,
         url: str,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
-    ) -> Tuple[int, Any]:
+    ) -> tuple[int, Any]:
         try:
             r = self._basic_put(
                 url=url,

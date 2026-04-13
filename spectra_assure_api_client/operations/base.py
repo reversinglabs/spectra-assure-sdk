@@ -4,9 +4,6 @@ import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
-    Tuple,
-    List,
-    Dict,
     Any,
 )
 
@@ -29,8 +26,7 @@ class SpectraAssureApiOperationsBase(
         package: str | None = None,
         version: str | None = None,
     ) -> str:
-        """
-        Action:
+        """Action:
             Determine the context of the operation we are executing.
 
         Args:
@@ -65,8 +61,8 @@ class SpectraAssureApiOperationsBase(
         return "version"
 
     @staticmethod
-    def _extract_hashes(data: List[List[str]]) -> Dict[str, Any]:
-        rr: Dict[str, Any] = {}
+    def _extract_hashes(data: list[list[str]]) -> dict[str, Any]:
+        rr: dict[str, Any] = {}
         for item in data:
             rr[item[0]] = item[1]
         return rr
@@ -77,8 +73,7 @@ class SpectraAssureApiOperationsBase(
         path: str,
         data: Any,
     ) -> Any | None:
-        """
-        Action:
+        """Action:
             Perform a naive traverse of data by dict keys
             (naive as we don't support arrays).
 
@@ -93,8 +88,8 @@ class SpectraAssureApiOperationsBase(
          - If the data we have is None, we return None.
          - If there is no '/', we try the path as-is with the default of None.
          - Otherwise we iterate over the path elements and try to walk the whole path.
-        """
 
+        """
         if not path:
             return None
 
@@ -119,14 +114,13 @@ class SpectraAssureApiOperationsBase(
 
     @staticmethod
     def _flatten_list(
-        data: Dict[str, Any],
+        data: dict[str, Any],
         *,
         multiple: str,
         single: str,
         with_sort: bool = True,
-    ) -> List[str]:
-        """
-        Action:
+    ) -> list[str]:
+        """Action:
             Try to flatten a dict into a list.
 
         Args:
@@ -150,8 +144,8 @@ class SpectraAssureApiOperationsBase(
              - the versions in a package or
              - the packages in a project or
              - the projects in a group.
-        """
 
+        """
         p_list = data.get(multiple)
         if not p_list:
             return []
@@ -184,6 +178,8 @@ class SpectraAssureApiOperationsBase(
         # https://{portalUrl}/{community-api}/find/packages
         #   with: community-api: 'api/public/v1/community'
 
+        # for profile export/import this will return https://server..../api/public/v1/profile
+        #   and as what == group we can handle all the rest by the caller
         base = self._render_action_org_group_url(action)
         tail = ""
         if what == "group":
@@ -250,9 +246,8 @@ class SpectraAssureApiOperationsBase(
     def exists_posix_path(
         *,
         item_path: str,
-    ) -> Tuple[bool, str]:
-        """
-        Action:
+    ) -> tuple[bool, str]:
+        """Action:
             Test if the path exists and check if it is a file or a directory.
 
         Args:
@@ -286,8 +281,7 @@ class SpectraAssureApiOperationsBase(
         *,
         target_path: str,
     ) -> str:
-        """
-        Action:
+        """Action:
             Return a path with more POSIX-like separators
             (path does not need to exist).
 
@@ -300,6 +294,7 @@ class SpectraAssureApiOperationsBase(
         Notes:
             We simply change all occurrences of \\ into /
             Linux, Mac and Windows all support POSIX paths.
+
         """
         return target_path.replace("\\", "/")
 
@@ -308,9 +303,8 @@ class SpectraAssureApiOperationsBase(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        """
-        Action:
+    ) -> dict[str, Any]:
+        """Action:
             Filter a query parameter dict for the status() call.
 
         Args:
@@ -323,8 +317,9 @@ class SpectraAssureApiOperationsBase(
 
         Return:
             A new dict. All unknown or unsupported query parameters will have been removed in the returned dict.
+
         """
-        r: Dict[str, Any] = {}
+        r: dict[str, Any] = {}
         if what in ["version"]:
             for k in ["build", "download"]:
                 if k in qp:
@@ -337,8 +332,7 @@ class SpectraAssureApiOperationsBase(
         *,
         my_logger: logging.Logger,
     ) -> None:
-        """
-        Action:
+        """Action:
             Using the provided myLogger,
             set up a default myLogger
              - that writes to stderr
@@ -350,7 +344,7 @@ class SpectraAssureApiOperationsBase(
         Returns:
             None
 
-        Raises
+        Raises:
             no specific exceptions are raised by the implementation.
 
         Notes:
@@ -359,6 +353,7 @@ class SpectraAssureApiOperationsBase(
 
             Supports reading LOG_LEVEL from the environment for stderr .
             the file always uses DEBUG
+
         """
         assert my_logger is not None
         my_logger.setLevel(logging.DEBUG)
@@ -401,7 +396,7 @@ class SpectraAssureApiOperationsBase(
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """needed here for the download operation"""
+        """Needed here for the download operation"""
 
     @abstractmethod
     def list(
@@ -413,4 +408,4 @@ class SpectraAssureApiOperationsBase(
         auto_adapt_to_throttle: bool = False,
         **qp: Any,  # not actually used in list
     ) -> Any:
-        """needed here for the download operation"""
+        """Needed here for the download operation"""

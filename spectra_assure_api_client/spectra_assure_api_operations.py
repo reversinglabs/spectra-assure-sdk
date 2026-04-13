@@ -1,33 +1,50 @@
 import logging
 
+from spectra_assure_api_client.operations.approve import (
+    SpectraAssureApiOperationsApprove,
+)
+
 # real operations
 from spectra_assure_api_client.operations.checks import SpectraAssureApiOperationsChecks
-from spectra_assure_api_client.operations.create import SpectraAssureApiOperationsCreate
-from spectra_assure_api_client.operations.delete import SpectraAssureApiOperationsDelete
-from spectra_assure_api_client.operations.edit import SpectraAssureApiOperationsEdit
-from spectra_assure_api_client.operations.list import SpectraAssureApiOperationsList
-from spectra_assure_api_client.operations.report import SpectraAssureApiOperationsReport
-from spectra_assure_api_client.operations.scan import SpectraAssureApiOperationsScan
-from spectra_assure_api_client.operations.status import SpectraAssureApiOperationsStatus
-from spectra_assure_api_client.operations.sync import SpectraAssureApiOperationsSync
-from spectra_assure_api_client.operations.approve import SpectraAssureApiOperationsApprove
-from spectra_assure_api_client.operations.reject import SpectraAssureApiOperationsReject
-from spectra_assure_api_client.operations.revoke import SpectraAssureApiOperationsRevoke
-from spectra_assure_api_client.operations.rl_safe import SpectraAssureApiOperationsRlSafe
-from spectra_assure_api_client.operations.usage import SpectraAssureApiOperationsUsage
-from spectra_assure_api_client.operations.listGroups import SpectraAssureApiOperationsListGroups
-from spectra_assure_api_client.operations.url_import import SpectraAssureApiOperationsUrlImport
-from spectra_assure_api_client.operations.community_find_packages import SpectraAssureApiOperationsCommunityFindPackages
+from spectra_assure_api_client.operations.community_find_packages import (
+    SpectraAssureApiOperationsCommunityFindPackages,
+)
 from spectra_assure_api_client.operations.community_report_package import (
     SpectraAssureApiOperationsCommunityReportPackage,
 )
 from spectra_assure_api_client.operations.community_report_version import (
     SpectraAssureApiOperationsCommunityReportVersion,
 )
-
+from spectra_assure_api_client.operations.create import SpectraAssureApiOperationsCreate
+from spectra_assure_api_client.operations.delete import SpectraAssureApiOperationsDelete
 
 # pseudo operation
-from spectra_assure_api_client.operations.download import SpectraAssureApiOperationsDownload
+from spectra_assure_api_client.operations.download import (
+    SpectraAssureApiOperationsDownload,
+)
+from spectra_assure_api_client.operations.edit import SpectraAssureApiOperationsEdit
+from spectra_assure_api_client.operations.export_profile import SpectraAssureApiOperationsExportProfile
+from spectra_assure_api_client.operations.import_profile import SpectraAssureApiOperationsImportProfile
+from spectra_assure_api_client.operations.list import SpectraAssureApiOperationsList
+from spectra_assure_api_client.operations.listGroups import (
+    SpectraAssureApiOperationsListGroups,
+)
+from spectra_assure_api_client.operations.purl_import import (
+    SpectraAssureApiOperationsPurlImport,
+)
+from spectra_assure_api_client.operations.reject import SpectraAssureApiOperationsReject
+from spectra_assure_api_client.operations.report import SpectraAssureApiOperationsReport
+from spectra_assure_api_client.operations.revoke import SpectraAssureApiOperationsRevoke
+from spectra_assure_api_client.operations.rl_safe import (
+    SpectraAssureApiOperationsRlSafe,
+)
+from spectra_assure_api_client.operations.scan import SpectraAssureApiOperationsScan
+from spectra_assure_api_client.operations.status import SpectraAssureApiOperationsStatus
+from spectra_assure_api_client.operations.sync import SpectraAssureApiOperationsSync
+from spectra_assure_api_client.operations.url_import import (
+    SpectraAssureApiOperationsUrlImport,
+)
+from spectra_assure_api_client.operations.usage import SpectraAssureApiOperationsUsage
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +67,11 @@ class SpectraAssureApiOperations(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsUsage,  # list usage information
     SpectraAssureApiOperationsListGroups,  # list the groups in this organization that we have access to
     SpectraAssureApiOperationsUrlImport,  # scan a file (create a version) via a url
+    SpectraAssureApiOperationsPurlImport,  # scan a file (create a version) via a purl
     SpectraAssureApiOperationsCommunityFindPackages,  # community find packages
     SpectraAssureApiOperationsCommunityReportPackage,  # Community report on a [Namespace/]Package[@version]
     SpectraAssureApiOperationsCommunityReportVersion,  # Community report on a [Namespace/]Package[@version]
+    SpectraAssureApiOperationsExportProfile,  # export org or group profile
+    SpectraAssureApiOperationsImportProfile,  # import org or group profile
 ):
     """A class that combines all operations"""

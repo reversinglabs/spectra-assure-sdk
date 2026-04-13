@@ -1,20 +1,16 @@
 # python 3
 
+import logging
+import os
+from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import (
-    Dict,
     Any,
 )
-
-import os
-import logging
-
-from pathlib import Path
-from abc import ABC, abstractmethod
 
 from .spectraAssureExceptions import (
     InvalidAction,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +18,7 @@ logger = logging.getLogger(__name__)
 class SpectraAssureConfigFile(
     ABC,
 ):
-    configOptions: Dict[str, Dict[str, str]] = {
+    configOptions: dict[str, dict[str, str]] = {
         "host": {"vType": "str"},
         "server": {"vType": "str"},
         "organization": {"vType": "str"},
@@ -41,29 +37,28 @@ class SpectraAssureConfigFile(
     def __init__(
         self,
         *,
-        configOptions: Dict[str, Dict[str, str]] | None = None,
+        configOptions: dict[str, dict[str, str]] | None = None,
     ) -> None:
         super().__init__()
 
         self.startupDone = False
-        self.configData: Dict[str, Any] = {}
+        self.configData: dict[str, Any] = {}
 
         if configOptions:
             self.configOptions = configOptions
 
     @staticmethod
     def _simplePathToPosix(targetPath: str) -> str:
-        """return a path with more POSIX-like separators (path does not need to exist)"""
+        """Return a path with more POSIX-like separators (path does not need to exist)"""
         return targetPath.replace("\\", "/")
 
     def _existsFile(
         self,
         itemPath: str,
     ) -> str:
-        """test if path exists and is a file, return the POSIX realpath
+        """Test if path exists and is a file, return the POSIX realpath
         raises exception if path does not exist or is not a file
         """
-
         fp = Path(itemPath)
         exists = fp.exists()
 
@@ -79,8 +74,8 @@ class SpectraAssureConfigFile(
         return os.path.realpath(itemPath)
 
     @abstractmethod
-    def _loadConfig(self) -> Dict[str, Any]:  # Interface only
-        data: Dict[str, Any] = {}
+    def _loadConfig(self) -> dict[str, Any]:  # Interface only
+        data: dict[str, Any] = {}
         return data
 
     def _addConfigFile(
@@ -92,8 +87,8 @@ class SpectraAssureConfigFile(
             return
         self.configFile = self._existsFile(configFile)
 
-    def _processConfigFile(self) -> Dict[str, Any]:
-        rr: Dict[str, Any] = {}
+    def _processConfigFile(self) -> dict[str, Any]:
+        rr: dict[str, Any] = {}
 
         if self.configFile is None:
             return rr
@@ -134,7 +129,7 @@ class SpectraAssureConfigFile(
 
         return value
 
-    def getConfigOptions(self) -> Dict[str, Dict[str, str]]:
+    def getConfigOptions(self) -> dict[str, dict[str, str]]:
         return self.configOptions
 
     def addConfigOption(
@@ -142,7 +137,7 @@ class SpectraAssureConfigFile(
         key: str,
         typeName: str | None = None,
     ) -> None:
-        """add one config key and type to the current config items
+        """Add one config key and type to the current config items
 
         Args:
          - key: str; mandatory
@@ -176,22 +171,22 @@ class SpectraAssureConfigFile(
             logger.warning(f"we currently support validating {typeNames}, your type {typeName} will not be validated")
         self.configOptions[key][t] = typeName
 
-    def getValues(self) -> Dict[str, Any]:
-        """process the file and return the data
+    def getValues(self) -> dict[str, Any]:
+        """Process the file and return the data
 
         Note:
             We process only once;
             after that, only the processed data is returned
-        """
 
+        """
         if self.startupDone is False:
             self.configData = self._processConfigFile()
             self.startupDone = True
 
         return self.configData
 
-    def getConfigFileNow(self) -> Dict[str, Any]:
-        cfDict: Dict[str, Any] = {}
+    def getConfigFileNow(self) -> dict[str, Any]:
+        cfDict: dict[str, Any] = {}
 
         cf = self.getConfigOptions()
         for key, value in self.getValues().items():

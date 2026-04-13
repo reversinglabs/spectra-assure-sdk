@@ -1,15 +1,13 @@
 import logging
 from typing import (
     Any,
-    Dict,
-    Tuple,
 )
 
 import requests
 
 from .core import (
-    SpectraAssureApiCore,
     Executor,
+    SpectraAssureApiCore,
 )
 
 logger = logging.getLogger(__name__)
@@ -18,14 +16,13 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiGet(
     SpectraAssureApiCore,
 ):
-
     def _get_with_retry(
         self,
         *,
         url: str,
-        payload: Dict[str, Any],
-        headers: Dict[str, str],
-        url_params: Dict[str, str] | None,
+        payload: dict[str, Any],
+        headers: dict[str, str],
+        url_params: dict[str, str] | None,
         auto_adapt_to_throttle: bool = False,
     ) -> requests.Response | None:
         executor = Executor(
@@ -48,8 +45,8 @@ class SpectraAssureApiGet(
         self,
         *,
         url: str,
-        payload: Dict[str, Any],
-        headers: Dict[str, str],
+        payload: dict[str, Any],
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> requests.Response:
@@ -75,11 +72,11 @@ class SpectraAssureApiGet(
         self,
         *,
         url: str,
-        payload: Dict[str, Any],
-        headers: Dict[str, str],
+        payload: dict[str, Any],
+        headers: dict[str, str],
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
-    ) -> Tuple[int, Any]:
+    ) -> tuple[int, Any]:
         try:
             r = self._basic_get(
                 url=url,
@@ -102,7 +99,7 @@ class SpectraAssureApiGet(
     ) -> requests.Response:
         logger.debug(url)
 
-        payload: Dict[Any, Any] = {}
+        payload: dict[Any, Any] = {}
         headers = self._make_headers()
 
         return self._basic_get(

@@ -1,9 +1,9 @@
 # python3
 
-from spectra_assure_api_client import SpectraAssureApiOperations
-
-import testPackage
 import testing
+import testPackage
+
+from spectra_assure_api_client import SpectraAssureApiOperations
 
 
 def testListProjectOnly(
@@ -39,8 +39,8 @@ def testListProject(
     if r is False:
         return r
 
-    jData = data.json()
-    for p in jData.get("packages"):
+    jd = data.json()
+    for p in jd.get("packages"):
         package = p.get("name")
         print(action, f"package: {package}")
 
@@ -79,7 +79,7 @@ def testEditProject(
     aOperationsHandle: SpectraAssureApiOperations,
     project: str,
     description: str | None = None,
-    newName: str | None = None,
+    newname: str | None = None,
 ) -> bool:
     action = "Edit Project"
 
@@ -88,8 +88,8 @@ def testEditProject(
     if description is not None:
         qp["description"] = description
 
-    if newName is not None:
-        qp["name"] = newName
+    if newname is not None:
+        qp["name"] = newname
 
     data = aOperationsHandle.edit(
         project=project,

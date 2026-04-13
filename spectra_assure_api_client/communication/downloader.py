@@ -5,19 +5,15 @@ import re
 import urllib.parse
 import uuid
 from pathlib import Path
-from typing import (
-    Dict,
-    Tuple,
-)
 
 import requests
 
 from .downloader_exceptions import (
-    UrlDownloaderUnknownHashKey,
+    UrlDownloaderFileVerifyIssue,
     UrlDownloaderTargetDirectoryIssue,
     UrlDownloaderTargetFileIssue,
     UrlDownloaderTempFileIssue,
-    UrlDownloaderFileVerifyIssue,
+    UrlDownloaderUnknownHashKey,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=too-many-instance-attributes
 class UrlDownloader:
-
     def __init__(  # pylint: disable=too-many-arguments
         self,
         *,
@@ -40,8 +35,7 @@ class UrlDownloader:
         with_verify_after_download: bool = True,
         with_verify_existing_files: bool = True,
     ) -> None:
-        """
-        Actions:
+        """Actions:
             Initialize a 'UrlDownloader'.
 
         Args:
@@ -78,8 +72,8 @@ class UrlDownloader:
         Notes:
             The specified target directory must exist.
             Internally, all paths are converted to POSIX paths.
-        """
 
+        """
         self.with_overwrite_existing_files = with_overwrite_existing_files
         self.with_verify_after_download = with_verify_after_download
         self.with_verify_existing_files = with_verify_existing_files
@@ -179,7 +173,7 @@ class UrlDownloader:
     def _exists_path(
         *,
         item_path: str,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         fp = Path(item_path)
         exists = fp.exists()
         what = ""
@@ -196,7 +190,7 @@ class UrlDownloader:
         *,
         url: str,
         dir_path: str,
-    ) -> Tuple[str, bool]:
+    ) -> tuple[str, bool]:
         uuid_name = uuid.uuid5(
             uuid.NAMESPACE_URL,
             url,
@@ -213,10 +207,9 @@ class UrlDownloader:
         self,
         *,
         file_path: str,
-        hashes: Dict[str, str],
+        hashes: dict[str, str],
     ) -> None:
-        """
-        Args:
+        """Args:
          - file_path: str,
          - hashes: Dict[str, str],
 
@@ -226,8 +219,8 @@ class UrlDownloader:
         Raises:
          - UrlDownloaderUnknownHashKey: if we cannot find the proper key we support
          - UrlDownloaderFileVerifyIssue: if the verification fails
-        """
 
+        """
         digest = hashes.get(self.hash_key)
         if digest is None:
             msg = f"no digest found for '{self.hash_key}' in: {hashes}"
@@ -254,10 +247,9 @@ class UrlDownloader:
         *,
         download_url: str,
         file_path: str,
-        hashes: Dict[str, str],
+        hashes: dict[str, str],
     ) -> None:
-        """
-        Args:
+        """Args:
          - download_url: str;    The actual URL from which the file will be downloaded. Valid for a short interval only
          - file_path: str;       The target file path
          - hashes: Dict[str, str]; The current dict of hashes (sha1 and sha256 are supported for verification)
@@ -269,6 +261,7 @@ class UrlDownloader:
             Whatever the GET request raises on HTTPS errors
 
         Notes:
+
         """
         try:
             logger.debug("%s %s", download_url, file_path)
@@ -299,11 +292,9 @@ class UrlDownloader:
         self,
         *,
         target_file_name: str,
-        hashes: Dict[str, str],
-    ) -> Tuple[bool, str]:
-        """
-
-        Args:
+        hashes: dict[str, str],
+    ) -> tuple[bool, str]:
+        """Args:
          - target_file_name: str; The file name (not the file path)
          - hashes: Dict[str,str]; Supported hashes: sha1 and sha256
 
@@ -323,7 +314,6 @@ class UrlDownloader:
                   we raise: 'UrlDownloaderFileVerifyIssue'
 
         """
-
         target_file_path = f"{self.target_dir_posix}/{target_file_name}"
         exists, _ = self._exists_path(item_path=target_file_path)
         if exists is False:
@@ -353,8 +343,7 @@ class UrlDownloader:
         file_path: str,
         target_path: str,
     ) -> None:
-        """
-        After verification, we must rename the temp file.
+        """After verification, we must rename the temp file.
 
         Args:
          - file_path: str; The temp path we downloaded the file to
@@ -422,8 +411,7 @@ class UrlDownloader:
         temp_dir: str,
         download_url: str,
     ) -> str:
-        """
-        Args:
+        """Args:
          - temp_dir: str; The location of the temp directory (must exist)
          - download_url: str; The URL we use to get the file name
 
@@ -445,7 +433,7 @@ class UrlDownloader:
 
         return temp_file_path
 
-    def _validate_hashes(self, hashes: Dict[str, str]) -> None:
+    def _validate_hashes(self, hashes: dict[str, str]) -> None:
         if len(hashes) == 0:
             return
 
@@ -472,7 +460,7 @@ class UrlDownloader:
 
     @staticmethod
     def _simple_path_to_posix(target_path: str) -> str:
-        """return a path with more POSIX-like separators, path does not need to exist"""
+        """Return a path with more POSIX-like separators, path does not need to exist"""
         return target_path.replace("\\", "/")
 
     # PUBLIC
@@ -481,10 +469,9 @@ class UrlDownloader:
         self,
         *,
         download_url: str,
-        hashes: Dict[str, str],
-    ) -> Tuple[bool, str]:
-        """
-        Action:
+        hashes: dict[str, str],
+    ) -> tuple[bool, str]:
+        """Action:
             With the specified arguments,
             download the file from the URL into the provided target directory,
             and verify the downloaded file if requested to do so.

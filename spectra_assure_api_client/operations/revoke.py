@@ -4,13 +4,10 @@
 # The request will be successful only if the package version currently has the Approved status.
 # When the approval status is set to Revoked, you can no longer change it back to Approved or Rejected.
 
+import logging
 from typing import (
     Any,
-    List,
-    Dict,
 )
-
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
@@ -18,23 +15,21 @@ from spectra_assure_api_client.communication.exceptions import (
 
 from .base import SpectraAssureApiOperationsBase
 
-
 logger = logging.getLogger(__name__)
 
 
 class SpectraAssureApiOperationsRevoke(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_revoke(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
 
-        version_qp: List[str] = [
+        version_qp: list[str] = [
             "reason",
         ]
 
@@ -54,8 +49,7 @@ class SpectraAssureApiOperationsRevoke(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a revoke() API call.
 
         Args:
@@ -78,7 +72,6 @@ class SpectraAssureApiOperationsRevoke(  # pylint: disable=too-many-ancestors
              - reason: str
 
         """
-
         action = "revoke"
         what = self._what(
             project=project,
@@ -100,7 +93,7 @@ class SpectraAssureApiOperationsRevoke(  # pylint: disable=too-many-ancestors
             version=version,
         )
 
-        valid_qp: Dict[str, Any] = self.qp_revoke(
+        valid_qp: dict[str, Any] = self.qp_revoke(
             what=what,
             **qp,
         )

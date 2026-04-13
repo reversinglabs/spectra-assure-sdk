@@ -1,14 +1,13 @@
 # python3
 
+import datetime
 from typing import (
     Any,
-    Dict,
 )
 
-import datetime
+import testing
 
 from spectra_assure_api_client import SpectraAssureApiOperations
-import testing
 
 
 def testVersionRlSafe(
@@ -84,8 +83,8 @@ def testStatusVersion(
         **qp,
     )
 
-    jData = data.json()
-    return jData
+    jd = data.json()
+    return jd
 
 
 def testChecksVersion(
@@ -150,7 +149,7 @@ def testCreateVersion(
     version: str,
     filePath: str,
 ) -> bool:
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "publisher": "ReversingLabs Testing",
         "product": "a reversingLabs test",
         "category": "Development",  # test also a error category , 400 {"error":"category: Invalid software category"}
@@ -206,7 +205,7 @@ def testApproveVersion(
 ) -> bool:
     action = "Approve Version"
 
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "reason": f"some dummy reason: {action}",
     }
 
@@ -229,7 +228,7 @@ def testRejectVersion(
 ) -> bool:
     action = "Reject Version"
 
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "reason": f"some dummy reason: {action}",
     }
 
@@ -252,7 +251,7 @@ def testRevokeVersion(
 ) -> bool:
     action = "Revoke Version"
 
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "reason": f"some dummy reason: {action}",
     }
 

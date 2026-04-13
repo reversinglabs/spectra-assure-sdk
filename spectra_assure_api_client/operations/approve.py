@@ -2,13 +2,10 @@
 # qp:: reason: str
 
 
+import logging
 from typing import (
     Any,
-    List,
-    Dict,
 )
-
-import logging
 
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
@@ -16,23 +13,21 @@ from spectra_assure_api_client.communication.exceptions import (
 
 from .base import SpectraAssureApiOperationsBase
 
-
 logger = logging.getLogger(__name__)
 
 
 class SpectraAssureApiOperationsApprove(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-
     @staticmethod
     def qp_approve(
         *,
         what: str,
         **qp: Any,
-    ) -> Dict[str, Any]:
-        r: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        r: dict[str, Any] = {}
 
-        version_qp: List[str] = [
+        version_qp: list[str] = [
             "reason",
         ]
 
@@ -52,8 +47,7 @@ class SpectraAssureApiOperationsApprove(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> Any:
-        """
-        Action:
+        """Action:
             Execute a approve() API call.
 
         Args:
@@ -76,7 +70,6 @@ class SpectraAssureApiOperationsApprove(  # pylint: disable=too-many-ancestors
              - reason: str
 
         """
-
         action = "approve"
         what = self._what(
             project=project,
@@ -98,7 +91,7 @@ class SpectraAssureApiOperationsApprove(  # pylint: disable=too-many-ancestors
             version=version,
         )
 
-        valid_qp: Dict[str, Any] = self.qp_approve(
+        valid_qp: dict[str, Any] = self.qp_approve(
             what=what,
             **qp,
         )

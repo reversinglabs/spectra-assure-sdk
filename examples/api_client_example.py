@@ -1,17 +1,13 @@
-from typing import (
-    Any,
-    Dict,
-    List,
-    Tuple,
-)
-
 import datetime
-import time
+import json
 import logging
 import os
-import json
 import sys
+import time
 import uuid
+from typing import (
+    Any,
+)
 
 from spectra_assure_api_client import (
     SpectraAssureApiOperations,
@@ -30,8 +26,6 @@ def make_api_client(
     host: str | None = None,
     server: str | None = None,
 ) -> SpectraAssureApiOperations:
-    os.environ["LOG_LEVEL"] = "INFO"  # set the default log level to INFO
-    os.environ["ENVIRONMENT"] = "testing"  # in testing mode the log file uses DEBUG level
 
     api_client = SpectraAssureApiOperations(
         host=host,
@@ -53,14 +47,14 @@ def create_project(
     api_client: SpectraAssureApiOperations,
     project: str,
 ) -> None:
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "description": "SDK created project",
     }
     rr = api_client.create(
         project=project,
         **qp,
     )
-    print("Create project", rr.status_code, rr.text)
+    print("Create project", project, rr.status_code, rr.text)
 
 
 def create_package(
@@ -68,7 +62,7 @@ def create_package(
     project: str,
     package: str,
 ) -> None:
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "description": "SDK created project",
     }
 
@@ -77,7 +71,7 @@ def create_package(
         package=package,
         **qp,
     )
-    print("Create package", rr.status_code, rr.text)
+    print("Create package", project, package, rr.status_code, rr.text)
 
 
 def scan_version(
@@ -87,7 +81,7 @@ def scan_version(
     version: str,
     file_path: str,
 ) -> int:
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "publisher": "ReversingLabs Testing",
         "product": "a reversingLabs test",
         "category": "Development",
@@ -120,7 +114,7 @@ def url_import_version(
     bearer_token: str | None = None,
 ) -> int:
     # url: https://www.7-zip.org/a/7z2500-x64.exe
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "replace": False,
         "force": True,
         "publisher": "ReversingLabs Testing",
@@ -145,6 +139,45 @@ def url_import_version(
     )
 
     print("url_import Version", rr.status_code, rr.text)
+    return int(rr.status_code)
+
+
+def purl_import_version(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    version: str,
+    purl: str,
+    auth_user: str | None = None,
+    auth_pass: str | None = None,
+    bearer_token: str | None = None,
+) -> int:
+    # purl: "pkg:pypi/pyaudio@0.2.13?artifact=PyAudio-0.2.13-cp311-cp311-win_amd64.whl"
+    qp: dict[str, Any] = {
+        "replace": False,
+        "force": True,
+        "publisher": "ReversingLabs Testing",
+        "product": "a reversingLabs test",
+        "category": "Development",
+        "license": "MIT License Modern Variant",
+        "platform": "Containers",
+        "release_date": f"{datetime.datetime.now()}",
+        "build": "version",
+    }
+
+    # create a version with upload via url (url_import)
+    rr = api_client.purl_import(
+        project=project,
+        package=package,
+        version=version,
+        purl=purl,
+        auth_user=auth_user,
+        auth_pass=auth_pass,
+        bearer_token=bearer_token,
+        **qp,
+    )
+
+    print("purl_import Version", rr.status_code, rr.text)
     return int(rr.status_code)
 
 
@@ -190,8 +223,10 @@ def list_groups(
     api_client: SpectraAssureApiOperations,
 ) -> Any:
     response = api_client.listGroups()
+    print("list_groups:", response)
+
     data = response.json()
-    print("listGroups: ", json.dumps(data, indent=2))
+    # print("listGroups: ", json.dumps(data, indent=2))
     return data
 
 
@@ -199,8 +234,9 @@ def list_projects(
     api_client: SpectraAssureApiOperations,
 ) -> Any:
     response = api_client.list()
+    print("list_projects:", response)
     data = response.json()
-    print("Projects: ", json.dumps(data, indent=2))
+    # print("Projects: ", json.dumps(data, indent=2))
     return data
 
 
@@ -211,8 +247,9 @@ def list_project(
     project_info = api_client.list(
         project=project,
     )
+    print("list_project:", project_info)
     project_data = project_info.json()
-    print("Project detail: ", json.dumps(project_data, indent=2))
+    # print("Project detail: ", json.dumps(project_data, indent=2))
     return project_data
 
 
@@ -225,8 +262,9 @@ def list_package(
         project=project,
         package=package,
     )
+    print("list_package:", package_info)
     package_data = package_info.json()
-    print("Package details: ", json.dumps(package_data, indent=2))
+    # print("Package details: ", json.dumps(package_data, indent=2))
     return package_data
 
 
@@ -241,8 +279,10 @@ def list_version(
         package=package,
         version=version,
     )
+    print("list_version:", version_info)
+    # print("Version details: ", version_info.status_code)
     version_data = version_info.json()
-    print("Version details: ", json.dumps(version_data, indent=2))
+    # print("Version details: ", json.dumps(version_data, indent=2))
     return version_data
 
 
@@ -251,7 +291,7 @@ def edit_project(
     api_client: SpectraAssureApiOperations,
     project: str,
 ) -> None:
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "description": "API edited",
         "name": project,
     }
@@ -267,7 +307,7 @@ def edit_package(
     project: str,
     package: str,
 ) -> None:
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "description": "API edited",
         "name": package,
     }
@@ -285,7 +325,7 @@ def edit_version(
     package: str,
     version: str,
 ) -> None:
-    qp: Dict[str, Any] = {
+    qp: dict[str, Any] = {
         "publisher": "ReversingLabs Testing 2",
         "product": "a reversingLabs test 2",
         "license": "iMatix Standard Function Library Agreement",
@@ -318,10 +358,10 @@ def report_version(
     logger.debug("%s", report_data)
 
     try:
-        print("Report details:", report_type, report_data.text)
+        # print("Report details:", report_type, report_data.text)
 
         if report_type in ["rl-cve", "rl-uri"]:
-            print("Report details:", report_data.text)
+            # print("Report details:", report_data.text)
             return report_data.text
 
         if report_type.endswith("pdf"):
@@ -331,7 +371,7 @@ def report_version(
             return ""
 
         report_details = report_data.json()
-        print("Report details:", json.dumps(report_details, indent=2))
+        # print("Report details:", json.dumps(report_details, indent=2))
         return report_details
 
     except Exception as e:
@@ -351,7 +391,8 @@ def check_version(
         package=package,
         version=version,
     )
-    print("Version check:", json.dumps(rr.json(), indent=2))
+    print("Version check:", rr.status_code)
+    # print("Version check:", json.dumps(rr.json(), indent=2))
 
 
 # STATUS
@@ -362,7 +403,7 @@ def status_version(
     version: str,
     with_download_url: bool = False,
 ) -> Any:
-    qp: Dict[str, Any] = {}
+    qp: dict[str, Any] = {}
 
     if with_download_url is True:
         qp["download"] = True  # this will subtract from your quota
@@ -373,8 +414,8 @@ def status_version(
         version=version,
         **qp,
     )
-    print("Version status check:")
-    print(json.dumps(version_check_response.json(), indent=2))
+    print(f"Version status check: {version_check_response.status_code}")
+    # print(json.dumps(version_check_response.json(), indent=2))
     return version_check_response.json()
 
 
@@ -402,7 +443,7 @@ def approve_version(
     version: str,
     reason: str | None = None,
 ) -> Any:
-    qp: Dict[str, Any] = {}
+    qp: dict[str, Any] = {}
     if reason:
         qp["reason"] = reason
 
@@ -424,7 +465,7 @@ def reject_version(
     version: str,
     reason: str | None = None,
 ) -> Any:
-    qp: Dict[str, Any] = {}
+    qp: dict[str, Any] = {}
     if reason:
         qp["reason"] = reason
 
@@ -446,7 +487,7 @@ def revoke_version(
     version: str,
     reason: str | None = None,
 ) -> Any:
-    qp: Dict[str, Any] = {}
+    qp: dict[str, Any] = {}
     if reason:
         qp["reason"] = reason
 
@@ -545,7 +586,7 @@ def version_rl_safe_with_download_and_rename(
     package: str,
     version: str,
     **qp: Any,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     action = "Rl-Safe with download and rename"
 
     download_ok, file_path = api_client.rl_safe_download(
@@ -563,13 +604,13 @@ def version_rl_safe_with_download_and_rename(
     return download_ok, file_path
 
 
-def makeFindQueries():
-    queries = {}
+def makeFindQueries() -> dict:
+    queries: dict = {}
 
     # ==================================
     myUuid = str(uuid.uuid4())
     myPurl = "pkg:pypi/numpy@2.3.5"
-    query: Dict[str, str] = {
+    query: dict[str, str] = {
         "uuid": myUuid,
         "purl": myPurl,
     }
@@ -581,7 +622,7 @@ def makeFindQueries():
     # ==================================
     myUuid = str(uuid.uuid4())
     myPurl = "pkg:pypi/numpy"
-    query: Dict[str, str] = {
+    query: dict[str, str] = {
         "uuid": myUuid,
         "purl": myPurl,
     }
@@ -597,7 +638,7 @@ def makeFindQueries():
     # ==================================
     myUuid = str(uuid.uuid4())
     sha256Hash = "fffe29a1ef00883599d1dc2c51aa2e5d80afe49523c261a74933df395c15c520"
-    query: Dict[str, str] = {
+    query: dict[str, str] = {
         "uuid": "1.2.3",
         "sha256": sha256Hash,
     }
@@ -615,8 +656,7 @@ def community_find_packages(
     print("community_find_packages")
 
     for qName, query in makeFindQueries().items():
-
-        post_data: List[Any] = [query["query"]]
+        post_data: list[Any] = [query["query"]]
         qp = query["qp"]
 
         print(f"qp: {qp}; post_data: {post_data}")
@@ -628,7 +668,8 @@ def community_find_packages(
         )
 
         s = f"query: {qName} {query} gives:"
-        print(s)
+        print(f"{s} {result.status_code}")
+        continue
 
         if result.status_code == 200:
             print(json.dumps(json.loads(result.text), indent=2))
@@ -654,9 +695,10 @@ def community_report_package(
         qp=qp,
         auto_adapt_to_throttle=True,
     )
+    print(f"{result.status_code}")
 
-    if result.status_code == 200:
-        print(json.dumps(json.loads(result.text), indent=2))
+    # if result.status_code == 200:
+    #    print(json.dumps(json.loads(result.text), indent=2))
 
     return None
 
@@ -681,8 +723,54 @@ def community_report_version(
         auto_adapt_to_throttle=True,
     )
 
+    print(f"{result.status_code}")
+    # if result.status_code == 200:
+    #    print(json.dumps(json.loads(result.text), indent=2))
+
+    return None
+
+
+def export_profile(
+    api_client: SpectraAssureApiOperations,
+    organization: str,
+    group: str | None = None,
+) -> str | None:
+
+    result = api_client.export_profile(
+        organization=organization,
+        group=group,
+        auto_adapt_to_throttle=True,
+    )
+
     if result.status_code == 200:
-        print(json.dumps(json.loads(result.text), indent=2))
+        f_name = f"export_profile.{organization}.{group}.json"
+        data = json.dumps(json.loads(result.text))
+        print(f"export_profile {organization} {group}\n {data}")
+        with open(f_name, "wb") as f:
+            f.write(bytes(data, "utf-8"))
+        return f_name
+
+    return None
+
+
+def import_profile(
+    api_client: SpectraAssureApiOperations,
+    *,
+    file_path: str,
+    organization: str,
+    group: str | None = None,
+    replace: bool = True,  # default is to replace the full profile
+) -> Any:
+
+    result = api_client.import_profile(
+        file_path=file_path,
+        organization=organization,
+        group=group,
+        replace=replace,
+        auto_adapt_to_throttle=True,
+    )
+
+    print(f"import_profile, {file_path} {organization} {group} {replace} {result.status_code}")
 
     return None
 
@@ -817,9 +905,9 @@ def x_main() -> None:
         group=group,
     )
 
-    new_project = "SDKTestProject"
-    new_package = "SDKTestPackage"
-    new_version = "2025.7.29"
+    new_project = "SDKTestProject202604"
+    new_package = "SDKTestPackage202604"
+    new_version = "2026.04.09"
     file_path = "api_client_example.py"  # use my self as scan file
 
     create_project(
@@ -849,6 +937,14 @@ def x_main() -> None:
         url="https://www.7-zip.org/a/7z2500-x64.exe",
     )
 
+    status_code = purl_import_version(
+        api_client=api_client,
+        project=new_project,
+        package="pyaudio",
+        version="0.2.13",
+        purl="pkg:pypi/pyaudio@0.2.13?artifact=PyAudio-0.2.13-cp311-cp311-win_amd64.whl",
+    )
+
     n = 0
     while True:
         m = 10
@@ -871,6 +967,7 @@ def x_main() -> None:
 
     if exists_test_data is True:
         delete_test_data = False  # but we will not delete previously existing data
+    delete_test_data = True  # by default we delete what we create
 
     if exists_test_data is False:
         edit_project(
@@ -955,6 +1052,36 @@ def x_main() -> None:
                 version=new_version,
             )
 
+    f_name_org: str | None = export_profile(
+        api_client=api_client,
+        organization=organization,
+    )  # export org profile
+    print(f"export_profile: f_name: {f_name_org}")
+
+    f_name_group: str | None = export_profile(
+        api_client=api_client,
+        organization=organization,
+        group=group,
+    )  # export group profile
+    print(f"export_profile: f_name: {f_name_group}")
+
+    if f_name_org:
+        import_profile(
+            api_client=api_client,
+            file_path=f_name_org,
+            organization=organization,
+            replace=True,
+        )
+
+    if f_name_group:
+        import_profile(
+            api_client=api_client,
+            file_path=f_name_group,
+            organization=organization,
+            group=group,
+            replace=True,
+        )
+
     walk_all_project_package_version(
         api_client=api_client,
     )
@@ -992,4 +1119,7 @@ def x_main() -> None:
 
 
 if __name__ == "__main__":
+    os.environ["LOG_LEVEL"] = "INFO"  # set the default log level to INFO
+    os.environ["ENVIRONMENT"] = "testing"  # in testing mode the log file uses DEBUG level
+
     x_main()

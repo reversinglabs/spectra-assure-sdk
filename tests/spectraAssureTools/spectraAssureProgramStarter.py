@@ -1,31 +1,24 @@
 # python 3
 
-from typing import (
-    Dict,
-    Any,
-    Tuple,
-    List,
-)
-
-import sys
-import os
 import argparse
 import logging
+import os
+import sys
+from typing import (
+    Any,
+)
 
 from spectraAssureTools import (
     SpectraAssureApiConfig,
 )
 
-
 from .spectraAssureConfigFile import SpectraAssureConfigFile
 from .spectraAssureEnvironmentVars import SpectraAssureEnvironmentVars
-
 
 logger = logging.getLogger(__name__)
 
 
 class SpectraAssureProgramStarter:
-
     def __init__(
         self,
         *,
@@ -33,13 +26,11 @@ class SpectraAssureProgramStarter:
         description: str | None = None,
         epilog: str | None = None,
         #
-        externalEnvVarsInfo: Dict[str, Dict[str, Any]] | None = None,
+        externalEnvVarsInfo: dict[str, dict[str, Any]] | None = None,
         configFileHandle: SpectraAssureConfigFile | None = None,
         **additionalKwArgs: Any,
     ) -> None:
-        """
-        Args:
-
+        """Args:
          - progName: str | None, default None
             If required, you can override the program name from the default:
             - os.path.basename(sys.argv[0])
@@ -52,7 +43,7 @@ class SpectraAssureProgramStarter:
             The epilog is shown at the end of the usage() in case of errors
             or if -h, --help is specified
 
-         - externalEnvVarsInfo: Dict | None , default None
+         - externalEnvVarsInfo: dict | None , default None
             By default, the program knows about standard environment variables used by SpectraAssureApi.
             You can override the naming of the environment variables here.
             The environment variables will be merged into the final parameterList,
@@ -65,7 +56,7 @@ class SpectraAssureProgramStarter:
 
          - additionalKwArgs: Any
             Nonstandard parameters specified will be collected in the
-            additionalConfig Dict for later use by the program
+            additionalConfig dict for later use by the program
 
         Note:
             Positional arguments are not supported,
@@ -133,13 +124,13 @@ class SpectraAssureProgramStarter:
         self,
         **additionalKwArgs: Any,
     ) -> None:
-        self.additionalConfig: Dict[str, Any] = {}
+        self.additionalConfig: dict[str, Any] = {}
         for k, v in additionalKwArgs.items():
             self.additionalConfig[k] = v
 
     @staticmethod
     def _simplePathToPosix(targetPath: str) -> str:
-        """return a path with more POSIX-like separators (path does not need to exist)"""
+        """Return a path with more POSIX-like separators (path does not need to exist)"""
         return targetPath.replace("\\", "/")
 
     def _parseMyApiArgs(self) -> None:
@@ -227,7 +218,7 @@ class SpectraAssureProgramStarter:
             help=f"{p} password (only used if proxy_user is set), {env}",
         )
 
-    def _parseProcessCliArgs(self) -> Dict[str, Any]:
+    def _parseProcessCliArgs(self) -> dict[str, Any]:
         assert self.parser is not None
 
         # https://stackoverflow.com/questions/42279063/python-typehints-for-argparse-namespace-objects
@@ -237,8 +228,8 @@ class SpectraAssureProgramStarter:
         logger.info(f"Cli: {cliDict}")
         return cliDict
 
-    def _applyConfigFileNow(self) -> Dict[str, Any]:
-        cfDict: Dict[str, Any] = {}
+    def _applyConfigFileNow(self) -> dict[str, Any]:
+        cfDict: dict[str, Any] = {}
         if self.configFileHandle is None:
             return cfDict
 
@@ -246,8 +237,8 @@ class SpectraAssureProgramStarter:
 
     def updateParamsDict(
         self,
-        paramsDict: Dict[str, Any],
-        inputDict: Dict[str, Any],
+        paramsDict: dict[str, Any],
+        inputDict: dict[str, Any],
     ) -> None:
         for k, v in inputDict.items():
             if v is not None:
@@ -255,13 +246,13 @@ class SpectraAssureProgramStarter:
 
     def _processArgsStrategy(
         self,
-        strategyLoadConfigParams: List[str],
-    ) -> Dict[str, Any]:
+        strategyLoadConfigParams: list[str],
+    ) -> dict[str, Any]:
         if strategyLoadConfigParams == []:
             strategyLoadConfigParams = ["CLI", "ENV"]
         logger.debug("%s", strategyLoadConfigParams)
 
-        paramsDict: Dict[str, Any] = {}
+        paramsDict: dict[str, Any] = {}
         for what in strategyLoadConfigParams:
             if what.upper() == "CLI":
                 self.updateParamsDict(paramsDict, self._parseProcessCliArgs())
@@ -283,12 +274,12 @@ class SpectraAssureProgramStarter:
     def getConfig(
         self,
         *,
-        strategyLoadConfigParams: List[str] = ["CLI", "ENV"],
-    ) -> Tuple[SpectraAssureApiConfig, Dict[str, Any]]:
-        """getConfig processes all parameter sources and produces a merged result according to the chosen strategy
+        strategyLoadConfigParams: list[str] | None = None,
+    ) -> tuple[SpectraAssureApiConfig, dict[str, Any]]:
+        """GetConfig processes all parameter sources and produces a merged result according to the chosen strategy
 
         Args:
-         - strategyLoadConfigParams: List[str].
+         - strategyLoadConfigParams: list[str].
             A list of strings indicating the sequence of processing
 
             The default strategy is:    ["CONFIGFILE", "CLI", "ENV"]
@@ -306,14 +297,17 @@ class SpectraAssureProgramStarter:
         Return:
             We return a tuple (apiConfig, additionalConfig)
             apiConfig: SpectraAssureApiConfig,
-            additionslConfig: Dict[str, Any]
+            additionslConfig: dict[str, Any]
 
         Notes:
 
         """
+        if strategyLoadConfigParams is None:
+            strategyLoadConfigParams = ["CLI", "ENV"]
+
         self._startupCliArgs()
 
-        paramsDict: Dict[str, Any] = self._processArgsStrategy(
+        paramsDict: dict[str, Any] = self._processArgsStrategy(
             strategyLoadConfigParams,
         )
 

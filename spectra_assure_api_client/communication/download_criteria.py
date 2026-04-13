@@ -1,13 +1,10 @@
 import logging
-from typing import (
-    List,
-)
 
 from .exceptions import (
     SpectraAssureInvalidAction,
 )
 
-SUPPORTED_STRATEGIES: List[str] = [
+SUPPORTED_STRATEGIES: list[str] = [
     "LatestApproved_ByApprovalTimeStamp",  # default
     "AllApproved",
     # "AllApproved_SkipExistingFiles_VerifyAfterDownload",
@@ -19,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class SpectraAssureDownloadCriteria:
-
     def __init__(
         self,
         *,
@@ -35,9 +31,7 @@ class SpectraAssureDownloadCriteria:
         with_verify_after_download: bool = True,
         with_verify_existing_files: bool = True,
     ) -> None:
-        """
-        Args:
-
+        """Args:
         wait_for_scan_done: bool = False
             If a scan has not finished, wait for it to finish.
 

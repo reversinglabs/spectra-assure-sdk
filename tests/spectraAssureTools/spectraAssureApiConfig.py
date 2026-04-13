@@ -1,17 +1,14 @@
 # python3
 
+import logging
 from typing import (
     Any,
-    Tuple,
 )
-
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class SpectraAssureApiConfig:
-
     def __init__(
         self,
         *,
@@ -63,13 +60,13 @@ class SpectraAssureApiConfig:
 
     # PUBLIC
 
-    def validateMinimalConfigComplete(self) -> Tuple[bool, str | None]:
+    def validateMinimalConfigComplete(self) -> tuple[bool, str | None]:
         """Validate if the minimal mandatory params have been provided.
 
         Note:
             exits the program if not all mandatory parameters have been provided
-        """
 
+        """
         tests = [
             self.server is None and self.host is None,
             self.organization is None,
