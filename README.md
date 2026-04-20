@@ -630,6 +630,7 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
+| v1.0.12 | fix the return data for `community-report-version`. |
 | v1.0.11 | add import/export, purl-import, reports now all supported by api. |
 | v1.0.10 | add support for community queries. |
 | v1.0.9  | update to the latest python `requests` version. |

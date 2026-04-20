@@ -104,7 +104,7 @@ class SpectraAssureApiOperationsCommunityReportVersion(  # pylint: disable=too-m
 
         Note: we will add the namespace to the package as the rest of the lib does not understand namespace
         """
-        action = "community_report_package"
+        action = "community_report_version"
         # we will the namespace to the package as the rest of the lib does not understand namespace
         if namespace is not None and len(namespace) > 0:
             package = f"{namespace}/{package}"

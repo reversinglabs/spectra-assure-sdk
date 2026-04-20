@@ -724,8 +724,8 @@ def community_report_version(
     )
 
     print(f"{result.status_code}")
-    # if result.status_code == 200:
-    #    print(json.dumps(json.loads(result.text), indent=2))
+    if result.status_code == 200:
+        print(json.dumps(json.loads(result.text), indent=2))
 
     return None
 
