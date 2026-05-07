@@ -135,6 +135,7 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
             with_overwrite_existing_files=True,
             with_verify_after_download=False,
             with_verify_existing_files=False,
+            no_ssl_verify=self.no_ssl_verify,
         )
         download_ok, file_path = ud.download_file_from_url(
             download_url=download_url,

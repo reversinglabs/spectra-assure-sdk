@@ -47,13 +47,19 @@ class Executor:
         if self.no_ssl_verify is True:
             os.environ["REQUESTS_CA_BUNDLE"] = ""
 
+        verify = self.no_ssl_verify == False  # noqa: E712
+
+        logger.debug(f"no_ssl_verify: {self.no_ssl_verify}")
+        logger.debug(f"verify: {verify}")
+
         return self.request_callable(
             self.url,
             params=self.url_params,
-            json=self.payload,  # and what about the file upload
+            json=self.payload,
             headers=self.headers,
             proxies=self.proxies,
             timeout=self.timeout,
+            verify=verify,
         )
 
 

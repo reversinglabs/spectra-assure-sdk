@@ -111,7 +111,6 @@ tests: tests-simple
 
 tests-simple: testLocalInstall
 	( cd tests && TEST_MY=1 		 make tests )
-	# ( cd tests && TEST_PLAYGROUND1=1 make tests )
 	cp tests/api_client_example.py examples/
 
 tests-all: testLocalInstall

@@ -34,6 +34,7 @@ class UrlDownloader:
         with_overwrite_existing_files: bool = False,
         with_verify_after_download: bool = True,
         with_verify_existing_files: bool = True,
+        no_ssl_verify: bool = False,
     ) -> None:
         """Actions:
             Initialize a 'UrlDownloader'.
@@ -77,6 +78,9 @@ class UrlDownloader:
         self.with_overwrite_existing_files = with_overwrite_existing_files
         self.with_verify_after_download = with_verify_after_download
         self.with_verify_existing_files = with_verify_existing_files
+
+        self.no_ssl_verify = no_ssl_verify
+        logger.debug(f"no_ssl_verfy: {self.no_ssl_verify}")
 
         self._validate_target_dir(target_dir)
         self._validate_hash_key(hash_key)
@@ -264,13 +268,18 @@ class UrlDownloader:
 
         """
         try:
+            verify = self.no_ssl_verify == False  # noqa: E712
+
             logger.debug("%s %s", download_url, file_path)
+            logger.debug("no_ssl_verify: %s verify: %s", self.no_ssl_verify, verify)
 
             response = requests.get(
                 download_url,
                 stream=True,
                 timeout=self.timeout,
+                verify=verify,
             )
+
             with open(file_path, mode="wb") as file:
                 for chunk in response.iter_content(chunk_size=self.chunk_size):
                     file.write(chunk)

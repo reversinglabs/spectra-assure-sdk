@@ -579,6 +579,15 @@ the API responds with an error and the download capacity remains unaffected.
 | Targets          |       |         |         | &#10003;  |
 | Query parameters |       |         |         | &#10003;  |
 
+[`SpectraAssureApiOperationsCommunityUserAccount`](./doc/community-user-account.md)
+
+**View details about the Spectra Assure Community account of the current user.**
+
+|                  | Group | Package | Version | Community |
+| --               | --    |  --     |    --   | --        |
+| Targets          |       |         |         | &#10003;  |
+| Query parameters |       |         |         | &#10003;  |
+
 [`SpectraAssureApiOperationsExportProfile`](./doc/export-profile.md)
 
 **Export the profile configuration for a Portal organization or group as a JSON file .**
@@ -630,6 +639,7 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
+| v1.0.13 | add `community-user-account`. |
 | v1.0.12 | fix the return data for `community-report-version`. |
 | v1.0.11 | add import/export, purl-import, reports now all supported by api. |
 | v1.0.10 | add support for community queries. |

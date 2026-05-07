@@ -6,6 +6,8 @@ from spectra_assure_api_client.operations.approve import (
 
 # real operations
 from spectra_assure_api_client.operations.checks import SpectraAssureApiOperationsChecks
+
+# community
 from spectra_assure_api_client.operations.community_find_packages import (
     SpectraAssureApiOperationsCommunityFindPackages,
 )
@@ -15,6 +17,11 @@ from spectra_assure_api_client.operations.community_report_package import (
 from spectra_assure_api_client.operations.community_report_version import (
     SpectraAssureApiOperationsCommunityReportVersion,
 )
+from spectra_assure_api_client.operations.community_user_account import (
+    SpectraAssureApiOperationsCommunityUserAccount,
+)
+
+#
 from spectra_assure_api_client.operations.create import SpectraAssureApiOperationsCreate
 from spectra_assure_api_client.operations.delete import SpectraAssureApiOperationsDelete
 
@@ -68,9 +75,12 @@ class SpectraAssureApiOperations(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsListGroups,  # list the groups in this organization that we have access to
     SpectraAssureApiOperationsUrlImport,  # scan a file (create a version) via a url
     SpectraAssureApiOperationsPurlImport,  # scan a file (create a version) via a purl
+    # community
     SpectraAssureApiOperationsCommunityFindPackages,  # community find packages
     SpectraAssureApiOperationsCommunityReportPackage,  # Community report on a [Namespace/]Package[@version]
     SpectraAssureApiOperationsCommunityReportVersion,  # Community report on a [Namespace/]Package[@version]
+    SpectraAssureApiOperationsCommunityUserAccount,
+    # profile
     SpectraAssureApiOperationsExportProfile,  # export org or group profile
     SpectraAssureApiOperationsImportProfile,  # import org or group profile
 ):

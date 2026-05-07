@@ -121,13 +121,17 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         auto_adapt_to_throttle: bool = False,
         **qp: Any,
     ) -> dict[str, dict[str, Any]]:
+        logger.debug(f" no_ssl_verify: {self.no_ssl_verify}")
+
         # create a UrlDownloader to do the actual download
         ud = UrlDownloader(
             target_dir=target_dir,
             with_verify_existing_files=self.download_criteria.with_verify_existing_files,
             with_verify_after_download=self.download_criteria.with_verify_after_download,
             with_overwrite_existing_files=self.download_criteria.with_overwrite_existing_files,
+            no_ssl_verify=self.no_ssl_verify,
         )
+        logger.debug(f" no_ssl_verify={self.no_ssl_verify}")
 
         for version_, info in chosen.items():
             logger.info("try download: version %s, with info: %s", version_, info)

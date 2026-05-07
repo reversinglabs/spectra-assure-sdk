@@ -25,6 +25,7 @@ class SpectraAssureApiGet(
         url_params: dict[str, str] | None,
         auto_adapt_to_throttle: bool = False,
     ) -> requests.Response | None:
+
         executor = Executor(
             url=url,
             proxies=self.proxies,
@@ -33,6 +34,7 @@ class SpectraAssureApiGet(
             headers=headers,
             url_params=url_params,
             request_callable=requests.get,
+            no_ssl_verify=self.no_ssl_verify,
         )
 
         logger.debug("Proxies: %s", self.proxies)
@@ -52,6 +54,8 @@ class SpectraAssureApiGet(
     ) -> requests.Response:
         logger.debug("URL: %s", url)
         logger.debug("QUERY PARAMS: %s", qp)
+
+        # verify = self.no_ssl_verify == False  # noqa: E712
 
         response = self._get_with_retry(
             url=url,

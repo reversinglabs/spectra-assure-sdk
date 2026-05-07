@@ -66,6 +66,8 @@ _post_with_retry:
 """
         logger.debug(msg)
 
+        verify = self.no_ssl_verify == False  # noqa: E712
+
         while current_try < max_try:
             current_try += 1
 
@@ -78,6 +80,7 @@ _post_with_retry:
                     timeout=self.timeout,
                     proxies=self.proxies,
                     json=payload,  # payload here is dict/list
+                    verify=verify,
                 )
             else:
                 logger.debug("have filePath")
@@ -91,6 +94,7 @@ _post_with_retry:
                             timeout=self.timeout,
                             proxies=self.proxies,
                             data=fh,  # payload is now a fileHandle
+                            verify=verify,
                         )
 
                 else:
@@ -114,6 +118,7 @@ _post_with_retry:
                             proxies=self.proxies,
                             data=payload,
                             files=files,
+                            verify=verify,
                         )
 
             logger.debug("response.status: %d, %s", response.status_code, response.text)

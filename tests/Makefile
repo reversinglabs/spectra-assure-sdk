@@ -35,6 +35,7 @@ export PACKAGE_TEST_INSTALL
 # ---------------------------------------
 # defaults
 ENV_FILE	:=	~/.envfile_rl-scanner-cloud-my
+ENV_FILE	:=	~/.envfile_rl-scanner-cloud
 ENV_NAME	:=	my
 
 # variable test endpoints

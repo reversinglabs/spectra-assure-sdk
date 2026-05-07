@@ -14,8 +14,7 @@ from spectra_assure_api_client import (
     SpectraAssureDownloadCriteria,
 )
 
-log = logging.getLogger()
-logger = log
+logger = logging.getLogger()
 
 
 def make_api_client(
@@ -37,7 +36,7 @@ def make_api_client(
         timeout=60,
         no_ssl_verify=True,
     )
-    api_client.make_logger(my_logger=log)  # use a build in default logger to file and stderr
+    api_client.make_logger(my_logger=logger)  # use a build in default logger to file and stderr
     print(f"host: {host}, server: {server}, organization: {organization}, group: {group}")
     return api_client
 
@@ -695,7 +694,7 @@ def community_report_package(
         qp=qp,
         auto_adapt_to_throttle=True,
     )
-    print(f"{result.status_code}")
+    print(f"community_report_package {result.status_code}")
 
     # if result.status_code == 200:
     #    print(json.dumps(json.loads(result.text), indent=2))
@@ -723,7 +722,21 @@ def community_report_version(
         auto_adapt_to_throttle=True,
     )
 
-    print(f"{result.status_code}")
+    print(f"community_report_version {result.status_code}")
+    if result.status_code == 200:
+        print(json.dumps(json.loads(result.text), indent=2))
+
+    return None
+
+
+def community_user_account(
+    api_client: SpectraAssureApiOperations,
+):
+    result = api_client.community_user_account(
+        auto_adapt_to_throttle=True,
+    )
+
+    print(f"community_user_account: {result.status_code}")
     if result.status_code == 200:
         print(json.dumps(json.loads(result.text), indent=2))
 
@@ -903,6 +916,19 @@ def x_main() -> None:
     usage_group(
         api_client=api_client,
         group=group,
+    )
+
+    community_find_packages(
+        api_client=api_client,
+    )
+    community_report_package(
+        api_client=api_client,
+    )
+    community_report_version(
+        api_client=api_client,
+    )
+    community_user_account(
+        api_client=api_client,
     )
 
     new_project = "SDKTestProject202604"
@@ -1105,21 +1131,11 @@ def x_main() -> None:
             project=new_project,
         )
 
-    community_find_packages(
-        api_client=api_client,
-    )
-    community_report_package(
-        api_client=api_client,
-    )
-    community_report_version(
-        api_client=api_client,
-    )
-
     print("Done")
 
 
 if __name__ == "__main__":
-    os.environ["LOG_LEVEL"] = "INFO"  # set the default log level to INFO
+    os.environ["LOG_LEVEL"] = "DEBUG"  # set the default log level to INFO
     os.environ["ENVIRONMENT"] = "testing"  # in testing mode the log file uses DEBUG level
 
     x_main()

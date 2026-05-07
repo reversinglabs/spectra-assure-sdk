@@ -32,6 +32,7 @@ class SpectraAssureApiDelete(
             headers=headers,
             url_params=None,
             request_callable=requests.delete,
+            no_ssl_verify=self.no_ssl_verify,
         )
 
         logger.debug("Proxies: %s ", self.proxies)

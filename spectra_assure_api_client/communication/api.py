@@ -295,11 +295,15 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
         # B) GET https://{portalUrl}/api/public/v1/profile/{organization_name}/{group_name}/export
 
         transl: dict[str, str] = {
+            # community
+            "community_user_account": "community/user/account",
             "community_find_packages": "community/find/packages",
             "community_report_version": "community/report/version",
             "community_report_package": "community/report/package",
+            # export profile
             "export_org_profile": "profile",  # the rest will be done by the caller
             "export_group_profile": "profile",  # the rest will be done by the caller
+            # import profile
             "import_org_profile": "profile",  # the rest will be done by the caller
             "import_group_profile": "profile",  # the rest will be done by the caller
         }
