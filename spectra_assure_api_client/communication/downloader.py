@@ -80,7 +80,7 @@ class UrlDownloader:
         self.with_verify_existing_files = with_verify_existing_files
 
         self.no_ssl_verify = no_ssl_verify
-        logger.debug(f"no_ssl_verfy: {self.no_ssl_verify}")
+        logger.debug(f"no_ssl_verify: {self.no_ssl_verify}")
 
         self._validate_target_dir(target_dir)
         self._validate_hash_key(hash_key)
@@ -92,7 +92,7 @@ class UrlDownloader:
         min_block_size = 4 * 1024
         max_block_size = 2**16  # 64k
 
-        if block_size < min_block_size or block_size > 2**16:
+        if block_size < min_block_size or block_size > max_block_size:
             block_size = max_block_size
 
         self.block_size = block_size
@@ -105,7 +105,7 @@ class UrlDownloader:
 
         if hash_key not in known_sha_list:
             msg = f"The hash key you provided is not supported; it must be one of {known_sha_list}"
-            logger.exception(msg)
+            logger.error(msg)
             raise UrlDownloaderUnknownHashKey(msg)
 
         self.hash_key = hash_key
@@ -137,12 +137,12 @@ class UrlDownloader:
         )
         if exists is False:
             msg = f"the specified target path does not exist; {target_dir_posix}"
-            logger.exception(msg)
+            logger.error(msg)
             raise UrlDownloaderTargetDirectoryIssue(msg)
 
         if what != "D":
             msg = f"the specified target path exists but is not a directory; {target_dir_posix}"
-            logger.exception(msg)
+            logger.error(msg)
             raise UrlDownloaderTargetDirectoryIssue(msg)
 
         self.target_dir_posix = target_dir_posix
@@ -170,7 +170,7 @@ class UrlDownloader:
 
         except Exception as e:  # pylint:disable=broad-exception-caught
             msg = f"cannot calculate {self.hash_key} of file: {file_path} -> {e}"
-            logger.error(msg)
+            logger.exception(msg)
             raise UrlDownloaderFileVerifyIssue(msg) from e
 
     @staticmethod
@@ -228,7 +228,7 @@ class UrlDownloader:
         digest = hashes.get(self.hash_key)
         if digest is None:
             msg = f"no digest found for '{self.hash_key}' in: {hashes}"
-            logger.exception(msg)
+            logger.error(msg)
             raise UrlDownloaderUnknownHashKey(message=msg)
 
         my_hex_digest = self._get_hex_digest(file_path=file_path)
@@ -268,17 +268,18 @@ class UrlDownloader:
 
         """
         try:
-            verify = self.no_ssl_verify == False  # noqa: E712
+            # verify = self.no_ssl_verify == False  # noqa: E712
 
             logger.debug("%s %s", download_url, file_path)
-            logger.debug("no_ssl_verify: %s verify: %s", self.no_ssl_verify, verify)
+            # logger.debug("no_ssl_verify: %s verify: %s", self.no_ssl_verify, verify)
 
             response = requests.get(
                 download_url,
                 stream=True,
                 timeout=self.timeout,
-                verify=verify,
+                verify=not self.no_ssl_verify,
             )
+            response.raise_for_status()  # check before starting the download, thanks Claude
 
             with open(file_path, mode="wb") as file:
                 for chunk in response.iter_content(chunk_size=self.chunk_size):
@@ -437,7 +438,7 @@ class UrlDownloader:
         )
         if exists:
             msg = f"temp file exists; {temp_file_path}"
-            logger.exception(msg)
+            logger.error(msg)
             raise UrlDownloaderTempFileIssue(msg)
 
         return temp_file_path
@@ -447,8 +448,8 @@ class UrlDownloader:
             return
 
         if self.hash_key not in hashes:
-            msg = "the hash key {hash_key} is not present in the hashes dict {hashes}"
-            logger.exception(msg)
+            msg = f"the hash key {self.hash_key} is not present in the hashes dict {hashes}"
+            logger.error(msg)
             raise UrlDownloaderUnknownHashKey(msg)
 
     def _get_target_file_name(self, download_url: str) -> str:
@@ -458,7 +459,7 @@ class UrlDownloader:
 
         if target_file_name is None:
             msg = f"the target file name cannot be extracted from the download URL; {download_url}"
-            logger.exception(msg)
+            logger.error(msg)
             raise UrlDownloaderTargetFileIssue(msg)
 
         target_file_name_posix = self._simple_path_to_posix(target_file_name)

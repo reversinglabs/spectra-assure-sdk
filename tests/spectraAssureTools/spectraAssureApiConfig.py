@@ -78,7 +78,7 @@ class SpectraAssureApiConfig:
             ll = [
                 f"HOST, optional: {self.host}; SERVER, optional: {self.server}; cannot be both empty.",
                 f"ORGANIZATION, mandatory: {self.organization}; cannot be empty.",
-                f"GROUP, mandatory: {self.group}; cannot be emptry.",
+                f"GROUP, mandatory: {self.group}; cannot be empty.",
                 f"TOKEN is None, mandatory: {self.token is None}; cannot be True.",
             ]
             msg = "FATAL: minimal required parameters are not set properly; " + ", ".join(ll)

@@ -300,6 +300,9 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
             "community_find_packages": "community/find/packages",
             "community_report_version": "community/report/version",
             "community_report_package": "community/report/package",
+            # audit
+            "audit_log_export": f"audit-log/{self.organization}/export",  #
+            "audit_log_status": f"audit-log/{self.organization}/export",  # the caller will add the rest
             # export profile
             "export_org_profile": "profile",  # the rest will be done by the caller
             "export_group_profile": "profile",  # the rest will be done by the caller
@@ -337,7 +340,7 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
         """Validate if the minimal mandatory parameters have been provided.
 
         Note:
-            exits the program if not all mandatory parameters have been provided
+            raises an exception if not all mandatory parameters have been provided
 
         """
         server = args.get("server")
@@ -359,7 +362,7 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
             ll = [
                 f"HOST, optional: {host}; SERVER, optional: {server}; cannot be both empty.",
                 f"ORGANIZATION, mandatory: {organization}; cannot be empty.",
-                f"GROUP, mandatory: {group}; cannot be emptry.",
+                f"GROUP, mandatory: {group}; cannot be empty.",
                 f"TOKEN is None, mandatory: {token is None}; cannot be True.",
             ]
             msg = "FATAL: minimal required parameters are not set properly; " + ", ".join(ll)
@@ -392,9 +395,9 @@ class SpectraAssureApi(  # pylint: disable=too-many-instance-attributes
 
         return project, package, version
 
-    @staticmethod
-    def make_purl(project: str, package: str, version: str) -> str:
-        return f"{project}{package}@{version}"
+    #    @staticmethod
+    #    def make_purl(project: str, package: str, version: str) -> str:
+    #        return f"{project}{package}@{version}"
 
     def get_additional_args(self) -> Any:
         if self.additional_args.get("additional_args") is not None:

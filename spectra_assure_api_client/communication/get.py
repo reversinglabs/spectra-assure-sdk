@@ -37,7 +37,7 @@ class SpectraAssureApiGet(
             no_ssl_verify=self.no_ssl_verify,
         )
 
-        logger.debug("Proxies: %s", self.proxies)
+        # logger.debug("Proxies: %s", self.proxies)
         return self.execute_with_retry(
             auto_adapt_to_throttle=auto_adapt_to_throttle or self.auto_adapt_to_throttle,
             executor=executor,

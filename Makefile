@@ -1,5 +1,6 @@
 # makefile; ts=4
 # supported: 3.10, 3.11, 3.12, 3.13
+# 3.10 last dat Oct 31 2026
 MIN_PYTHON_VERSION := python3.10
 export MIN_PYTHON_VERSION
 
@@ -30,9 +31,9 @@ ASSERT_REQUESTS_VERSION := $(shell echo 1 | awk '{ if( "$(README_REQUESTS_VERSIO
 
 # ========================================
 # ========================================
-simple: ASSERT prep tests
+simple: ASSERT prep
 
-all: ASSERT prep tests-all
+all: ASSERT prep tests
 
 ASSERT: README.md pyproject.toml
 	if (( $(ASSERT_REQUESTS_VERSION) == 1 )) ; then \
@@ -108,14 +109,18 @@ testLocalInstall: build
 	./testLocalWhl.sh
 
 tests: tests-simple
+# tests: tests-staging
+
+tests-staging: testLocalInstall
+	( cd tests && TEST_STAGING=1 make tests )
 
 tests-simple: testLocalInstall
-	( cd tests && TEST_MY=1 		 make tests )
+	( cd tests && TEST_PLAYGROUND1=1 make tests )
+	( cd tests && TEST_PLAYGROUND2=1 make tests )
 	cp tests/api_client_example.py examples/
 
 tests-all: testLocalInstall
 	( cd tests && TEST_MY=1 		 make tests )
 	( cd tests && TEST_PLAYGROUND1=1 make tests )
 	( cd tests && TEST_PLAYGROUND2=1 make tests )
-	# ( cd tests && TEST_CANADA=1 	 make tests )
-	cp tests/api_client_example.py examples/
+	( cd tests && TEST_CANADA=1 	 make tests )

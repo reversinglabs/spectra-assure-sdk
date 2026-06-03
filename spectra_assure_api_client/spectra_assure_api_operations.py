@@ -4,6 +4,14 @@ from spectra_assure_api_client.operations.approve import (
     SpectraAssureApiOperationsApprove,
 )
 
+# audit
+from spectra_assure_api_client.operations.audit_log_export import (
+    SpectraAssureApiOperationsAuditLogExport,
+)
+from spectra_assure_api_client.operations.audit_log_status import (
+    SpectraAssureApiOperationsAuditLogStatus,
+)
+
 # real operations
 from spectra_assure_api_client.operations.checks import SpectraAssureApiOperationsChecks
 
@@ -83,5 +91,8 @@ class SpectraAssureApiOperations(  # pylint: disable=too-many-ancestors
     # profile
     SpectraAssureApiOperationsExportProfile,  # export org or group profile
     SpectraAssureApiOperationsImportProfile,  # import org or group profile
+    # audit
+    SpectraAssureApiOperationsAuditLogExport,
+    SpectraAssureApiOperationsAuditLogStatus,
 ):
     """A class that combines all operations"""

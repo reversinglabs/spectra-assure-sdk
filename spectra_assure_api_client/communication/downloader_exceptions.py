@@ -29,7 +29,7 @@ class UrlDownloaderTargetFileIssue(UrlDownloaderExceptions):
 class UrlDownloaderTempFileIssue(UrlDownloaderExceptions):
     """A custom exception class for Spectra Assure Api."""
 
-    def __init__(self, message: str = "The target directory has a serious issue"):
+    def __init__(self, message: str = "The target temp_file has a serious issue"):
         super().__init__(message)
 
 

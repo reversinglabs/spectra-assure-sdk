@@ -85,7 +85,7 @@ class SpectraAssureDownloadCriteria:
             # pylint: disable-next=line-too-long
             msg = (
                 "The strategy you requested is not supported:"
-                + f" {self.current_strategy}; must be one of {SUPPORTED_STRATEGIES}"
+                + f" {current_strategy}; must be one of {SUPPORTED_STRATEGIES}"
             )
             raise SpectraAssureInvalidAction(message=msg)
 

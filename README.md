@@ -55,7 +55,7 @@ With the Spectra Assure Portal, you can:
 ## Requirements and dependencies
 
 - Python (minimal version: 3.10)
-- [requests](https://pypi.org/project/requests/); version: 2.33.1
+- [requests](https://pypi.org/project/requests/); version: 2.34.2
 - An active Spectra Assure Portal account. If you don't already have a Portal account, you may need to contact the administrator of your Portal organization to [invite you](https://docs.secure.software/portal/members#invite-a-new-member). Alternatively, if you're not a Spectra Assure customer yet, you can [contact ReversingLabs](https://docs.secure.software/portal/#get-access-to-securesoftware-portal) to sign up for a Portal account.
 - A [Personal Access Token](https://docs.secure.software/api/generate-api-token) generated for your Spectra Assure Portal account.
 
@@ -606,6 +606,24 @@ the API responds with an error and the download capacity remains unaffected.
 | Targets          |       |         |         |
 | Query parameters |       |         |         |
 
+[`SpectraAssureApiOperationsAuditLogExport`](./doc/audit-log-export.md)
+
+**Check the status of an audit log export.**
+
+|                  | Group | Package | Version |
+| --               | --    |  --     |    --   |
+| Targets          |       |         |         |
+| Query parameters |       |         |         |
+
+[`SpectraAssureApiOperationsAuditLogStatus`](./doc/audit-log-status.md)
+
+**Start the export of an audit log.**
+
+|                  | Group | Package | Version |
+| --               | --    |  --     |    --   |
+| Targets          |       |         |         |
+| Query parameters |       |         |         |
+
 
 ## Community repositories
 
@@ -617,6 +635,7 @@ Current (Dec. 2025) repository names are:
 - `psgallery`
 - `pypi`
 - `vsx`
+- `maven`
 
 See [communities](https://secure.software/communities)
 
@@ -639,6 +658,7 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 
 | Version | Description |
 | --      | --          |
+| v1.0.14 | add `audit_log_export, audir_log_status and update requests to the latest version`. |
 | v1.0.13 | add `community-user-account`. |
 | v1.0.12 | fix the return data for `community-report-version`. |
 | v1.0.11 | add import/export, purl-import, reports now all supported by api. |

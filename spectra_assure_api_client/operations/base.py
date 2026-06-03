@@ -203,10 +203,10 @@ class SpectraAssureApiOperationsBase(
         if what == "version":
             if action not in ["report"]:
                 return base + tail
-            else:
-                # note report has the report_type in the middle of the url (not orthogonal)
-                tail = f"/{report_type}{tail}"
-                return base + tail
+
+            # note report has the report_type in the middle of the url (not orthogonal)
+            tail = f"/{report_type}{tail}"
+            return base + tail
 
         msg = f"'_make_current_url' {action} with unsupported parameters: {what}"
         raise SpectraAssureInvalidAction(message=msg)

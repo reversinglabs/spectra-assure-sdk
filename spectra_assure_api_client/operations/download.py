@@ -233,7 +233,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         skip: list[str],
         info_dict: dict[str, dict[str, Any]],
     ) -> None:
-        if info_dict[version]["analysis"].lower() != "done":
+        a = info_dict[version]["analysis"]
+        if a and a.lower() != "done":
             # waiting on 'done', was already completed while fetching the VersionStatus data
             msg = f"{project}/{package}@{version} has not yet finished processing; it will be skipped"
             if version not in skip:
@@ -243,7 +244,8 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
 
         if self.download_criteria.must_be_approved is True:
             msg = f"{project}/{package}@{version} has not been approved; it will be skipped"
-            if info_dict[version]["approved"].lower() != "approved":
+            a = info_dict[version]["approved"]
+            if a is None or a.lower() != "approved":
                 if version not in skip:
                     skip.append(version)
                     logger.info(msg)
@@ -314,7 +316,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             # pylint: disable-next=line-too-long
             msg = (
                 f"waiting for analysis to finish on: {project}/{package}@{version}"
-                + " (max {max_time}s, current {current_time}s"
+                + f" (max {max_time}s, current {current_time}s"
             )
             current_time = self._update_time_for_repeat(
                 current_time,
@@ -418,6 +420,9 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
                 if k == "approval-stamp" and v is not None:
                     tt[v] = version
         sorted_by_time = sorted(tt.keys())
+        if len(sorted_by_time) == 0:
+            msg = "No data in filter_latest_approved_version"
+            raise SpectraAssureUnexpectedNoDataFound(msg)
 
         latest_most_recent = sorted_by_time[-1]  # let's assume this is actually unique
         latest_version_string = tt[latest_most_recent]

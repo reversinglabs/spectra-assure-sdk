@@ -788,6 +788,52 @@ def import_profile(
     return None
 
 
+def audit_log_export(
+    api_client: SpectraAssureApiOperations,
+    *,
+    name: str,
+    should_create_cef: bool,
+    should_create_ndjson: bool,
+    datetime_start: str,
+    datetime_end: str,
+    filters: list[Any] | None = None,
+) -> str:
+    print("==================== Audit Log Export =========================")
+    name = str(uuid.uuid1())
+    should_create_cef = True
+    should_create_ndjson = True
+    datetime_start = "2026-01-01T00:00:00Z"
+    datetime_end = "2026-06-01T00:00:00Z"
+
+    r1 = api_client.audit_log_export(
+        name=name,
+        should_create_cef=should_create_cef,
+        should_create_ndjson=should_create_ndjson,
+        datetime_end=datetime_end,
+        datetime_start=datetime_start,
+        filters=filters,
+    )
+    print("audit-log-export response", r1, r1.json())
+
+    my_id = r1.json().get("id")
+    print("audit-log-export", my_id)
+
+    return my_id
+
+
+def audit_log_status(
+    api_client: SpectraAssureApiOperations,
+    *,
+    job_id: str,
+) -> Any:
+    print("==================== Audit Log Export =========================")
+    r2 = api_client.audit_log_status(
+        job_id=job_id,
+    )
+    print("response_status:", r2, "resonse_data:", r2.json())
+    return r2.json
+
+
 def walk_all_project_package_version(
     api_client: SpectraAssureApiOperations,
     limit_projects: int = 2,
@@ -1131,6 +1177,25 @@ def x_main() -> None:
             project=new_project,
         )
 
+    name = str(uuid.uuid1())
+    should_create_cef = True
+    should_create_ndjson = True
+    datetime_start = "2026-05-01T00:00:00Z"
+    datetime_end = "2026-06-30T00:00:00Z"
+
+    job_id = audit_log_export(
+        api_client=api_client,
+        name=name,
+        should_create_cef=should_create_cef,
+        should_create_ndjson=should_create_ndjson,
+        datetime_end=datetime_end,
+        datetime_start=datetime_start,
+    )
+    result = audit_log_status(
+        api_client=api_client,
+        job_id=job_id,
+    )
+    print("Audit Log Export Status", result)
     print("Done")
 
 

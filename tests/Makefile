@@ -54,6 +54,11 @@ ifdef TEST_CANADA
 	ENV_NAME	:=	ca
 endif
 
+ifdef TEST_STAGING
+	ENV_FILE	:=	~/.envfile_rl-scanner-cloud-staging
+	ENV_NAME	:=	staging
+endif
+
 # install a config file if we have one for this environment
 ZZ := myConfig.json
 CONF_FILE 	:= $(shell rm -f $(ZZ) ; [ -f $(ZZ)-$(ENV_NAME) ] && cp $(ZZ)-$(ENV_NAME) $(ZZ) )
@@ -63,6 +68,7 @@ export ENV_NAME
 # export CONF_FILE
 
 BASIC_TESTS		:= t1 t2 t3
+
 COMMUNITY_TESTS := test-community-find-packages test-community-report-package test-community-report-version
 STEPS_TESTS 	:= test-project-steps test-package-steps test-version-steps
 LIST_ALL 		:= list_all # a very long test not normally needed
@@ -74,7 +80,8 @@ TESTS 			:= $(BASIC_TESTS) \
 					$(COMMUNITY_TESTS) \
 					api_client_example
 
-TESTS 			:= api_client_example
+# TESTS 			:= api_client_example
+# TESTS 			:= t4_audit
 
 POST_TEST := mv *.[12] $(ENV_NAME)/; ls *.log >/dev/null && mv *.log $(ENV_NAME)/
 
@@ -86,7 +93,7 @@ all: test_clean test_prep mypy-stubs mypy tests
 
 test_clean:
 	rm -f *.1 *.2 *.log
-	rm -rf my ca pg1 pg2
+	rm -rf my ca pg1 pg2 staging
 	rm -rf $(VENV)
 	rm -rf input test1
 	rm -rf downloads*
@@ -131,6 +138,11 @@ t2:
 	$(POST_TEST)
 
 t3:
+	rm -rf $(VENV)
+	./test-one.sh $@.py 2>$@.2 | tee $@.1
+	$(POST_TEST)
+
+t4_audit:
 	rm -rf $(VENV)
 	./test-one.sh $@.py 2>$@.2 | tee $@.1
 	$(POST_TEST)

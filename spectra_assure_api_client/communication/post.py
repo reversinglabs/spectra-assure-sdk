@@ -57,16 +57,14 @@ class SpectraAssureApiPost(
 _post_with_retry:
     url:        {url}
     payload:    {payload}
-    headers:    {headers}
     file_path:  {file_path}
     timeout:    {self.timeout}
-    proxies:    {self.proxies}
     use_multipart {use_multipart}
     query params: {qp}
 """
         logger.debug(msg)
 
-        verify = self.no_ssl_verify == False  # noqa: E712
+        # verify = self.no_ssl_verify == False
 
         while current_try < max_try:
             current_try += 1
@@ -80,7 +78,7 @@ _post_with_retry:
                     timeout=self.timeout,
                     proxies=self.proxies,
                     json=payload,  # payload here is dict/list
-                    verify=verify,
+                    verify=not self.no_ssl_verify,
                 )
             else:
                 logger.debug("have filePath")
@@ -94,7 +92,7 @@ _post_with_retry:
                             timeout=self.timeout,
                             proxies=self.proxies,
                             data=fh,  # payload is now a fileHandle
-                            verify=verify,
+                            verify=not self.no_ssl_verify,
                         )
 
                 else:
@@ -118,7 +116,7 @@ _post_with_retry:
                             proxies=self.proxies,
                             data=payload,
                             files=files,
-                            verify=verify,
+                            verify=not self.no_ssl_verify,
                         )
 
             logger.debug("response.status: %d, %s", response.status_code, response.text)
@@ -242,6 +240,10 @@ _post_with_retry:
             headers = self._make_headers()
             payload = post_data
         elif action == "community_find_packages":
+            assert post_data is not None
+            headers = self._make_headers()
+            payload = post_data
+        elif action in ["audit_log_export", "audit_log_status"]:
             assert post_data is not None
             headers = self._make_headers()
             payload = post_data

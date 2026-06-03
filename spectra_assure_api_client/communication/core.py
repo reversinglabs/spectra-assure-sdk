@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 import urllib.request
 from collections.abc import Callable
@@ -44,13 +43,13 @@ class Executor:
 
     def execute(self) -> requests.Response:
         assert self.request_callable is not None
-        if self.no_ssl_verify is True:
-            os.environ["REQUESTS_CA_BUNDLE"] = ""
+        # if self.no_ssl_verify is True:
+        #    os.environ["REQUESTS_CA_BUNDLE"] = ""
 
-        verify = self.no_ssl_verify == False  # noqa: E712
+        # verify = self.no_ssl_verify == False  # noqa: E712
 
         logger.debug(f"no_ssl_verify: {self.no_ssl_verify}")
-        logger.debug(f"verify: {verify}")
+        # logger.debug(f"verify: {verify}")
 
         return self.request_callable(
             self.url,
@@ -59,7 +58,7 @@ class Executor:
             headers=self.headers,
             proxies=self.proxies,
             timeout=self.timeout,
-            verify=verify,
+            verify=not self.no_ssl_verify,
         )
 
 
