@@ -1,0 +1,30 @@
+# Targets for the specification-driven rebuild.
+#
+# Kept out of the repository's own Makefile deliberately: merge these targets
+# in rather than replacing what is already there.
+
+# One OpenAPI document since the Portal API merged the File Stream into it.
+SPEC_YAML := ./etc/spectra-assure-portal-public-api.yaml
+SPEC_JSON := spectra_assure_api_client/spec/compiled_spec.json
+
+.PHONY: all spec contract test check typecheck lint build clean
+
+all: spec contract check test
+
+
+# Regenerate the operation table from the OpenAPI specifications.
+# Run this whenever either YAML changes; the result is committed.
+spec: $(SPEC_JSON)
+
+$(SPEC_JSON): $(SPEC_YAML) tools/compile_spec.py
+	python3 tools/compile_spec.py $(SPEC_JSON) $(SPEC_YAML)
+
+# Re-record the public surface.
+contract:
+	python3 tools/extract_contract.py . > tests_unit/contract_snapshot.json
+
+check:
+	./bin/verify.sh $$( realpath . )
+
+test:
+	python3 -m pytest tests_unit/ -q

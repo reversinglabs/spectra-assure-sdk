@@ -18,7 +18,7 @@ None
 
 ## Responses
 
-Returns the 'requests.result' of the community_user_account() API call.
+Returns the 'requests.result' of the audit_log_status() API call.
 
 May raise exceptions on issues with the HTTP connection or wrong parameters:
 

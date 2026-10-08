@@ -6,7 +6,6 @@ from typing import (
 import requests
 
 from .core import (
-    Executor,
     SpectraAssureApiCore,
 )
 
@@ -16,100 +15,20 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiGet(
     SpectraAssureApiCore,
 ):
-    def _get_with_retry(
+    def _do_it_get(
         self,
         *,
         url: str,
-        payload: dict[str, Any],
-        headers: dict[str, str],
-        url_params: dict[str, str] | None,
-        auto_adapt_to_throttle: bool = False,
-    ) -> requests.Response | None:
-
-        executor = Executor(
-            url=url,
-            proxies=self.proxies,
-            timeout=self.timeout,
-            payload=payload,
-            headers=headers,
-            url_params=url_params,
-            request_callable=requests.get,
-            no_ssl_verify=self.no_ssl_verify,
-        )
-
-        # logger.debug("Proxies: %s", self.proxies)
-        return self.execute_with_retry(
-            auto_adapt_to_throttle=auto_adapt_to_throttle or self.auto_adapt_to_throttle,
-            executor=executor,
-        )
-
-    def _basic_get(
-        self,
-        *,
-        url: str,
-        payload: dict[str, Any],
-        headers: dict[str, str],
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None,
         **qp: Any,
     ) -> requests.Response:
         logger.debug("URL: %s", url)
         logger.debug("QUERY PARAMS: %s", qp)
 
-        # verify = self.no_ssl_verify == False  # noqa: E712
-
-        response = self._get_with_retry(
+        return self._basic_xx(
             url=url,
-            payload=payload,
-            headers=headers,
+            headers=self._make_headers(),
+            action="GET",
             url_params=qp,
             auto_adapt_to_throttle=auto_adapt_to_throttle,
-        )
-
-        assert response is not None
-
-        return self._log_response_status(
-            url=url,
-            response=response,
-        )
-
-    def _basic_get_with_exception_handled(
-        self,
-        *,
-        url: str,
-        payload: dict[str, Any],
-        headers: dict[str, str],
-        auto_adapt_to_throttle: bool = False,
-        **qp: Any,
-    ) -> tuple[int, Any]:
-        try:
-            r = self._basic_get(
-                url=url,
-                payload=payload,
-                headers=headers,
-                auto_adapt_to_throttle=auto_adapt_to_throttle,
-                **qp,
-            )
-            return r.status_code, r
-        except Exception as e:  # pylint:disable=broad-exception-caught; later
-            logger.exception("get: %s raises: %s", url, e)
-            raise e
-
-    def do_it_get(
-        self,
-        *,
-        url: str,
-        auto_adapt_to_throttle: bool,
-        **qp: Any,
-    ) -> requests.Response:
-        logger.debug(url)
-
-        payload: dict[Any, Any] = {}
-        headers = self._make_headers()
-
-        return self._basic_get(
-            url=url,
-            payload=payload,
-            headers=headers,
-            auto_adapt_to_throttle=auto_adapt_to_throttle,
-            **qp,
         )

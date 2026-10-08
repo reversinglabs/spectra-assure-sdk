@@ -1,29 +1,9 @@
-"""
-A) GET https://{portalUrl}/api/public/v1/profile/{organization_name}/export
-B) GET https://{portalUrl}/api/public/v1/profile/{organization_name}/{group_name}/export
-
-## path Parameters
-A and B)
-
-    organization    required    string
-        Example: example-organization
-        Specify the name of a Portal organization to use in the request.
-        The user account that is sending the request must be a member of the specified organization
-          and have the appropriate permissions to perform the requested operation.
-        Organization names are case-sensitive.
-
-B only)
-    group   required    string
-        Example: example-group
-        Specify the name of a Portal group to use in the request.
-        The group must exist in the specified Portal organization.
-        Group names are case-sensitive.
-"""
-
 import logging
 from typing import (
     Any,
 )
+
+import requests
 
 from .base import SpectraAssureApiOperationsBase
 
@@ -38,25 +18,20 @@ class SpectraAssureApiOperationsExportProfile(  # pylint: disable=too-many-ances
         *,
         organization: str,
         group: str | None = None,
-        auto_adapt_to_throttle: bool = False,
-        **qp: Any,  # ignored
-    ) -> Any:
-        action = "export_org_profile"
-        if group is not None:
-            action = "export_group_profile"
-
-        url = self._make_current_url(
-            action=action,
-        )
-
-        # url will now be 'https://<server....>/api/public/v1/profile'
-        if action == "export_group_profile":
-            url = f"{url}/{organization}/{group}/export"
+        auto_adapt_to_throttle: bool | None = None,
+        # **qp: Any,  # ignored
+    ) -> requests.Response:
+        # organization and group are arguments here, not session context:
+        # the caller chooses whose profile to export.
+        if group is None:
+            operation = self._resolve("export_profile", "organization")
+            url = self._url_for(operation, organization=organization)
         else:
-            url = f"{url}/{organization}/export"
+            operation = self._resolve("export_profile", "group")
+            url = self._url_for(operation, organization=organization, group=group)
 
-        qp = {}
-        return self.do_it_get(
+        qp: dict[str, Any] = {}
+        return self._do_it_get(
             url=url,
             auto_adapt_to_throttle=auto_adapt_to_throttle,
             **qp,

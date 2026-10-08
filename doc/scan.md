@@ -11,14 +11,14 @@ Execute a scan() API call to upload a file and scan it, creating a version in a 
 - project: str, mandatory.
 - package: str, mandatory.
 - version: str, mandatory.
-- filePath: str, mandatory, must exist.
+- file_path: str, mandatory, must exist.
 - auto_adapt_to_throttle: bool, default False, optional.
 - qp: Dict[str,Any], optional.
 
 
-This operation always needs the path to the file to be provided in the parameter `filePath`.
+This operation always needs the path to the file to be provided in the argument `file_path`.
 
-If the file is not readable (or does not exist in the provided path), the operation will raise an exception `InvalidAction`.
+If the file is not readable (or does not exist in the provided path), the operation will raise an exception `SpectraAssureInvalidAction`.
 
 ## Query parameters
 

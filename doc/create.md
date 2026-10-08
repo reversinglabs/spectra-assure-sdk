@@ -16,16 +16,17 @@ If we specify 'project' and 'package', we create a new 'package' in that 'projec
 
 - project: str, mandatory.
 - package: str | None, optional.
+- version: str | None, default None. Versions cannot be created this way (scan or import one instead); passing a version raises `SpectraAssureInvalidAction`.
 - auto_adapt_to_throttle: bool, default False, optional.
 - qp: Dict[str,Any], optional.
 
-## Query parameters
+## Body fields
 
 | Name          | Type                  | Default   | Validation |
 | --            | --                    | --        | --         |
 | description   | `string`              |           | <= 500 characters |
 
-'description' is supported as a query parameter for both 'project' and 'package'.
+`description` is sent in the JSON request body, for a project and for a package; pass it as a keyword argument.
 
 ## Responses
 

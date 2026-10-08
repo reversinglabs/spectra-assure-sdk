@@ -1,13 +1,19 @@
 import hashlib
 import logging
 import os
-import re
-import urllib.parse
+import tempfile
 import uuid
-from pathlib import Path
 
 import requests
 
+from spectra_assure_api_client.communication.api import SpectraAssureApi
+
+from .constants import (
+    DEFAULT_BLOCK_SIZE,
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_CONNECT_TIMEOUT,
+    DEFAULT_READ_TIMEOUT,
+)
 from .downloader_exceptions import (
     UrlDownloaderFileVerifyIssue,
     UrlDownloaderTargetDirectoryIssue,
@@ -27,65 +33,41 @@ class UrlDownloader:
         target_dir: str,
         #
         hash_key: str = "sha256",
-        chunk_size: int = (16 * 1024),  # 16KByte
-        timeout: int = (60 * 60),  # in seconds 1H
-        block_size: int = 2**16,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        timeout: int | None = None,  # alias of read_timeout, kept for existing callers
+        read_timeout: int | None = None,
+        connect_timeout: int | None = None,
+        block_size: int = DEFAULT_BLOCK_SIZE,
         #
         with_overwrite_existing_files: bool = False,
         with_verify_after_download: bool = True,
         with_verify_existing_files: bool = True,
+        #
         no_ssl_verify: bool = False,
+        session: requests.Session | None = None,
+        proxies: dict[str, str] | None = None,
     ) -> None:
-        """Actions:
-            Initialize a 'UrlDownloader'.
-
-        Args:
-         - target_dir: str, mandatory;
-            Where to download the file; the directory MUST exist.
-
-         - hash_key: str, default: "sha256", optional;
-            By default, we verify against 'sha256';
-            alternatively, we can verify against 'sha1'.
-
-         - chunk_size: int, default: 16k, optional;
-            By default, the file is transferred in chunks of 16k.
-
-         - timeout: int, default (60 * 60), optional;
-            When downloading the file, the HTTPS request timeout is set to 1 hour.
-
-         - block_size: int, default 64k, optional;
-            When validating the hash of the downloaded or existing file, we read data in blocks of 64k.
-
-         - with_overwrite_existing_files: bool = False, optional;
-            If the file exists in target directory, we can choose to overwrite it
-            or skip the download (if the hash verification passes when requested).
-
-         - with_verify_after_download: bool = True, optional;
-            After a successful download, we verify against the provided hash.
-
-         - with_verify_existing_files: bool = True, optional;
-            If the file already exists in target directory, we can verify against the provided hash.
-
-        Raises:
-         - UrlDownloaderTargetDirectoryIssue:
-            If the target file path does not exist or is not a directory, we raise an exception.
-
-        Notes:
-            The specified target directory must exist.
-            Internally, all paths are converted to POSIX paths.
-
-        """
         self.with_overwrite_existing_files = with_overwrite_existing_files
         self.with_verify_after_download = with_verify_after_download
         self.with_verify_existing_files = with_verify_existing_files
 
+        self.proxies = proxies
         self.no_ssl_verify = no_ssl_verify
         logger.debug(f"no_ssl_verify: {self.no_ssl_verify}")
+
+        # The client's session, when it passed one: the archive host is usually the
+        # same host across a multi-file download, so the connection is reused.
+        # Without one, a private session is used so this class still works alone.
+        self.session = session if session is not None else requests.Session()
 
         self._validate_target_dir(target_dir)
         self._validate_hash_key(hash_key)
         self._validate_chunk_size(chunk_size)
-        self._validate_timeout(timeout)
+        # `read_timeout` wins over its alias `timeout`. Only `timeout` used to be
+        # looked at, so the `read_timeout` the client passes was ignored and
+        # every download ran on the default.
+        self._validate_read_timeout(read_timeout or timeout or DEFAULT_READ_TIMEOUT)
+        self._validate_connect_timeout(connect_timeout or DEFAULT_CONNECT_TIMEOUT)
         self._validate_block_size(block_size)
 
     def _validate_block_size(self, block_size: int) -> None:
@@ -110,15 +92,42 @@ class UrlDownloader:
 
         self.hash_key = hash_key
 
-    def _validate_timeout(self, timeout: int) -> None:
+    def _validate_read_timeout(self, r_timeout: int) -> None:
+        """Clamp the read timeout to 10..3600 seconds, saying so when that changes the value."""
         min_timeout = 10
         max_timeout = 3600
 
-        timeout = max(timeout, min_timeout)
-        timeout = min(max_timeout, timeout)
+        clamped = min(max_timeout, max(r_timeout, min_timeout))
+        if clamped != r_timeout:
+            logger.warning(
+                "download read timeout of %s seconds is outside %s..%s; using %s seconds",
+                r_timeout,
+                min_timeout,
+                max_timeout,
+                clamped,
+            )
 
-        self.timeout = timeout
-        logger.info("set HTTP request timeout to: %s seconds", timeout)
+        self.timeout = clamped  # alias of read_timeout
+        self.read_timeout = clamped
+        logger.info("set HTTP read timeout to: %s seconds", clamped)
+
+    def _validate_connect_timeout(self, c_timeout: int) -> None:
+        """Clamp the connect timeout to 1..10 seconds, saying so when that changes the value."""
+        min_timeout = 1
+        max_timeout = 10
+
+        clamped = min(max_timeout, max(c_timeout, min_timeout))
+        if clamped != c_timeout:
+            logger.warning(
+                "download connect timeout of %s seconds is outside %s..%s; using %s seconds",
+                c_timeout,
+                min_timeout,
+                max_timeout,
+                clamped,
+            )
+
+        self.connect_timeout = clamped
+        logger.info("set HTTP connect timeout to: %s seconds", clamped)
 
     def _validate_chunk_size(self, chunk_size: int) -> None:
         min_chunk = 4 * 1024  # 4k
@@ -131,8 +140,8 @@ class UrlDownloader:
         logger.info("set chunk size to: %s bytes", chunk_size)
 
     def _validate_target_dir(self, target_dir: str) -> None:
-        target_dir_posix = self._simple_path_to_posix(target_dir)
-        exists, what = self._exists_path(
+        target_dir_posix = SpectraAssureApi._simple_path_to_posix(target_path=target_dir)
+        exists, what = SpectraAssureApi._exists_posix_path(
             item_path=target_dir_posix,
         )
         if exists is False:
@@ -153,7 +162,9 @@ class UrlDownloader:
         *,
         file_path: str,
     ) -> str | None:
-        assert self.hash_key in ["sha1", "sha256"]
+        if self.hash_key not in ["sha1", "sha256"]:
+            msg = f"hash_key must be one of ['sha1', 'sha256']; it is '{self.hash_key}'"
+            raise UrlDownloaderUnknownHashKey(msg)
 
         if self.hash_key == "sha1":
             sha_sum = hashlib.sha1()
@@ -173,39 +184,31 @@ class UrlDownloader:
             logger.exception(msg)
             raise UrlDownloaderFileVerifyIssue(msg) from e
 
-    @staticmethod
-    def _exists_path(
-        *,
-        item_path: str,
-    ) -> tuple[bool, str]:
-        fp = Path(item_path)
-        exists = fp.exists()
-        what = ""
-        if exists:
-            if fp.is_dir():
-                what = "D"
-            elif fp.is_file():
-                what = "F"
-
-        return fp.exists(), what
-
-    def _make_temp_file_name_and_check_exists(
+    def _make_temp_file(
         self,
         *,
         url: str,
         dir_path: str,
-    ) -> tuple[str, bool]:
+    ) -> str:
+        """Create a new, empty temporary file for one download attempt and return its path.
+
+        The name is unique per attempt: `.<uuid5 of the URL>.<random>.tmp`. It used
+        to be `.<uuid5 of the URL>.tmp` only, so a file left behind by an
+        interrupted run had exactly the name the next attempt wanted, and that
+        attempt refused to start. Now a leftover is an inert stray file. It is
+        never deleted here, because with a shared name it could belong to a
+        download still running in another process.
+
+        mkstemp creates the file exclusively, so two attempts never write to the
+        same temporary file.
+        """
         uuid_name = uuid.uuid5(
             uuid.NAMESPACE_URL,
             url,
         )
-        tmp_name = f".{uuid_name}.tmp"
-        file_path = f"{dir_path}/{tmp_name}"
-        exists, _ = self._exists_path(
-            item_path=file_path
-        )  # we are not interested in 'file' or 'dir' as we expect it not to exist
-
-        return file_path, exists
+        handle, file_path = tempfile.mkstemp(prefix=f".{uuid_name}.", suffix=".tmp", dir=dir_path)
+        os.close(handle)
+        return file_path
 
     def _verify_existing_file(
         self,
@@ -213,18 +216,6 @@ class UrlDownloader:
         file_path: str,
         hashes: dict[str, str],
     ) -> None:
-        """Args:
-         - file_path: str,
-         - hashes: Dict[str, str],
-
-        Return:
-           None if successful.
-
-        Raises:
-         - UrlDownloaderUnknownHashKey: if we cannot find the proper key we support
-         - UrlDownloaderFileVerifyIssue: if the verification fails
-
-        """
         digest = hashes.get(self.hash_key)
         if digest is None:
             msg = f"no digest found for '{self.hash_key}' in: {hashes}"
@@ -240,12 +231,6 @@ class UrlDownloader:
 
         logger.info("verify of '%s' ok: '%s:%s'", file_path, self.hash_key, digest)
 
-    @staticmethod
-    def _remove_temp_file_if_exists(file_path: str) -> None:
-        fp = Path(file_path)
-        fp.unlink(missing_ok=True)  # UNLINK THE temp file
-        logger.info("temp file removed: %s", file_path)
-
     def _download_with_optional_verify(  # pylint: disable=too-many-arguments
         self,
         *,
@@ -254,9 +239,13 @@ class UrlDownloader:
         hashes: dict[str, str],
     ) -> None:
         """Args:
-         - download_url: str;    The actual URL from which the file will be downloaded. Valid for a short interval only
-         - file_path: str;       The target file path
-         - hashes: Dict[str, str]; The current dict of hashes (sha1 and sha256 are supported for verification)
+         - download_url: str;
+           The actual URL from which the file will be downloaded.
+           Valid for a short interval only
+         - file_path: str;
+           The target file path.
+         - hashes: Dict[str, str];
+           The current dict of hashes (sha1 and sha256 are supported for verification).
 
         Return:
             None if successful.
@@ -267,36 +256,50 @@ class UrlDownloader:
         Notes:
 
         """
+        # Bound before the try: when the request itself fails (DNS, connect, TLS)
+        # there is no response, and the handler below must not trip over that
+        # and replace the real error with an UnboundLocalError.
+        response: requests.Response | None = None
+
         try:
-            # verify = self.no_ssl_verify == False  # noqa: E712
-
             logger.debug("%s %s", download_url, file_path)
-            # logger.debug("no_ssl_verify: %s verify: %s", self.no_ssl_verify, verify)
 
-            response = requests.get(
+            response = self.session.get(
                 download_url,
                 stream=True,
-                timeout=self.timeout,
+                timeout=(self.connect_timeout, self.read_timeout),
                 verify=not self.no_ssl_verify,
+                proxies=self.proxies,
             )
-            response.raise_for_status()  # check before starting the download, thanks Claude
+            response.raise_for_status()  # check before starting the download
+            h = response.headers
+            cl = h.get("Content-Length")
+            if cl:
+                cl_int = int(cl)
 
             with open(file_path, mode="wb") as file:
                 for chunk in response.iter_content(chunk_size=self.chunk_size):
                     file.write(chunk)
-                logger.info("file downloaded: %s, size: %d", file_path, file.tell())
+
+                size = file.tell()
+                if cl and size != cl_int:
+                    msg = f"file downloaded: size: {size} does not match Content-Length header: {cl_int}"
+                    raise UrlDownloaderFileVerifyIssue(msg)
+                logger.info("file downloaded: %s, size: %d", file_path, size)
+
+            if self.with_verify_after_download is True:
+                self._verify_existing_file(  # raises error on verify fail
+                    file_path=file_path,
+                    hashes=hashes,
+                )
 
         except Exception as e:  # pylint:disable=broad-exception-caught
             msg = f"cannot download to {file_path}; {e}"
             logger.exception(msg)
-            self._remove_temp_file_if_exists(file_path)
-            raise e
-
-        if self.with_verify_after_download is True:
-            self._verify_existing_file(  # raises error on verify fail
-                file_path=file_path,
-                hashes=hashes,
-            )
+            if response is not None:
+                response.close()
+            SpectraAssureApi._remove_temp_file_if_exists(file_path)
+            raise
 
     def _check_target_path(
         self,
@@ -325,7 +328,7 @@ class UrlDownloader:
 
         """
         target_file_path = f"{self.target_dir_posix}/{target_file_name}"
-        exists, _ = self._exists_path(item_path=target_file_path)
+        exists, _ = SpectraAssureApi._exists_posix_path(item_path=target_file_path)
         if exists is False:
             return True, target_file_path  # process this item
 
@@ -372,48 +375,16 @@ class UrlDownloader:
         """
         try:
             logger.debug("try rename: %s -> %s", file_path, target_path)
-            fp = Path(file_path)
-            fp.rename(target_path)
-            # On Unix, if target exists and is a file, it will be replaced silently if the user has permission.
-            # On Windows, if target exists, FileExistsError will be raised.
+            # os.replace overwrites an existing target file on every platform.
+            # Path.rename only does so on Unix; on Windows it raises FileExistsError,
+            # so replacing an existing file (with_overwrite_existing_files) failed there.
+            os.replace(file_path, target_path)
             logger.info("rename ok: %s -> %s", file_path, target_path)
-            return
-
-        except FileExistsError as e:
-            logger.exception("Cannot rename file %s to %s; %s", file_path, target_path, e)
-            self._remove_temp_file_if_exists(file_path)
-            raise e
 
         except Exception as e:
             logger.exception("Cannot rename file %s to %s; %s", file_path, target_path, e)
-            self._remove_temp_file_if_exists(file_path)
-            raise e
-
-    @staticmethod
-    def _extract_target_file_name(
-        *,
-        download_url: str,
-    ) -> str | None:
-        u_info = urllib.parse.urlparse(download_url)
-        u_query = urllib.parse.parse_qs(u_info.query)
-
-        k = "response-content-disposition"
-        p = u_query.get(k)
-        if p is None or len(p) == 0:
-            msg = f"no target filename extracted from URL {download_url} using: {k}"
-            logger.error(msg)
-            return None
-
-        r = r'filename="([^"]+)"'
-        zz = re.findall(r, p[0])
-        if len(zz) == 0:
-            msg = f"no target filename extracted from URL {download_url} using 'regex: {r}'"
-            logger.error(msg)
-            return None
-
-        target_file_name = str(zz[0])
-
-        return target_file_name
+            SpectraAssureApi._remove_temp_file_if_exists(file_path)
+            raise
 
     def _check_temp_path(
         self,
@@ -426,22 +397,21 @@ class UrlDownloader:
          - download_url: str; The URL we use to get the file name
 
         Returns:
-            temp_file_path if we reach the end
+            the path of a new, empty temporary file
 
         Raises:
-         - UrlDownloaderTempFileIssue: if the temp file exists
+         - UrlDownloaderTempFileIssue: if no temporary file can be created in temp_dir
 
         """
-        temp_file_path, exists = self._make_temp_file_name_and_check_exists(
-            url=download_url,
-            dir_path=temp_dir,
-        )
-        if exists:
-            msg = f"temp file exists; {temp_file_path}"
+        try:
+            return self._make_temp_file(
+                url=download_url,
+                dir_path=temp_dir,
+            )
+        except OSError as e:
+            msg = f"cannot create a temporary file in {temp_dir}: {e}"
             logger.error(msg)
-            raise UrlDownloaderTempFileIssue(msg)
-
-        return temp_file_path
+            raise UrlDownloaderTempFileIssue(msg) from e
 
     def _validate_hashes(self, hashes: dict[str, str]) -> None:
         if len(hashes) == 0:
@@ -453,7 +423,7 @@ class UrlDownloader:
             raise UrlDownloaderUnknownHashKey(msg)
 
     def _get_target_file_name(self, download_url: str) -> str:
-        target_file_name = self._extract_target_file_name(
+        target_file_name = SpectraAssureApi._extract_target_file_name(
             download_url=download_url,
         )
 
@@ -462,16 +432,11 @@ class UrlDownloader:
             logger.error(msg)
             raise UrlDownloaderTargetFileIssue(msg)
 
-        target_file_name_posix = self._simple_path_to_posix(target_file_name)
+        target_file_name_posix = SpectraAssureApi._simple_path_to_posix(target_path=target_file_name)
         if "/" in target_file_name_posix:
             target_file_name_posix = os.path.basename(target_file_name_posix)
 
         return target_file_name_posix
-
-    @staticmethod
-    def _simple_path_to_posix(target_path: str) -> str:
-        """Return a path with more POSIX-like separators, path does not need to exist"""
-        return target_path.replace("\\", "/")
 
     # PUBLIC
 
@@ -504,7 +469,7 @@ class UrlDownloader:
          - UrlDownloaderTargetFileIssue:
             If the target file has an issue.
          - UrlDownloaderTempFileIssue:
-            If there are problems with the temp file.
+            If no temporary file can be created in the target directory.
          - UrlDownloaderFileVerifyIssue:
             If there are problems with verifying either the downloaded file or the existing file.
 

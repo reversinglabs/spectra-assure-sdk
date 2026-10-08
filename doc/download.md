@@ -45,6 +45,9 @@ The following strategies are supported:
 
  - `AllApproved`: look at all approved versions in the current `project/package`.
  - `LatestApproved_ByApprovalTimeStamp`: select only one version in the current `project/package` - the version with the latest (most recent) approval date.
+   Only approved versions have an approval date. If none of the candidates is approved, which can happen with
+   `must_be_approved=False`, this strategy selects nothing and `download` returns `None`.
+   When there is only one candidate, it is used whether approved or not.
 
 **with_overwrite_existing_files**
 

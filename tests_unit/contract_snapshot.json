@@ -1,0 +1,2272 @@
+{
+  "__all__": [
+    "SpectraAssureApiOperations",
+    "SpectraAssureDownloadCriteria",
+    "SpectraAssureExceptions",
+    "SpectraAssureInvalidAction",
+    "SpectraAssureInvalidPath",
+    "SpectraAssureNoDownloadUrlInResult",
+    "SpectraAssureSpecError",
+    "SpectraAssureUnexpectedNoDataFound",
+    "SpectraAssureUnsupportedStrategy",
+    "SpectraAssureWaitTimeoutExceeded",
+    "UrlDownloader",
+    "UrlDownloaderExceptions",
+    "UrlDownloaderFileVerifyIssue",
+    "UrlDownloaderTargetDirectoryIssue",
+    "UrlDownloaderTargetFileIssue",
+    "UrlDownloaderTempFileIssue",
+    "UrlDownloaderUnknownHashKey",
+    "VERSION"
+  ],
+  "exports": {
+    "SpectraAssureApiOperations": {
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "host"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "server"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "organization"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "group"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "token"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "proxy_server"
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "proxy_port"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "proxy_user"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "proxy_password"
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "timeout"
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "read_timeout"
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "connect_timeout"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "default": "'v1'",
+              "kind": "KEYWORD_ONLY",
+              "name": "api_version"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "default": "'secure.software'",
+              "kind": "KEYWORD_ONLY",
+              "name": "api_domain"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "default": "'https'",
+              "kind": "KEYWORD_ONLY",
+              "name": "api_proto"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "config_file"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "no_ssl_verify"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "additional_args"
+            }
+          ]
+        },
+        "approve": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "audit_log_export": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "name"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "datetime_start"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "datetime_end"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "False",
+              "kind": "KEYWORD_ONLY",
+              "name": "should_create_cef"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "False",
+              "kind": "KEYWORD_ONLY",
+              "name": "should_create_ndjson"
+            },
+            {
+              "annotation": "list[typing.Any] | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "filters"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "audit_log_status": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "job_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "checks": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "close": {
+          "kind": "method",
+          "parameters": []
+        },
+        "community_find_packages": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "list[typing.Any]",
+              "kind": "KEYWORD_ONLY",
+              "name": "post_data"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "community_report_package": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "repository"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "namespace"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "community_report_version": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "repository"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "namespace"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "community_user_account": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "create": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "delete": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "do_it_delete": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "url"
+            },
+            {
+              "annotation": "bool | None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "dict[str, str] | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "url_params"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "do_it_get": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "url"
+            },
+            {
+              "annotation": "bool | None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "do_it_patch": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "url"
+            },
+            {
+              "annotation": "bool | None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "do_it_post": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "action"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "url"
+            },
+            {
+              "annotation": "bool | None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_path"
+            },
+            {
+              "annotation": "typing.Any",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "post_data"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "False",
+              "kind": "KEYWORD_ONLY",
+              "name": "use_multipart"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "origin_call"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "do_it_put": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "url"
+            },
+            {
+              "annotation": "bool | None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "dict[str, str] | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "url_params"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "download": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "target_dir"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "spectra_assure_api_client.communication.download_criteria.SpectraAssureDownloadCriteria | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "download_criteria"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "edit": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "execute_with_retry": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "bool",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "Executor",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "executor"
+            }
+          ]
+        },
+        "exists_posix_path": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "item_path"
+            }
+          ]
+        },
+        "export_profile": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "organization"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "group"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "extract_hashes": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "list[list[str]]",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "data"
+            }
+          ]
+        },
+        "extract_purl_components": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "package_url"
+            }
+          ]
+        },
+        "extract_target_file_name": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "download_url"
+            }
+          ]
+        },
+        "filestream_approve": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "reason"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_checks": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_delete": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_download": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "target_dir"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "SpectraAssureDownloadCriteria | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "download_criteria"
+            }
+          ]
+        },
+        "filestream_list": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "filestream_purl_import": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "purl"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_user"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_pass"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "bearer_token"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "filestream_reject": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "reason"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_report": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "report_type"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_report_types": {
+          "kind": "method",
+          "parameters": []
+        },
+        "filestream_revoke": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "reason"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_rl_safe": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_rl_safe_download": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "target_dir"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "rename_archive"
+            },
+            {
+              "annotation": "int",
+              "default": "300",
+              "kind": "KEYWORD_ONLY",
+              "name": "max_wait_time_for_archive"
+            }
+          ]
+        },
+        "filestream_scan": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_path"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "filestream_status": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "filestream_sync": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_id"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "filestream_url_import": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "url"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_user"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_pass"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "bearer_token"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "flatten_list": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "dict[str, typing.Any]",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "data"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "multiple"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "single"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "with_sort"
+            }
+          ]
+        },
+        "get_additional_args": {
+          "kind": "method",
+          "parameters": []
+        },
+        "get_customer_context": {
+          "kind": "method",
+          "parameters": []
+        },
+        "get_path": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "path"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "KEYWORD_ONLY",
+              "name": "data"
+            }
+          ]
+        },
+        "import_profile": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "organization"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_path"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "replace"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "group"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "keywords": {
+          "kind": "attribute",
+          "value": "['host', 'server', 'organization', 'group', 'token', 'proxy_server', 'proxy_port', 'proxy_user', 'proxy_password', 'timeout', 'connect_timeout', 'read_timeout', 'auto_adapt_to_throttle', 'no_ssl_verify']"
+        },
+        "list": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "listGroups": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "list_groups": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "make_logger": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'logging.Logger'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "my_logger"
+            }
+          ]
+        },
+        "purl_import": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "purl"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_user"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_pass"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "bearer_token"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_download": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_edit": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_purl_import": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_reject": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_revoke": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_scan": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_status": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "qp_url_import": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "what"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "reject": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "remove_temp_file_if_exists": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "file_path"
+            }
+          ]
+        },
+        "report": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "report_type"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "revoke": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "rl_safe": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "rl_safe_download": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "target_dir"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "rename_archive"
+            },
+            {
+              "annotation": "<class 'int'>",
+              "default": "300",
+              "kind": "KEYWORD_ONLY",
+              "name": "max_wait_time_for_archive"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "scan": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "file_path"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "show_debug": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "dict[str, typing.Any]",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "args"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "text"
+            }
+          ]
+        },
+        "simple_path_to_posix": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "target_path"
+            }
+          ]
+        },
+        "status": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "sync": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "url_import": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "version"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "url"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_user"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auth_pass"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "bearer_token"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            },
+            {
+              "annotation": "typing.Any",
+              "kind": "VAR_KEYWORD",
+              "name": "qp"
+            }
+          ]
+        },
+        "usage": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "group"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureDownloadCriteria": {
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'bool'>",
+              "default": "False",
+              "kind": "KEYWORD_ONLY",
+              "name": "wait_for_scan_done"
+            },
+            {
+              "annotation": "<class 'int'>",
+              "default": "300",
+              "kind": "KEYWORD_ONLY",
+              "name": "max_wait_time_for_scan_done"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "must_be_approved"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "default": "'LatestApproved_ByApprovalTimeStamp'",
+              "kind": "KEYWORD_ONLY",
+              "name": "current_strategy"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "False",
+              "kind": "KEYWORD_ONLY",
+              "name": "with_overwrite_existing_files"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "with_verify_after_download"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "with_verify_existing_files"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureExceptions": {
+      "exception_mro": [
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "''",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureInvalidAction": {
+      "exception_mro": [
+        "SpectraAssureInvalidAction",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'This action is not allowed'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureInvalidPath": {
+      "exception_mro": [
+        "SpectraAssureInvalidPath",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The path you specified is invalid'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureNoDownloadUrlInResult": {
+      "exception_mro": [
+        "SpectraAssureNoDownloadUrlInResult",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The query returns no download URL'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureSpecError": {
+      "exception_mro": [
+        "SpectraAssureSpecError",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "''",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureUnexpectedNoDataFound": {
+      "exception_mro": [
+        "SpectraAssureUnexpectedNoDataFound",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'Received no data where we expected some'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureUnsupportedStrategy": {
+      "exception_mro": [
+        "SpectraAssureUnsupportedStrategy",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'Attempted strategy is not supported'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "SpectraAssureWaitTimeoutExceeded": {
+      "exception_mro": [
+        "SpectraAssureWaitTimeoutExceeded",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The maximum wait timout has been exceeded'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "UrlDownloader": {
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "target_dir"
+            },
+            {
+              "annotation": "<class 'str'>",
+              "default": "'sha256'",
+              "kind": "KEYWORD_ONLY",
+              "name": "hash_key"
+            },
+            {
+              "annotation": "<class 'int'>",
+              "default": "16384",
+              "kind": "KEYWORD_ONLY",
+              "name": "chunk_size"
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "timeout"
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "read_timeout"
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "connect_timeout"
+            },
+            {
+              "annotation": "<class 'int'>",
+              "default": "65536",
+              "kind": "KEYWORD_ONLY",
+              "name": "block_size"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "False",
+              "kind": "KEYWORD_ONLY",
+              "name": "with_overwrite_existing_files"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "with_verify_after_download"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "True",
+              "kind": "KEYWORD_ONLY",
+              "name": "with_verify_existing_files"
+            },
+            {
+              "annotation": "<class 'bool'>",
+              "default": "False",
+              "kind": "KEYWORD_ONLY",
+              "name": "no_ssl_verify"
+            },
+            {
+              "annotation": "requests.sessions.Session | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "session"
+            },
+            {
+              "annotation": "dict[str, str] | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "proxies"
+            }
+          ]
+        },
+        "download_file_from_url": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "kind": "KEYWORD_ONLY",
+              "name": "download_url"
+            },
+            {
+              "annotation": "dict[str, str]",
+              "kind": "KEYWORD_ONLY",
+              "name": "hashes"
+            }
+          ]
+        }
+      }
+    },
+    "UrlDownloaderExceptions": {
+      "exception_mro": [
+        "UrlDownloaderExceptions",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "''",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "UrlDownloaderFileVerifyIssue": {
+      "exception_mro": [
+        "UrlDownloaderFileVerifyIssue",
+        "UrlDownloaderExceptions",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The file does not verify with the given hash'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "UrlDownloaderTargetDirectoryIssue": {
+      "exception_mro": [
+        "UrlDownloaderTargetDirectoryIssue",
+        "UrlDownloaderExceptions",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The target directory has a serious issue'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "UrlDownloaderTargetFileIssue": {
+      "exception_mro": [
+        "UrlDownloaderTargetFileIssue",
+        "UrlDownloaderExceptions",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The target file has a serious issue'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "UrlDownloaderTempFileIssue": {
+      "exception_mro": [
+        "UrlDownloaderTempFileIssue",
+        "UrlDownloaderExceptions",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The target temp_file has a serious issue'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "UrlDownloaderUnknownHashKey": {
+      "exception_mro": [
+        "UrlDownloaderUnknownHashKey",
+        "UrlDownloaderExceptions",
+        "SpectraAssureExceptions",
+        "Exception",
+        "BaseException"
+      ],
+      "kind": "class",
+      "members": {
+        "__init__": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "<class 'str'>",
+              "default": "'The hash key you provided is not supported'",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "name": "message"
+            }
+          ]
+        }
+      }
+    },
+    "VERSION": {
+      "kind": "value",
+      "type": "str"
+    }
+  },
+  "package": "spectra_assure_api_client"
+}

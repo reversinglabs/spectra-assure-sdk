@@ -7,3 +7,9 @@ test-project/
 SDKTestProject/
 SDK test project/
 test1/
+myConfig.json
+results/
+vpytest/
+vtmp/
+selftest/
+export_profile*.json

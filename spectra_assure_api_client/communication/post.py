@@ -1,27 +1,10 @@
-"""
-explicit multipart/form-data with additional args beside the file:
-
-    import requests
-    url = 'https://api.example.com/upload'
-    data = {
-      'description': 'My File',
-      'extra': 'Some extra data'
-    }
-    files = {
-      'file_upload': open('report.pdf', 'rb')
-    }
-    r = requests.post(
-        url,
-        data=data,
-        files=files,
-    )
-"""
-
 import logging
 import os
-import time
+import re
+import urllib.parse
 from typing import (
     Any,
+    Literal,
 )
 
 import requests
@@ -33,250 +16,217 @@ from .exceptions import (
 
 logger = logging.getLogger(__name__)
 
+# What a POST sends as its body; see SpectraAssureApiPost._post.
+BodyKind = Literal["file", "json", "form", "none"]
+
+# The action names below are only used by _do_it_post, the old entry point
+# that infers the body from the action's name.
+
+# Operations whose body is a JSON document assembled by the caller rather than
+# the loose query-parameter bag.
+_JSON_BODY_ACTIONS = frozenset(
+    {
+        "url_import",
+        "purl_import",
+        "community_find_packages",
+        "audit_log_export",
+        "audit_log_status",
+    }
+)
+
+# Operations that upload a configuration file as multipart form data. The
+# Portal expects the file part under a fixed name regardless of what the file
+# is called on disk.
+_PROFILE_IMPORT_ACTIONS = frozenset({"import_org_profile", "import_group_profile"})
+_PROFILE_IMPORT_FIELD = "configuration_file"
+
+
+# RFC 7230 token characters: a filename made only of these needs no quoting.
+_TOKEN = re.compile(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$")
+# RFC 8187 attr-char, the characters left as they are in filename*.
+_ATTR_CHAR_SAFE = "!#$&+-.^_`|~"
+
+
+def _content_disposition(file_name: str) -> str:
+    """The Content-Disposition header for uploading `file_name`, per RFC 6266.
+
+    A name of token characters only, like the specification's example
+    `attachment; filename=upload.exe`, is sent as it is. Any other name is sent
+    as a quoted string with `"` and `\\` escaped; it used to go out unquoted, so
+    a space or `;` cut it short for a parser (I-47). A name with characters
+    outside printable ASCII gets an ASCII fallback in `filename` and the real
+    name, UTF-8 encoded, in `filename*`; such a name used to make the upload
+    fail with UnicodeEncodeError, because header values must be Latin-1.
+    Control characters (a newline, say) never reach the header.
+    """
+    if _TOKEN.match(file_name):
+        return f"attachment; filename={file_name}"
+
+    fallback = "".join(ch if " " <= ch <= "~" else "_" for ch in file_name)
+    quoted = fallback.replace("\\", "\\\\").replace('"', '\\"')
+    value = f'attachment; filename="{quoted}"'
+    if fallback != file_name:
+        value += "; filename*=UTF-8''" + urllib.parse.quote(file_name, safe=_ATTR_CHAR_SAFE)
+    return value
+
+
+def _form_value(value: Any) -> Any:
+    """A value as it is written into a multipart form field.
+
+    requests writes a Python bool as "True" or "False". The specification types
+    the form field `replace` as a boolean and writes it as true and false, and
+    for this field the difference matters: false merges the imported profile
+    into the existing configuration, true replaces it. Booleans are therefore
+    written in lowercase. Query strings are not affected: the Portal is known to
+    accept `download=True` there.
+    """
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return value
+
 
 class SpectraAssureApiPost(
     SpectraAssureApiCore,
 ):
-    def _post_with_retry(  # pylint: disable=too-many-arguments
-        self,
-        *,
-        url: str,
-        payload: Any,
-        headers: dict[str, str],
-        auto_adapt_to_throttle: bool = False,
-        file_path: Any | None = None,
-        use_multipart: bool = False,
-        origin_call: str | None = None,
-        **qp: Any,
-    ) -> requests.Response:
-        max_try = 1
-        current_try = 0
-        if auto_adapt_to_throttle or self.auto_adapt_to_throttle:
-            max_try = 5
-        msg = f"""
-_post_with_retry:
-    url:        {url}
-    payload:    {payload}
-    file_path:  {file_path}
-    timeout:    {self.timeout}
-    use_multipart {use_multipart}
-    query params: {qp}
-"""
-        logger.debug(msg)
-
-        # verify = self.no_ssl_verify == False
-
-        while current_try < max_try:
-            current_try += 1
-
-            if not file_path:
-                logger.debug("Not filePath")
-                response = requests.post(
-                    url,
-                    params=qp,
-                    headers=headers,
-                    timeout=self.timeout,
-                    proxies=self.proxies,
-                    json=payload,  # payload here is dict/list
-                    verify=not self.no_ssl_verify,
-                )
-            else:
-                logger.debug("have filePath")
-                if not use_multipart:
-                    logger.debug("not multipart")
-                    with open(file_path, "rb") as fh:
-                        response = requests.post(
-                            url,
-                            params=qp,
-                            headers=headers,
-                            timeout=self.timeout,
-                            proxies=self.proxies,
-                            data=fh,  # payload is now a fileHandle
-                            verify=not self.no_ssl_verify,
-                        )
-
-                else:
-                    file_name = os.path.basename(file_path)
-
-                    logger.debug("with multipart")
-                    logger.debug("file_name: %s", file_name)
-
-                    hard_name = file_name
-                    if origin_call in ["import_org_profile", "import_group_profile"]:
-                        hard_name = "configuration_file"
-
-                    with open(file_path, "rb") as fh:
-                        files = {hard_name: fh}
-                        logger.debug("files: %s", files)
-
-                        response = requests.post(
-                            url,
-                            headers=headers,
-                            timeout=self.timeout,
-                            proxies=self.proxies,
-                            data=payload,
-                            files=files,
-                            verify=not self.no_ssl_verify,
-                        )
-
-            logger.debug("response.status: %d, %s", response.status_code, response.text)
-
-            if response.status_code != 429:
-                break
-
-            # first try for Throttle
-            if response.status_code == 429 and current_try < max_try:  # auto retry 5 times if requested
-                logger.warning(
-                    "THROTTLE: %s; %s: current try: %s",
-                    url,
-                    response.text,
-                    current_try,
-                )
-                delay_time = self._get_throttle_delay(response.text)
-                time.sleep(delay_time)
-                continue
-
-        return response
-
-    def _basic_post(  # pylint: disable=too-many-arguments
-        self,
-        *,
-        url: str,
-        payload: Any,
-        headers: dict[str, str],
-        auto_adapt_to_throttle: bool = False,
-        file_path: Any | None = None,
-        use_multipart: bool = False,
-        origin_call: str | None = None,
-        **qp: Any,
-    ) -> requests.Response:
-        logger.debug("_basic_post")
-
-        response = self._post_with_retry(
-            url=url,
-            payload=payload,
-            headers=headers,
-            auto_adapt_to_throttle=auto_adapt_to_throttle,
-            file_path=file_path,
-            use_multipart=use_multipart,
-            origin_call=origin_call,
-            **qp,
-        )
-        return self._log_response_status(
-            url=url,
-            response=response,
-        )
-
-    def _basic_post_with_exception_handled(  # pylint: disable=too-many-arguments
-        self,
-        *,
-        url: str,
-        headers: dict[str, str],
-        payload: Any,
-        auto_adapt_to_throttle: bool = False,
-        file_path: str | None = None,
-        use_multipart: bool = False,
-        origin_call: str | None = None,
-        **qp: Any,
-    ) -> tuple[int, Any]:
-        logger.debug("_basic_post_with_exception_handled")
-
-        try:
-            r = self._basic_post(
-                url=url,
-                headers=headers,
-                payload=payload,
-                auto_adapt_to_throttle=auto_adapt_to_throttle,
-                file_path=file_path,
-                use_multipart=use_multipart,
-                origin_call=origin_call,
-                **qp,
-            )
-            return r.status_code, r
-        except Exception as e:  # pylint:disable=broad-exception-caught; later
-            logger.exception("get: %s raises: %s", url, e)
-            raise e
-
-    def do_it_post(
+    def _post(  # pylint: disable=too-many-arguments
         self,
         *,
         action: str,
         url: str,
-        auto_adapt_to_throttle: bool,
+        body: BodyKind,
+        auto_adapt_to_throttle: bool | None,
         file_path: str | None = None,
         post_data: Any = None,
-        use_multipart: bool = False,
-        origin_call: str | None = None,
         **qp: Any,
     ) -> requests.Response:
-        logger.debug("do_it_post")
-        logger.debug(url)
-        logger.debug(action)
+        """POST to `url`, sending the request body the caller names.
 
-        # post comes in 3 forms currently:
-        #  1: create/sync/
-        #  2: scan: uses file_path
-        #  3: url-import: uses post_data
-        #  3: purl-import: uses post_data
-        if action == "scan":
+        `body` says what the body is, so nothing is inferred from the action's
+        name: "file" streams `file_path` as application/octet-stream, "json"
+        sends `post_data` as JSON, "form" uploads `file_path` with `post_data`
+        as multipart form data, and "none" sends no body. `qp` is always the
+        query string and never the body. `action` names the call in messages.
+        """
+        logger.debug("_post %s %s (%s)", action, url, body)
+
+        payload: Any
+        multipart_field_name: str | None = None
+        use_multipart = False
+
+        if body == "file":
+            # The archive is streamed as the raw request body.
             if file_path is None:
                 msg = f"'{action}' needs a filename, none was given"
                 logger.error(msg)
                 raise SpectraAssureInvalidAction(message=msg)
 
             file_name = os.path.basename(file_path)
-            h: dict[str, str] = {
-                "Content-Disposition": f"attachment; filename={file_name}",
-                "Content-Type": "application/octet-stream",
-            }
-            headers = self._make_headers(h)
+            headers = self._make_headers(
+                {
+                    "Content-Disposition": _content_disposition(file_name),
+                    "Content-Type": "application/octet-stream",
+                }
+            )
             payload = None
-        elif action == "url_import":
-            assert post_data is not None
-            headers = self._make_headers()
-            payload = post_data
-        elif action == "purl_import":
-            assert post_data is not None
-            headers = self._make_headers()
-            payload = post_data
-        elif action == "community_find_packages":
-            assert post_data is not None
-            headers = self._make_headers()
-            payload = post_data
-        elif action in ["audit_log_export", "audit_log_status"]:
-            assert post_data is not None
-            headers = self._make_headers()
-            payload = post_data
-        elif action in ["import_org_profile", "import_group_profile"]:
-            use_multipart = True
 
+        elif body == "json":
+            if post_data is None:
+                msg = f"post_data must not be None for '{action}'"
+                logger.error(msg)
+                raise SpectraAssureInvalidAction(message=msg)
+
+            headers = self._make_headers()
+            payload = post_data
+
+        elif body == "form":
             if file_path is None:
                 msg = f"'{action}' needs a filename, none was given"
                 logger.error(msg)
                 raise SpectraAssureInvalidAction(message=msg)
 
-            assert post_data is not None  # the replace bool goes here
+            if post_data is None:  # the replace bool goes here
+                msg = f"post_data must not be None for '{action}' (it carries the 'replace' flag)"
+                logger.error(msg)
+                raise SpectraAssureInvalidAction(message=msg)
 
-            payload = post_data
+            use_multipart = True
+            multipart_field_name = _PROFILE_IMPORT_FIELD
+            payload = {name: _form_value(value) for name, value in post_data.items()}
 
-            # Request Body schema: multipart/form-data
             headers = self._make_headers()
-            # remove  "Content-Type" for multipart it will be set by the files param to post
-            key = "Content-Type"
-            if key in headers:
-                del headers[key]
+            # requests derives the multipart Content-Type, boundary included.
+            headers.pop("Content-Type", None)
+
+        elif body == "none":
+            if post_data is not None:
+                msg = f"'{action}' sends no request body, but post_data was given"
+                logger.error(msg)
+                raise SpectraAssureInvalidAction(message=msg)
+
+            headers = self._make_headers()
+            payload = None
+
         else:
-            payload = qp
-            headers = self._make_headers()
+            msg = f"'{action}': unknown body kind {body!r}; use one of 'file', 'json', 'form' or 'none'"
+            raise SpectraAssureInvalidAction(message=msg)
 
-        # may raise IOError if the file does not exist or is not readable
-        return self._basic_post(
+        # may raise OSError if the file does not exist or is not readable
+        response = self._xx_with_retry(
             url=url,
-            headers=headers,
             payload=payload,
+            headers=headers,
+            action="POST",
+            url_params=qp,
             auto_adapt_to_throttle=auto_adapt_to_throttle,
             file_path=file_path,
             use_multipart=use_multipart,
-            origin_call=action,
+            multipart_field_name=multipart_field_name,
+        )
+
+        return self._log_response_status(
+            url=url,
+            response=response,
+        )
+
+    def _do_it_post(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        action: str,
+        url: str,
+        auto_adapt_to_throttle: bool | None,
+        file_path: str | None = None,
+        post_data: Any = None,
+        use_multipart: bool = False,  # noqa: ARG002  kept for signature compatibility
+        origin_call: str | None = None,  # noqa: ARG002  kept for signature compatibility
+        **qp: Any,
+    ) -> requests.Response:
+        """The old entry point, kept for the deprecated `do_it_post` alias (I-19).
+
+        It infers the body from the action's name, as the SDK used to; the SDK
+        itself calls `_post` with an explicit body kind (I-23). The inference
+        is unchanged, including its last case: an unknown action without
+        `post_data` sends its query parameters as the JSON body as well.
+        """
+        body: BodyKind
+        if action == "scan":
+            body = "file"
+        elif action in _JSON_BODY_ACTIONS:
+            body = "json"
+        elif action in _PROFILE_IMPORT_ACTIONS:
+            body = "form"
+        elif post_data is not None:
+            body = "json"
+        elif qp:
+            body, post_data = "json", dict(qp)
+        else:
+            body = "none"
+
+        return self._post(
+            action=action,
+            url=url,
+            body=body,
+            auto_adapt_to_throttle=auto_adapt_to_throttle,
+            file_path=file_path,
+            post_data=post_data,
             **qp,
         )

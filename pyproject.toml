@@ -37,7 +37,22 @@
     ]
 
     dependencies = [
-        "requests==2.34.2",
+        "requests>=2.32.2,<=2.34.2",
+    ]
+
+[project.optional-dependencies]
+    # Needed only to regenerate spec/compiled_spec.json from the OpenAPI YAML.
+    # Not required to use the SDK.
+    build = [
+        "pyyaml>=6.0",
+    ]
+    test = [
+        "pytest>=8.0",
+    ]
+    typecheck = [
+        "mypy>=1.10",
+        "types-requests",
+        "types-PyYAML",
     ]
 
 [project.urls]
@@ -67,6 +82,18 @@
         ".gitignore",
         "/.gitignore",
     ]
+
+    # The compiled operation table is data, not code. Without it in the wheel
+    # the client raises SpectraAssureSpecError on first use.
+    artifacts = [
+        "spectra_assure_api_client/spec/compiled_spec.json",
+    ]
+
+[tool.mypy]
+    python_version = "3.10"
+    strict = true
+    # The tests and build tooling are checked too, not just the shipped package.
+    files = ["spectra_assure_api_client", "tools", "tests_unit"]
 
 [tool.ruff]
     target-version = "py310"
@@ -107,12 +134,10 @@
         "T20",    # flake8-print
         "PT",     # flake8-pytest-style
         "Q",      # flake8-quotes
-        # "N",      # pep8-naming
-        # "D",      # pydocstyle
     ]
     ignore = [
-        "T201", # print found
+        "T201",  # print found
         "PT028", # Test function parameter has default argument
-        "S101", # Use of `assert` detected
-        "S324", # Probable use of insecure hash functions in `hashlib`: `sha1`
+        "S101",  # Use of `assert` detected
+        "S324",  # Probable use of insecure hash functions in `hashlib`: `sha1`
     ]

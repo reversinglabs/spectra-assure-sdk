@@ -1,18 +1,18 @@
 # Spectra Assure SDK for Python &middot; [![RL Status Badge](https://secure.software/pypi/badge/spectra-assure-sdk)](https://secure.software/pypi/packages/spectra-assure-sdk)
 Spectra Assure SDK for Python is the official library maintained by ReversingLabs that makes it easier to integrate with the [Spectra Assure Portal](https://docs.secure.software/portal/) and interact with it in your own applications.
 
-The SDK provides access to operations supported by the [Spectra Assure Portal API](https://docs.secure.software/api/).
-The Portal API only supports Portal Projects features, and cannot be used to work with the File Stream.
+The SDK provides access to the operations supported by the [Spectra Assure Portal API](https://docs.secure.software/api/), allowing you to work with Portal File Stream and Projects.
 
 You can use the SDK to:
 
-- Create and delete projects and packages in the Portal
-- Add and remove package versions in the Portal
-- Update details for projects, packages, and versions
-- Get a list of all projects in a group, all packages in a project, all versions in a package, and show details for any package version
-- Show analysis status and performed checks for a package version
-- Download analysis reports for a package version
-- Download package versions previously approved in the Portal GUI
+- Create, edit and delete projects and packages, and edit and delete versions
+- Add versions by uploading a file, or by importing it from a URL or a package URL (PURL)
+- List the projects in a group, the packages in a project and the versions of a package, and show the details of a version
+- Show the analysis status and the performed checks of a version, download its analysis reports and its RL-SAFE archive, and rescan it
+- Approve, reject and revoke versions, and download approved versions
+- Upload or import, analyze, approve and download standalone files in the File Stream
+- Query the Spectra Assure Community for open-source packages
+- List the groups of an organization, show usage, export and import profile configurations, and export the audit log
 
 
 > **Note:**
@@ -39,23 +39,27 @@ With the Spectra Assure Portal, you can:
 - [Installation](#installation)
 - [Authentication](#authentication)
 - [Quick start](#quick-start)
-    - [Logging](#logging)
+- [Logging](#logging)
 - [Usage](#usage)
     - [Rate limiting](#rate-limiting)
     - [Configuration](#configuration)
     - [Validation](#validation)
     - [Exceptions](#exceptions)
+- [Examples](#examples)
 - [Reference](#reference)
-    - [Operations](#operations)
+- [Operations](#operations)
+- [File Stream](#file-stream)
+- [Community repositories](#community-repositories)
+- [Sessions](#sessions)
 - [Support](#support)
 - [License](#license)
+- [Changes](#changes)
 - [Versioning](#versioning)
-
 
 ## Requirements and dependencies
 
 - Python (minimal version: 3.10)
-- [requests](https://pypi.org/project/requests/); version: 2.34.2
+- [requests](https://pypi.org/project/requests/); version: >=2.32.2,<=2.34.2
 - An active Spectra Assure Portal account. If you don't already have a Portal account, you may need to contact the administrator of your Portal organization to [invite you](https://docs.secure.software/portal/members#invite-a-new-member). Alternatively, if you're not a Spectra Assure customer yet, you can [contact ReversingLabs](https://docs.secure.software/portal/#get-access-to-securesoftware-portal) to sign up for a Portal account.
 - A [Personal Access Token](https://docs.secure.software/api/generate-api-token) generated for your Spectra Assure Portal account.
 
@@ -66,8 +70,9 @@ To get started with the Spectra Assure SDK, install the latest version from PyPI
 
 `pip install spectra-assure-sdk`
 
-By default, the SDK uses the Spectra Assure Portal API `v1` with `my.secure.software` as the host.
-The default host and API version must not be modified by SDK users.
+The SDK uses version `v1` of the Spectra Assure Portal API.
+Tell it where your Portal is with `host`, `server` or both; see [Usage](#usage).
+The API settings `api_version`, `api_domain` and `api_proto` must not be changed.
 
 
 ## Authentication
@@ -96,55 +101,47 @@ To start working with the SDK, initialize an instance of `SpectraAssureApiOperat
 
 *Using named arguments is explicitly enforced - positional arguments are not supported in any of the SDK calls.*
 
-The following code example shows how to combine different ways of specifying the required parameters (as named arguments, in a JSON configuration file, or both).
+The following example reads the settings from environment variables, lists the groups the specified token can access,
+and closes the connection when the `with` block ends.
 
 **Python code example**
 
-```
+```python
 import os
+
 from spectra_assure_api_client import SpectraAssureApiOperations
 
-prefix = "RLPORTAL_"
+# os.environ[...] fails at once when a variable is missing; str(os.getenv(...))
+# would instead pass the text "None" on as the organization name.
+with SpectraAssureApiOperations(
+    host=os.environ["RLPORTAL_HOST"],
+    server=os.environ.get("RLPORTAL_SERVER"),  # optional
+    organization=os.environ["RLPORTAL_ORG"],
+    group=os.environ["RLPORTAL_GROUP"],
+    token=os.environ["RLPORTAL_ACCESS_TOKEN"],
+) as client:
+    response = client.list_groups()
+    print(response.status_code, response.json())
+```
 
-host = os.getenv(f"{prefix}HOST")
-server = os.getenv(f"{prefix}SERVER")
-organization = str(os.getenv(f"{prefix}ORG"))
-group = str(os.getenv(f"{prefix}GROUP"))
-token = str(os.getenv(f"{prefix}ACCESS_TOKEN"))
+The settings can also come from a JSON configuration file, alone or together with named arguments,
+which take precedence over the file (see [Configuration](#configuration)):
 
-configFile = "./myConfig.json"
+```python
+import os
 
-for what in [1, 2, 3]:
-    try:
-        if what == 1:
-            # Use only named arguments
-            aHandle = SpectraAssureApiOperations(
-                host=host,
-                server=server,
-                organization=organization,
-                group=group,
-                token=token,
-            )
-        elif what == 2:
-            # Use only the configuration file
-            # Note: with the current configFile example, this will fail because the token is not specified
-            aHandle = SpectraAssureApiOperations(
-                configFile=configFile,
-            )
-        elif what == 3:
-            # Combine the configuration file with named arguments
-            aHandle = SpectraAssureApiOperations(
-                configFile=configFile,
-                token=token,
-            )
-        print(aHandle)
-    except Exception as e:
-        print(e)
+from spectra_assure_api_client import SpectraAssureApiOperations
+
+with SpectraAssureApiOperations(
+    config_file="./myConfig.json",
+    token=os.environ["RLPORTAL_ACCESS_TOKEN"],  # keeps the token out of the file
+) as client:
+    print(client.list_groups().status_code)
 ```
 
 **Example configuration file - myConfig.json**
 
-```
+```json
 {
   "SpectraAssureApi" : {
     "host": "my.secure.software",
@@ -158,45 +155,32 @@ for what in [1, 2, 3]:
 ```
 
 
-### Logging
+## Logging
 
-The SDK uses logging internally. You can interface with the logging functions in the SDK by using the standard Python logging library.
-
-**Logging example**
+The SDK logs through the standard Python `logging` module, under the logger `spectra_assure_api_client`
+(each module logs to a child of it, such as `spectra_assure_api_client.communication.core`).
+It never logs the token, and it masks a proxy password.
+Configure it like any library logger:
 
 ```python
-import os
 import logging
-import sys
+
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("spectra_assure_api_client").setLevel(logging.INFO)
+```
+
+For scripts, the SDK has a helper that sets up a console handler, at the level in the `LOG_LEVEL`
+environment variable (default `WARNING`), and a `<program>.log` file in the current directory.
+Calling it again replaces the handlers it added rather than adding more:
+
+```python
+import logging
+
 from spectra_assure_api_client import SpectraAssureApiOperations
 
 logger = logging.getLogger()
-
-def make_logger(logger: logging.Logger) -> None:
-     logger.setLevel(logging.DEBUG)
-
-     progName = os.path.basename(sys.argv[0])
-     if progName.endswith(".py"):
-         progName = progName[:-3]
-     fileName = f"{progName}.log"
-
-     fh = logging.FileHandler(fileName)
-     fh.setLevel(logging.INFO)
-
-     ch = logging.StreamHandler()
-     ch.setLevel(os.getenv("LOG_LEVEL", "WARNING"))
-
-     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-     ch.setFormatter(formatter)
-     fh.setFormatter(formatter)
-
-     # add the handlers to logger
-     logger.addHandler(ch)
-     logger.addHandler(fh)
-
-if __name__ == "__main__":
-    make_logger(logger)
-    logger.info("start program")
+SpectraAssureApiOperations.make_logger(my_logger=logger)
+logger.info("start program")
 ```
 
 
@@ -214,42 +198,57 @@ Group names are case-sensitive.
 
 The following parameters are optional:
 
-- **host** - Name of the host instance to use in requests.
-<br> The host name is usually `my.secure.software` and this the default if `host` is not specified.
+- **host** - The host name of your Portal, usually `my.secure.software`.
 <br> Any other host will be explicitly communicated to customers.
-<br> Note that `host` and `server` cannot both be empty.
 - **server** - Name of the Portal instance (tenant) to use in requests.
 <br> The Portal instance name usually matches the subdirectory of my.secure.software in your Portal URL.
 <br> For example, if your portal URL is 'my.secure.software/demo', the instance name to use with this parameter is 'demo'.
-<br>Note that `host` and `server` cannot both be empty.
 
-- **timeout** - The request timeout to be used for HTTPS requests to the Portal API, specified in seconds.
+At least one of `host` and `server` must be given; with neither, the client cannot be created.
+They combine like this:
+
+| Setting | Requests go to |
+| -- | -- |
+| `server` only | `https://my.secure.software/<server>/api/public/v1` |
+| `host` only | `https://<host>/api/public/v1` |
+| `host` and `server` | `https://<host>/<server>/api/public/v1` |
+| `server` is `trial` or `playground`, with or without `host` | `https://<server>.secure.software/api/public/v1` |
+
+- **read_timeout** - The read timeout to be used for HTTPS requests, specified in seconds.
+<br>The default is 3600 seconds.
+- **timeout** - The older name for `read_timeout`; both set the same value.
+<br>If both are given, `read_timeout` is used.
+- **connect_timeout** - The connect timeout used by the https requests, specified in seconds.
 <br>The default is 10 seconds.
-
+<br>Downloads keep the read timeout within 10 to 3600 seconds and the connect timeout within 1 to 10 seconds;
+a value outside that range is adjusted and a warning is logged.
 - **auto_adapt_to_throttle** - Some requests may be [throttled](#rate-limiting)
 and require a minimal wait time before the next request.
 <br> With this option, you can automatically wait for the data to become available and for the required time to pass.
 <br> By default, this option is disabled (set to `false`).
 <br> This parameter can also be specified on each individual operation.
+- **no_ssl_verify** - Set to `true` to turn off TLS certificate verification.
+<br> By default, certificates are verified. Use this only for testing.
+- **config_file** - Path to an optional JSON configuration file that supplies any of these settings; see [Configuration](#configuration).
+- **proxy_server**, **proxy_port**, **proxy_user**, **proxy_password** - Optional proxy settings for all requests.
+<br> `proxy_server` needs `proxy_port`, and `proxy_user` and `proxy_password` go together.
+- **additional_args** - Data of your own, passed through untouched; `get_additional_args()` returns it.
+
+Every setting can be given as a named argument or in the configuration file.
 
 
-Some operations support multiple targets (project, package, version) that have to be provided as named arguments.
-Based on the provided arguments, the library can automatically decide the target of the operation.
-The first value of 'None' decides the target of the operation:
+Operations on the Portal's projects, packages and versions take `project`, `package` and `version`
+as named arguments, and what they are given decides what they act on:
 
-```
- - project: str | None;
-   If we don't have a project name,
-   we are doing something with a group.
- - package: str | None;
-   If we don't have a package name,
-   we are doing something with a project.
- - version: str | None;
-   If we don't have a version name,
-   we are doing something with a package.
- - If all args are not None,
-   we are doing something with a version.
-```
+| `project` | `package` | `version` | The call acts on |
+| -- | -- | -- | -- |
+| not given | not given | not given | the group |
+| given | not given | not given | the project |
+| given | given | not given | the package |
+| given | given | given | the version |
+
+Which of these a call supports is shown in its table under [Operations](#operations).
+File Stream calls take a `file_id` instead.
 
 Refer to the full list of [supported operations](#operations) for more details
 on their usage and specific parameters they support.
@@ -263,6 +262,12 @@ This means that rate limits will also apply to requests sent by the SDK.
 
 Optionally, you can enable the `auto_adapt_to_throttle` setting globally
 (when creating the `SpectraAssureApiOperations` instance) or on each individual operation.
+A call that is answered with 429 waits as long as specified in the API's `Retry-After` header and tries again,
+up to 5 attempts in total. Without that header, the call waits 60 seconds.
+
+Download link requests are the exception. The API allows 10 requests per minute, so `download()` and
+`filestream_download()` wait out a 429 on a link request even when the setting is off.
+To fail immediately instead, pass `auto_adapt_to_throttle=False` to the call.
 
 Because this setting may slow down responses, it is not recommended for interactive use.
 It is most suitable for automatic batch processing.
@@ -281,7 +286,8 @@ In other words, if a parameter is set in the configuration file and as a argumen
 the SDK will use the value from the argument.
 
 - The configuration file must be in JSON format.
-- The file name is arbitrary.
+- The file name must end in `.json`, and the file must contain the `SpectraAssureApi` object;
+  otherwise the SDK raises `SpectraAssureInvalidAction`.
 - The file structure requires that all configuration parameters are placed as keys in the top-level `SpectraAssureApi` object like in the following example:
 
 ```json
@@ -313,10 +319,17 @@ The configuration file supports the following parameters:
 - proxy_port: `int`
 - proxy_user: `string`
 - proxy_password: `string`
-- timeout: `int`
+- timeout: `int` (same as `read_timeout`)
+- read_timeout: `int`
+- connect_timeout: `int`
 - auto_adapt_to_throttle: `bool`
+- no_ssl_verify: `bool` | None = None.
 
-**Important: host and server cannot both be empty.**
+
+A setting the SDK does not recognise is ignored, and a `UserWarning` is issued that names it and suggests
+the closest valid name. This applies to unknown keyword arguments and to unknown keys inside the
+`SpectraAssureApi` object of a configuration file.
+Keys outside that object are not checked.
 
 All `proxy_*` parameters are optional.
 However, if you're using `proxy_server`, then you must also use `proxy_port`.
@@ -335,21 +348,34 @@ Before using query parameters, it is recommended to check their limitations in t
 
 ### Exceptions
 
-All operations return a `requests.Response` and may raise exceptions in case of errors or misconfiguration.
+Operations return the `requests.Response` of the API call, except four that do more than one call:
+`download` and `filestream_download` return a `dict` describing what was downloaded, or `None` when nothing qualified,
+and `rl_safe_download` and `filestream_rl_safe_download` return a tuple `(downloaded, file_path)`.
+The operations that return the response do not raise on an HTTP error status; check `response.status_code`.
+The four download calls raise an exception when the API answers with an error.
+All operations raise exceptions for errors in their arguments or configuration.
 It is up to the SDK user to handle any exceptions.
 
+Every exception the SDK raises derives from `SpectraAssureExceptions`, so one `except SpectraAssureExceptions` catches them all.
 Depending on the operation and the type of issue, the following exceptions may be raised:
 
-- `SpectraAssureInvalidAction` - This action is not allowed
-- `SpectraAssureInvalidPath` - The specified path is incorrect
-- `SpectraAssureUnexpectedNoDataFound` - Received no data where we expected some
-- `SpectraAssureNoDownloadUrlInResult` - The query returns no download URL
-- `SpectraAssureUnsupportedStrategy` - Attempted download strategy is not supported
-- `UrlDownloaderUnknownHashKey` - No digest found; can't find the proper hash key or the hash type is not supported
-- `UrlDownloaderTargetDirectoryIssue` - The target file path does not exist or is not a directory
-- `UrlDownloaderTargetFileIssue` - The target file name can't be extracted from the URL
-- `UrlDownloaderTempFileIssue` - There is an issue with the target directory
-- `UrlDownloaderFileVerifyIssue` - Cannot calculate hash; verification failed
+- `SpectraAssureExceptions` - The base of all of them.
+  - `SpectraAssureInvalidAction` - This action is not allowed, or a setting is invalid.
+    It is also raised for every problem with the configuration file: it is missing or cannot be read,
+    it is not valid JSON or not UTF-8 text, or it does not contain a JSON object with a `SpectraAssureApi` object in it.
+    The original error, such as `FileNotFoundError` or `json.JSONDecodeError`, is available as its `__cause__`.
+  - `SpectraAssureWaitTimeoutExceeded` - A wait timeout has expired.
+  - `SpectraAssureInvalidPath` - The specified path is incorrect.
+  - `SpectraAssureUnexpectedNoDataFound` - Received no data where we expected some.
+  - `SpectraAssureNoDownloadUrlInResult` - The query returns no download URL.
+  - `SpectraAssureUnsupportedStrategy` - Attempted download strategy is not supported.
+  - `SpectraAssureSpecError` - The compiled API specification shipped with the SDK is missing or damaged; a packaging fault.
+  - `UrlDownloaderExceptions` - The base of the downloader's exceptions.
+    - `UrlDownloaderUnknownHashKey` - No digest found; can't find the proper hash key or the hash type is not supported.
+    - `UrlDownloaderTargetDirectoryIssue` - The target file path does not exist or is not a directory.
+    - `UrlDownloaderTargetFileIssue` - The target file name can't be extracted from the URL.
+    - `UrlDownloaderTempFileIssue` - No temporary file can be created in the target directory.
+    - `UrlDownloaderFileVerifyIssue` - Cannot calculate hash; verification failed.
 
 
 ## Examples
@@ -368,47 +394,58 @@ You can also consult the official
 for more detailed instructions on specific features and functionalities.
 
 
-### Operations
+## Operations
 
-Every class listed in this section maps directly to a Portal API operation,
-except **SpectraAssureApiOperationsDownload** which is a synthetic operation not directly available on the Portal.
+Each entry names the method to call and the class that provides it.
+Every method maps directly to a Portal API operation,
+except `download` and the two `*_rl_safe_download` calls, which combine several.
 
-If an operation supports query parameters, they should be provided in the `qp` argument list.
-Any invalid parameters will be automatically filtered out.
+The table under each entry shows where the call works and what it sends:
 
-[`SpectraAssureApiOperationsChecks`](./doc/checks.md)
+- **Targets**: the levels it addresses: the organization, a group, a project, a package or a version.
+- **Query parameters**: the levels at which the API specification declares query parameters.
+  Pass them as keyword arguments; names the specification does not declare are dropped.
+- **Body fields**: the levels at which the call sends named fields in the request body, such as `description` or `reason`.
+
+[`checks`](./doc/checks.md) · class `SpectraAssureApiOperationsChecks`
 
 **Show performed checks for a version.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  |  |  | &#10003; |
-| Query parameters |  |  |  |  |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  |  |
 
-
-[`SpectraAssureApiOperationsCreate`](./doc/create.md)
+[`create`](./doc/create.md) · class `SpectraAssureApiOperationsCreate`
 
 **Create a project or package in the Portal.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  | &#10003; | &#10003; |  |
-| Query parameters |  | &#10003; | &#10003; |  |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  | &#10003; | &#10003; |  |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  | &#10003; | &#10003; |  |
 
-
-[`SpectraAssureApiOperationsDelete`](./doc/delete.md)
+[`delete`](./doc/delete.md) · class `SpectraAssureApiOperationsDelete`
 
 **Remove a project, package, or version from the Portal.**
 
-|        | Group | Project | Package | Version |
-| --     | --    |    --   |  --     |    --   |
-| Targets |  | &#10003; | &#10003; | &#10003; |
-| Query parameters |  |  |  | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  | &#10003; | &#10003; | &#10003; |
+| Query parameters |  |  |  |  | &#10003; |
+| Body fields      |  |  |  |  |  |
 
-
-[`SpectraAssureApiOperationsDownload`](./doc/download.md)
+[`download`](./doc/download.md) · class `SpectraAssureApiOperationsDownload`
 
 **Download file(s) of approved version(s).**
+
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  | &#10003; | &#10003; |
+| Query parameters |  |  |  | &#10003; | &#10003; |
+| Body fields      |  |  |  |  |  |
 
 This class uses `list` and `status` operations to gather information about what is downloadable,
 and only requests the artifact download URL for versions that are selected for download.
@@ -418,216 +455,388 @@ even if the artifact is not downloaded from the link.
 If your user account doesn't have permission to download files from the Portal,
 the API responds with an error and the download capacity remains unaffected.
 
-
-[`SpectraAssureApiOperationsEdit`](./doc/edit.md)
+[`edit`](./doc/edit.md) · class `SpectraAssureApiOperationsEdit`
 
 **Edit details for a project, package, or version.**
 
-|                  | Group | Project  | Package  | Version  |
-| --               | --    |    --    |  --      |    --    |
-| Targets          |       | &#10003; | &#10003; | &#10003; |
-| Query parameters |       | &#10003; | &#10003; | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  | &#10003; | &#10003; | &#10003; |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  | &#10003; | &#10003; | &#10003; |
 
+[`list`](./doc/list.md) · class `SpectraAssureApiOperationsList`
 
-[`SpectraAssureApiOperationsList`](./doc/list.md)
+**List the projects in a group, the packages in a project or the versions of a package, or show the details of a version.**
 
-**List all groups, projects, packages, and versions.**
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  | &#10003; | &#10003; | &#10003; | &#10003; |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  |  |
 
-|                  | Group    | Project  | Package  | Version  |
-| --               | --       |    --    |  --      |    --    |
-| Targets          | &#10003; | &#10003; | &#10003; | &#10003; |
-| Query parameters |          |          |          |          |
-
-
-[`SpectraAssureApiOperationsReport`](./doc/report.md)
+[`report`](./doc/report.md) · class `SpectraAssureApiOperationsReport`
 
 **Download analysis report for a version.**
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  | &#10003; |
+| Body fields      |  |  |  |  |  |
 
+The report type is passed to the Portal as given, in lowercase, and checked there,
+so a report type the Portal adds works without an SDK update; see the reference page for the current list.
 
-[`SpectraAssureApiOperationsScan`](./doc/scan.md)
+[`scan`](./doc/scan.md) · class `SpectraAssureApiOperationsScan`
 
 **Upload and scan a new version.**
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  | &#10003; |
+| Body fields      |  |  |  |  |  |
 
-
-[`SpectraAssureApiOperationsStatus`](./doc/status.md)
+[`status`](./doc/status.md) · class `SpectraAssureApiOperationsStatus`
 
 **Show analysis status for a version.**
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  | &#10003; |
+| Body fields      |  |  |  |  |  |
 
-[`SpectraAssureApiOperationsSync`](./doc/sync.md)
+[`sync`](./doc/sync.md) · class `SpectraAssureApiOperationsSync`
 
-**Sync a version.** (Rescan a version)
+**Rescan a version**, to bring it up to date with a changed configuration or the latest engine; it does not count towards the monthly analysis capacity.
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         |          |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  |  |
 
-[`SpectraAssureApiOperationsApprove`](./doc/approve.md)
+[`approve`](./doc/approve.md) · class `SpectraAssureApiOperationsApprove`
 
-**Approve a version.**
+**Approve a version.** `reason` is mandatory.
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  | &#10003; |
 
-[`SpectraAssureApiOperationsReject`](./doc/reject.md)
+[`reject`](./doc/reject.md) · class `SpectraAssureApiOperationsReject`
 
-**Reject a version.**
+**Reject a version.** `reason` is mandatory.
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  | &#10003; |
 
-[`SpectraAssureApiOperationsRevoke`](./doc/revoke.md)
+[`revoke`](./doc/revoke.md) · class `SpectraAssureApiOperationsRevoke`
 
-**Revoke a previously approved version.**
+**Revoke a previously approved version.** `reason` is mandatory.
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  | &#10003; |
 
-[`SpectraAssureApiOperationsRlSafe`](./doc/rl_safe.md)
+[`rl_safe`, `rl_safe_download`](./doc/rl_safe.md) · class `SpectraAssureApiOperationsRlSafe`
 
 **Create a download link for the [RL-SAFE archive](https://docs.secure.software/concepts/analysis-reports#rl-safe-archive).**
 
-|                  | Group | Project | Package | Version  |
-| --               | --    |    --   |  --     |    --    |
-| Targets          |       |         |         | &#10003; |
-| Query parameters |       |         |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  | &#10003; |
+| Body fields      |  |  |  |  |  |
 
-[`SpectraAssureApiOperationsUsage`](./doc/usage.md)
+[`usage`](./doc/usage.md) · class `SpectraAssureApiOperationsUsage`
 
 **List the current analysis capacity usage for the organization or group .**
 
-|                  | Group | Project | Package | Version |
-| --               | --    |    --   |  --     |    --   |
-| Targets          | &#10003; (optional) |  |  |         |
-| Query parameters |       |         |         |         |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          | &#10003; | &#10003; |  |  |  |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  |  |
 
-[`SpectraAssureApiOperationsListGroups`](./doc/listGroups.md)
+[`list_groups`](./doc/listGroups.md) · class `SpectraAssureApiOperationsListGroups` (`listGroups` is its deprecated old name)
 
 **List the groups you have access to in the current organization .**
 
-|                  | Group | Project | Package | Version |
-| --               | --    |    --   |  --     |    --   |
-| Targets          |       |         |         |         |
-| Query parameters |       |         |         |         |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          | &#10003; |  |  |  |  |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  |  |
 
-[`SpectraAssureApiOperationsUrlImport`](./doc/urlImport.md)
+[`url_import`](./doc/urlImport.md) · class `SpectraAssureApiOperationsUrlImport`
 
 **Import and scan a new version from a URL.**
 
-|                  | Group | Package | Version |
-| --               | --    |  --     |    --   |
-| Targets          |       |         | &#10003; |
-| Query parameters |       |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  | &#10003; |
+| Body fields      |  |  |  |  | &#10003; |
 
-[`SpectraAssureApiOperationsPurlImport`](./doc/purlImport.md)
+[`purl_import`](./doc/purlImport.md) · class `SpectraAssureApiOperationsPurlImport`
 
 **Import and scan a new version from a package URL (PURL).**
 
-|                  | Group | Package | Version |
-| --               | --    |  --     |    --   |
-| Targets          |       |         | &#10003; |
-| Query parameters |       |         | &#10003; |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          |  |  |  |  | &#10003; |
+| Query parameters |  |  |  |  | &#10003; |
+| Body fields      |  |  |  |  | &#10003; |
 
+[`community_find_packages`](./doc/community-find-packages.md) · class `SpectraAssureApiOperationsCommunityFindPackages`
 
-[`SpectraAssureApiOperationsCommunityFindPackages`](./doc/community-find-packages.md)
+**Search the Spectra Assure Community for packages.**
 
-**Find Secure.Software Community information regarding packages.**
+|                  | Community |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      |  |
 
-|                  | Group | Package | Version | Community |
-| --               | --    |  --     |    --   | --        |
-| Targets          |       |         |         | &#10003;  |
-| Query parameters |       |         |         | &#10003;  |
+[`community_report_package`](./doc/community-report-package.md) · class `SpectraAssureApiOperationsCommunityReportPackage`
 
+**Show details about a package in the Spectra Assure Community.**
 
-[`SpectraAssureApiOperationsCommunityReportPackage`](./doc/community-report-package.md)
+|                  | Community |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      |  |
 
-**Find Secure.Software Community information regarding packages.**
+[`community_report_version`](./doc/community-report-version.md) · class `SpectraAssureApiOperationsCommunityReportVersion`
 
-|                  | Group | Package | Version | Community |
-| --               | --    |  --     |    --   | --        |
-| Targets          |       |         |         | &#10003;  |
-| Query parameters |       |         |         | &#10003;  |
+**Show the Spectra Assure Community report for a package version.**
 
+|                  | Community |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      |  |
 
-[`SpectraAssureApiOperationsCommunityReportVersion`](./doc/community-report-version.md)
-
-**Find Secure.Software Community information regarding versions.**
-
-|                  | Group | Package | Version | Community |
-| --               | --    |  --     |    --   | --        |
-| Targets          |       |         |         | &#10003;  |
-| Query parameters |       |         |         | &#10003;  |
-
-[`SpectraAssureApiOperationsCommunityUserAccount`](./doc/community-user-account.md)
+[`community_user_account`](./doc/community-user-account.md) · class `SpectraAssureApiOperationsCommunityUserAccount`
 
 **View details about the Spectra Assure Community account of the current user.**
 
-|                  | Group | Package | Version | Community |
-| --               | --    |  --     |    --   | --        |
-| Targets          |       |         |         | &#10003;  |
-| Query parameters |       |         |         | &#10003;  |
+|                  | Community |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      |  |
 
-[`SpectraAssureApiOperationsExportProfile`](./doc/export-profile.md)
+[`export_profile`](./doc/export-profile.md) · class `SpectraAssureApiOperationsExportProfile`
 
 **Export the profile configuration for a Portal organization or group as a JSON file .**
 
-|                  | Group | Package | Version |
-| --               | --    |  --     |    --   |
-| Targets          |       |         |         |
-| Query parameters |       |         |         |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          | &#10003; | &#10003; |  |  |  |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  |  |
 
-[`SpectraAssureApiOperationsImportProfile`](./doc/import-profile.md)
+[`import_profile`](./doc/import-profile.md) · class `SpectraAssureApiOperationsImportProfile`
 
 **Import profile configuration settings for a Portal organization or group from a JSON file.**
 
-|                  | Group | Package | Version |
-| --               | --    |  --     |    --   |
-| Targets          |       |         |         |
-| Query parameters |       |         |         |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          | &#10003; | &#10003; |  |  |  |
+| Query parameters |  |  |  |  |  |
+| Body fields      | &#10003; | &#10003; |  |  |  |
 
-[`SpectraAssureApiOperationsAuditLogExport`](./doc/audit-log-export.md)
-
-**Check the status of an audit log export.**
-
-|                  | Group | Package | Version |
-| --               | --    |  --     |    --   |
-| Targets          |       |         |         |
-| Query parameters |       |         |         |
-
-[`SpectraAssureApiOperationsAuditLogStatus`](./doc/audit-log-status.md)
+[`audit_log_export`](./doc/audit-log-export.md) · class `SpectraAssureApiOperationsAuditLogExport`
 
 **Start the export of an audit log.**
 
-|                  | Group | Package | Version |
-| --               | --    |  --     |    --   |
-| Targets          |       |         |         |
-| Query parameters |       |         |         |
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          | &#10003; |  |  |  |  |
+| Query parameters |  |  |  |  |  |
+| Body fields      | &#10003; |  |  |  |  |
 
+[`audit_log_status`](./doc/audit-log-status.md) · class `SpectraAssureApiOperationsAuditLogStatus`
+
+**Check the status of an audit log export.**
+
+|                  | Organization | Group | Project | Package | Version |
+| --               | -- | -- | -- | -- | -- |
+| Targets          | &#10003; |  |  |  |  |
+| Query parameters |  |  |  |  |  |
+| Body fields      |  |  |  |  |  |
+
+## File Stream
+
+File Stream files are standalone: they do not belong to a project or a package,
+and they have no versions. A server-generated `file_id`, returned when the file
+is created, is the only reference to a File Stream file.
+
+The File Stream calls are kept separate from the project/package/version calls:
+they take `file_id` rather than `project`, `package` and `version`.
+
+[`filestream_scan`](./doc/filestream-scan.md)
+
+**Upload a file to the File Stream and scan it.** Returns the `requests.Response`; on success (201) the new `file_id` is the `id` field of its JSON: `response.json()["id"]`.
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      |  |
+
+[`filestream_url_import`](./doc/filestream-url-import.md)
+
+**Import and scan a new File Stream file from a URL.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      | &#10003; |
+
+[`filestream_purl_import`](./doc/filestream-purl-import.md)
+
+**Import and scan a new File Stream file from a package URL (PURL).**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      | &#10003; |
+
+[`filestream_list`](./doc/filestream-list.md)
+
+**List the files in the File Stream of the current group.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      |  |
+
+[`filestream_status`](./doc/filestream-status.md)
+
+**Show analysis status for a File Stream file.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters | &#10003; |
+| Body fields      |  |
+
+[`filestream_checks`](./doc/filestream-checks.md)
+
+**Show performed checks for a File Stream file.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      |  |
+
+[`filestream_report`](./doc/filestream-report.md)
+
+**Download an analysis report for a File Stream file.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      |  |
+
+Supported types: `cyclonedx`, `rl-checks`, `rl-cve`, `rl-json`,
+`rl-summary-pdf`, `rl-uri`, `sarif`, `spdx`. (`rl-diff` is not available.)
+Unlike `report`, this call checks the type, against the eight types the API lists for the File Stream;
+a type the API adds there needs an SDK update.
+
+[`filestream_sync`](./doc/filestream-sync.md)
+
+**Rescan a File Stream file**, to bring it up to date with a changed configuration or the latest engine; it does not count towards the monthly analysis capacity.
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      |  |
+
+[`filestream_approve`](./doc/filestream-approve.md)
+
+**Approve a File Stream file.** `reason` is mandatory.
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      | &#10003; |
+
+[`filestream_reject`](./doc/filestream-reject.md)
+
+**Reject a File Stream file.** `reason` is mandatory.
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      | &#10003; |
+
+[`filestream_revoke`](./doc/filestream-revoke.md)
+
+**Revoke a previously approved File Stream file.** `reason` is mandatory.
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      | &#10003; |
+
+[`filestream_rl_safe`, `filestream_rl_safe_download`](./doc/filestream-rl-safe.md)
+
+**Create a download link for the [RL-SAFE archive](https://docs.secure.software/concepts/analysis-reports#rl-safe-archive) of a File Stream file.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      |  |
+
+`filestream_rl_safe_download` also fetches the archive.
+
+[`filestream_download`](./doc/filestream-download.md)
+
+**Download an approved File Stream file.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      |  |
+
+[`filestream_delete`](./doc/filestream-delete.md)
+
+**Remove a file from the File Stream.**
+
+|                  | File Stream file |
+| --               | -- |
+| Targets          | &#10003; |
+| Query parameters |  |
+| Body fields      |  |
 
 ## Community repositories
 
-Current (Dec. 2025) repository names are:
+The repository names the API accepts (the `community` values in its specification) are:
 
 - `gem`
 - `npm`
@@ -636,8 +845,28 @@ Current (Dec. 2025) repository names are:
 - `pypi`
 - `vsx`
 - `maven`
+- `clawhub`
 
-See [communities](https://secure.software/communities)
+The SDK passes the name to the API as given, so a repository the API adds works without an SDK update.
+Read more about [supported communities](https://docs.secure.software/community/#supported-communities).
+
+## Sessions
+
+Every request a client makes goes through one `requests.Session`, held for the life of the client,
+so connections to the Portal are reused rather than opened for every call.
+
+### Public surface
+
+    client.close()                                   release the pooled connections
+    with SpectraAssureApiOperations(...) as client:   closes the session on exit
+    client.session                                   the session itself, if you need to tune it
+
+`close()` is idempotent, and the client still works afterwards: `requests` opens a fresh connection on the next call.
+
+### Thread safety -- please read
+
+`requests.Session` is **not thread-safe**, so a client must not be shared between threads.
+Give each thread its own client.
 
 ## Support
 
@@ -652,13 +881,18 @@ In those cases, contact the author(s) of the modified SDK for help.
 
 ## License
 
-The Spectra Assure SDK (Software Development Kit) for Python is released under [the MIT License](./LICENSE.MD).
+The Spectra Assure SDK (Software Development Kit) for Python is released under [the MIT License](./LICENSE).
+
+## Changes
+
+For a detailed list of changes see [CHANGES](./CHANGES.md).
 
 ## Versioning
 
 | Version | Description |
 | --      | --          |
-| v1.0.14 | add `audit_log_export, audir_log_status and update requests to the latest version`. |
+| v1.1.0  | added the File Stream API and one HTTP session per client. |
+| v1.0.14 | add `audit_log_export` and `audit_log_status`, and update requests to the latest version. |
 | v1.0.13 | add `community-user-account`. |
 | v1.0.12 | fix the return data for `community-report-version`. |
 | v1.0.11 | add import/export, purl-import, reports now all supported by api. |
@@ -667,7 +901,7 @@ The Spectra Assure SDK (Software Development Kit) for Python is released under [
 | v1.0.8  | add support for url-import. |
 | v1.0.7  | add support for listGroups. |
 | v1.0.6  | add support for usage. |
-| v1.0.5  | add support for different hosts than the default `my.secure.software. |
+| v1.0.5  | add support for different hosts than the default `my.secure.software`. |
 | v1.0.4  | add `rl-summary-pdf` report. |
 | v1.0.3  | add `rl-safe` support. |
 | v1.0.2  | add version actions: `sync`, `approve`, `reject`, `revoke`. |

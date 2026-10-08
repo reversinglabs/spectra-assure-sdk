@@ -1,6 +1,8 @@
 import logging
 import os
+import re
 import time
+from datetime import datetime, timezone
 from typing import (
     Any,
 )
@@ -18,28 +20,57 @@ from spectra_assure_api_client.communication.exceptions import (
 )
 
 from .base import SpectraAssureApiOperationsBase
+from .constants import _ANALYSIS_FINISHED
 
 logger = logging.getLogger(__name__)
+
+_OFFSET_WITHOUT_COLON = re.compile(r"([+-]\d\d)(\d\d)$")
+_FRACTION = re.compile(r"\.(\d+)")
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    """An approval timestamp as an aware datetime, or None if it cannot be read.
+
+    The Portal writes date-times in several forms; its own specification shows
+    `...Z`, `...+0000`, `...+00:00`, with and without fractional seconds.
+    Compared as text they sort wrongly: "10:00:00Z" sorts after
+    "10:00:00.500Z", and "10:00:00+01:00" after "09:30:00Z" (I-27). They are
+    normalised here so that Python 3.10's fromisoformat reads them all; a
+    timestamp without an offset is taken as UTC.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    if text[-1] in ("Z", "z"):
+        text = text[:-1] + "+00:00"
+    text = _OFFSET_WITHOUT_COLON.sub(r"\1:\2", text)
+    text = _FRACTION.sub(lambda m: "." + (m.group(1) + "000000")[:6], text, count=1)
+    try:
+        when = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return when if when.tzinfo is not None else when.replace(tzinfo=timezone.utc)
 
 
 class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):
+    @staticmethod
     def _prep_criteria(
-        self,
         download_criteria: SpectraAssureDownloadCriteria | None = None,
-    ) -> None:
-        # pylint: disable=attribute-defined-outside-init
-        self.download_criteria = SpectraAssureDownloadCriteria()  # start with a default
-        if download_criteria:
-            self.download_criteria = download_criteria
+    ) -> SpectraAssureDownloadCriteria:
+        """The criteria for one download() call: the caller's, or the defaults.
 
-        self.download_criteria.must_be_approved = True  # OVERRIDE must_be_approved = True
-        logger.info("download_criteria: %s", download_criteria)
+        They are passed down explicitly rather than stored on the client, so one
+        call cannot change the criteria another one is using (I-27).
+        """
+        criteria = download_criteria or SpectraAssureDownloadCriteria()
+        logger.info("download_criteria: %s", criteria)
+        return criteria
 
     def _validate_target_dir(self, target_dir: str) -> str:
-        target_dir_posix = self.simple_path_to_posix(target_path=target_dir)
-        exists, what = self.exists_posix_path(item_path=target_dir_posix)
+        target_dir_posix = self._simple_path_to_posix(target_path=target_dir)
+        exists, what = self._exists_posix_path(item_path=target_dir_posix)
 
         if exists is False:
             msg = f"the target directory you specified does not exist; {target_dir_posix}"
@@ -62,7 +93,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         version: str,
         ud: UrlDownloader,
         info: dict[str, dict[str, Any]],
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         **qp: Any,
     ) -> tuple[bool, str]:
 
@@ -73,7 +104,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         )
 
         # if we need to download, request the download link
-        qp_status = self.qp_status(
+        qp_status = self._qp_status(
             what=what,
             **qp,
         )
@@ -83,12 +114,12 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             project=project,
             package=package,
             version=version,
-            auto_adapt_to_throttle=auto_adapt_to_throttle,
+            auto_adapt_to_throttle=self._link_request_throttle(auto_adapt_to_throttle),
             **qp_status,
         )
 
         if data.status_code >= 300 or data.status_code < 200:
-            msg = f"we get {data.status_code} from status lookup for {project}/{package}@{version}"
+            msg = self._link_request_failure(data.status_code, f"{project}/{package}@{version}")
             logger.error(msg)
             raise SpectraAssureUnexpectedNoDataFound(msg)
 
@@ -114,11 +145,12 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _process_candidates(  # pylint: disable=too-many-arguments
         self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         project: str,
         package: str,
         chosen: dict[str, dict[str, Any]],
         target_dir: str,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         **qp: Any,
     ) -> dict[str, dict[str, Any]]:
         logger.debug(f" no_ssl_verify: {self.no_ssl_verify}")
@@ -126,12 +158,15 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         # create a UrlDownloader to do the actual download
         ud = UrlDownloader(
             target_dir=target_dir,
-            with_verify_existing_files=self.download_criteria.with_verify_existing_files,
-            with_verify_after_download=self.download_criteria.with_verify_after_download,
-            with_overwrite_existing_files=self.download_criteria.with_overwrite_existing_files,
-            no_ssl_verify=self.no_ssl_verify,
+            with_verify_existing_files=criteria.with_verify_existing_files,
+            with_verify_after_download=criteria.with_verify_after_download,
+            with_overwrite_existing_files=criteria.with_overwrite_existing_files,
+            no_ssl_verify=bool(self.no_ssl_verify),
+            proxies=self.proxies,
+            session=self.session,
+            read_timeout=self.read_timeout,
+            connect_timeout=self.connect_timeout,
         )
-        logger.debug(f" no_ssl_verify={self.no_ssl_verify}")
 
         for version_, info in chosen.items():
             logger.info("try download: version %s, with info: %s", version_, info)
@@ -158,7 +193,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         package: str,
         version: str | None = None,
         with_sort: bool = True,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
     ) -> list[str]:
 
         data = self.list(
@@ -184,7 +219,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         *,
         project: str,
         package: str,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
     ) -> list[str]:
         version_list: list[str] = []
 
@@ -203,7 +238,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         project: str,
         package: str,
         version: str | None = None,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
     ) -> dict[str, dict[str, Any]]:
         info_dict: dict[str, dict[str, Any]] = {}
 
@@ -227,6 +262,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _update_skip_list(  # pylint: disable=too-many-arguments
         self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         project: str,
         package: str,
         version: str,
@@ -234,6 +270,13 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         info_dict: dict[str, dict[str, Any]],
     ) -> None:
         a = info_dict[version]["analysis"]
+        if a and a.lower() == "error":
+            msg = f"{project}/{package}@{version}: the analysis ended in an error; it will be skipped"
+            if version not in skip:
+                skip.append(version)
+                logger.warning(msg)
+            return
+
         if a and a.lower() != "done":
             # waiting on 'done', was already completed while fetching the VersionStatus data
             msg = f"{project}/{package}@{version} has not yet finished processing; it will be skipped"
@@ -242,7 +285,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
                 logger.info(msg)
             return
 
-        if self.download_criteria.must_be_approved is True:
+        if criteria.must_be_approved is True:
             msg = f"{project}/{package}@{version} has not been approved; it will be skipped"
             a = info_dict[version]["approved"]
             if a is None or a.lower() != "approved":
@@ -262,30 +305,37 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         current_time += step_time
         return current_time
 
-    def _get_start_times_for_repeat(self) -> tuple[int, int, int]:
+    def _get_start_times_for_repeat(
+        self,
+        *,
+        criteria: SpectraAssureDownloadCriteria,
+    ) -> tuple[int, int, int]:
         # prep time settings
-        max_time = self.download_criteria.max_wait_time_for_scan_done
-
-        step_time = int(self.download_criteria.max_wait_time_for_scan_done / 5)
-        step_time = max(step_time, 10)
-        if step_time > 60:
-            step_time = 30
-
         current_time = 0
+
+        max_time = criteria.max_wait_time_for_scan_done
+
+        step_time = int(criteria.max_wait_time_for_scan_done / 5)
+        step_time = min(
+            max(step_time, 10),
+            30,
+        )
 
         return current_time, step_time, max_time
 
     def _get_info_status(
         self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         project: str,
         package: str,
         version: str,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
+        **qp: Any,
     ) -> dict[str, Any]:
         a_dict: dict[str, Any] = {}
 
-        current_time, step_time, max_time = self._get_start_times_for_repeat()
+        current_time, step_time, max_time = self._get_start_times_for_repeat(criteria=criteria)
 
         while True:
             data = self.status(
@@ -293,6 +343,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
                 package=package,
                 version=version,
                 auto_adapt_to_throttle=auto_adapt_to_throttle,
+                **qp,
             )
             if data.status_code != 200:
                 msg = f"NO DATA FOUND with status({project},{package},{version}) :: {data.status_code} {data.text}"
@@ -308,11 +359,14 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
                 if a_dict[k] is not None and k != "hashes":
                     a_dict[k] = a_dict[k].lower()
 
-            if self.download_criteria.wait_for_scan_done is False:
+            if criteria.wait_for_scan_done is False:
                 return a_dict
 
-            if a_dict["analysis"].lower() == "done":
+            # Stop on a finished analysis, failed ones included: an analysis that
+            # ended in ERROR used to be polled for the whole wait budget (I-44).
+            if a_dict["analysis"] in _ANALYSIS_FINISHED:
                 return a_dict
+
             # pylint: disable-next=line-too-long
             msg = (
                 f"waiting for analysis to finish on: {project}/{package}@{version}"
@@ -329,18 +383,22 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _do_status(
         self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         project: str,
         package: str,
         version: str,
         skip: list[str],  # pylint: disable=unused-argument
         info_dict: dict[str, dict[str, Any]],
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
+        **qp: Any,
     ) -> None:
         a_dict = self._get_info_status(
+            criteria=criteria,
             project=project,
             package=package,
             version=version,
             auto_adapt_to_throttle=auto_adapt_to_throttle,
+            **qp,
         )
 
         for k, v in a_dict.items():
@@ -378,7 +436,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         version: str,
         skip: list[str],  # pylint: disable=unused-argument
         info_dict: dict[str, dict[str, Any]],
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
     ) -> None:
         # get the data
         data = self.list(
@@ -410,24 +468,41 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _filter_latest_approved_version(
         self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         temp_result_dict: dict[str, dict[str, Any]],
-    ) -> str:
-        # sort by latest approval timestamp
+    ) -> str | None:
+        """The candidate with the latest approval timestamp, or None if none has one.
 
-        tt: dict[str, str] = {}
-        for version, info in temp_result_dict.items():
-            for k, v in info.items():
-                if k == "approval-stamp" and v is not None:
-                    tt[v] = version
-        sorted_by_time = sorted(tt.keys())
-        if len(sorted_by_time) == 0:
-            msg = "No data in filter_latest_approved_version"
-            raise SpectraAssureUnexpectedNoDataFound(msg)
+        Only approved candidates have an approval timestamp, so this is the latest
+        approved candidate. When none of them is approved, which can happen with
+        must_be_approved=False, the strategy has nothing to choose: that used to
+        raise SpectraAssureUnexpectedNoDataFound and now selects nothing (I-38).
+        """
+        # Compared as points in time, not as text (I-27). On equal timestamps the
+        # version listed last wins, which is what the earlier dict-based code
+        # did implicitly, by overwriting.
+        stamped: list[tuple[datetime, int, str]] = []
+        for position, (version, info) in enumerate(temp_result_dict.items()):
+            raw = info.get("approval-stamp")
+            if raw is None:
+                continue
+            when = _parse_timestamp(raw)
+            if when is None:
+                logger.warning("approval timestamp %r of version %s cannot be read; it is not considered", raw, version)
+                continue
+            stamped.append((when, position, version))
 
-        latest_most_recent = sorted_by_time[-1]  # let's assume this is actually unique
-        latest_version_string = tt[latest_most_recent]
+        if not stamped:
+            msg = (
+                f"strategy {criteria.current_strategy} selects nothing: "
+                f"none of the candidates {sorted(temp_result_dict)} has been approved"
+            )
+            logger.info(msg)
+            return None
 
-        msg = f"strategy {self.download_criteria.current_strategy} selected {latest_version_string}"
+        latest_version_string = max(stamped)[2]
+
+        msg = f"strategy {criteria.current_strategy} selected {latest_version_string}"
         logger.info(msg)
 
         return latest_version_string
@@ -435,9 +510,9 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
     def _select_version_from_result(
         self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         result_dict: dict[str, dict[str, Any]],
     ) -> dict[str, dict[str, Any]] | None:
-        assert self.download_criteria is not None
 
         if len(result_dict) == 0:
             msg = "no versions exist after filters have been applied"
@@ -449,28 +524,31 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             logger.info(msg)
             return result_dict
 
-        if self.download_criteria.current_strategy.lower() == "AllApproved".lower():
-            msg = f"used strategy {self.download_criteria.current_strategy} on {result_dict.keys()}"
+        if criteria.current_strategy.lower() == "AllApproved".lower():
+            msg = f"used strategy {criteria.current_strategy} on {result_dict.keys()}"
             logger.info(msg)
             return result_dict
 
-        if self.download_criteria.current_strategy.lower() == "LatestApproved_ByApprovalTimeStamp".lower():
-            msg = f"used strategy {self.download_criteria.current_strategy} on {result_dict.keys()}"
+        if criteria.current_strategy.lower() == "LatestApproved_ByApprovalTimeStamp".lower():
+            msg = f"used strategy {criteria.current_strategy} on {result_dict.keys()}"
             logger.info(msg)
-            latest = self._filter_latest_approved_version(temp_result_dict=result_dict)
+            latest = self._filter_latest_approved_version(criteria=criteria, temp_result_dict=result_dict)
+            if latest is None:
+                return None
             return {latest: result_dict[latest]}
 
-        msg = f"unsupported strategy {self.download_criteria.current_strategy}"
+        msg = f"unsupported strategy {criteria.current_strategy}"
         logger.info(msg)
         raise SpectraAssureUnsupportedStrategy(msg)
 
     def _get_extended_info_versions(
-        self,  # pylint: disable=unused-argument
+        self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         project: str,
         package: str,
         version: str | None = None,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         **qp: Any,
     ) -> dict[str, dict[str, Any]] | None:
         skip: list[str] = []
@@ -486,12 +564,14 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         for version_ in info_dict:
             logger.debug("%s/%s@%s", project, package, version_)
             self._do_status(
+                criteria=criteria,
                 project=project,
                 package=package,
                 version=version_,
                 skip=skip,
                 info_dict=info_dict,
                 auto_adapt_to_throttle=auto_adapt_to_throttle,
+                **qp,
             )
             self._do_list(
                 project=project,
@@ -503,6 +583,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             )
 
             self._update_skip_list(
+                criteria=criteria,
                 project=project,
                 package=package,
                 version=version_,
@@ -519,22 +600,23 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         )
 
         return self._select_version_from_result(
+            criteria=criteria,
             result_dict=result_dict,
         )
 
     def _prep_candidates(
         self,
         *,
+        criteria: SpectraAssureDownloadCriteria,
         target_dir: str,  # pylint: disable=unused-argument
         project: str,
         package: str,
         version: str | None = None,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         **qp: Any,
     ) -> dict[str, dict[str, Any]] | None:
 
-        assert self.download_criteria is not None
-        self.download_criteria.must_be_approved = True  # Force True, we only currently support approved versions
+        # criteria.must_be_approved = True  # Force True, we only currently support approved versions
 
         what = self._what(
             project=project,
@@ -544,15 +626,21 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
 
         supported = ["package", "version"]
         if what not in supported:
-            msg = f"'download' is only supported for {'and '.join(supported)}"
+            msg = f"'download' is only supported for {' and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: dict[str, Any] = self.qp_download(
-            what=what,
-            **qp,
-        )
+        # Discovery has to ask about the artifact that will be downloaded. `build`
+        # selects a different file (the reproducible build) with its own analysis
+        # status and its own hashes; asking about the main artifact and then
+        # downloading the other one verifies it against the wrong hashes.
+        # Every version is looked up individually, so `build` applies whether the
+        # caller named a version or a whole package. `download` is never passed
+        # on: it requests a link, which is paid for in download capacity, and only
+        # the versions that are actually chosen may do that.
+        valid_qp = self._discovery_qp(**qp)
 
         return self._get_extended_info_versions(
+            criteria=criteria,
             project=project,
             package=package,
             version=version,
@@ -560,9 +648,16 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             **valid_qp,
         )
 
+    @staticmethod
+    def _discovery_qp(**qp: Any) -> dict[str, Any]:
+        """The query parameters for the status calls made while choosing what to download."""
+        if qp.get("build") is None:
+            return {}
+        return {"build": qp["build"]}
+
     # PUBLIC
     @staticmethod
-    def qp_download(
+    def _qp_download(
         *,
         what: str,
         **qp: Any,
@@ -581,7 +676,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
         project: str,
         package: str,
         version: str | None = None,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         download_criteria: SpectraAssureDownloadCriteria | None = None,
         **qp: Any,
     ) -> dict[str, dict[str, Any]] | None:
@@ -602,7 +697,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             None if you want to look at all available versions in the current project/package.
             (By default, only approved versions will be considered download candidates.)
 
-         - auto_adapt_to_throttle: bool = False, optional;
+         - auto_adapt_to_throttle: bool | None = None, optional;
             If a throttle response is received:
                 you may want to use this option to automatically wait until the data becomes available.
                 Otherwise, no download will take place and an exception will be raised.
@@ -635,7 +730,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
                 UrlDownloaderUnknownHashKey:  we cannot find the proper hash key in the provided hash info dict.
                 UrlDownloaderTargetDirectoryIssue:  there are issues with the target directory.
                 UrlDownloaderTargetFileIssue: there are issues with the target file.
-                UrlDownloaderTempFileIssue: there are issues with the temp file.
+                UrlDownloaderTempFileIssue: no temporary file can be created in the target directory.
                 UrlDownloaderFileVerifyIssue: the verification failed for the existing file or for the downloaded file.
 
         QueryParameters:
@@ -654,11 +749,12 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             Using status() with 'download' directly influences your Spectra Assure Portal download capacity.
 
         """
-        self._prep_criteria(download_criteria)
+        criteria = self._prep_criteria(download_criteria)
         target_dir_posix = self._validate_target_dir(target_dir)
 
         # find the version(s) and see if they are candidates
         chosen = self._prep_candidates(
+            criteria=criteria,
             target_dir=target_dir_posix,
             project=project,
             package=package,
@@ -672,6 +768,7 @@ class SpectraAssureApiOperationsDownload(  # pylint: disable=too-many-ancestors
             return None
 
         return self._process_candidates(
+            criteria=criteria,
             target_dir=target_dir_posix,
             project=project,
             package=package,

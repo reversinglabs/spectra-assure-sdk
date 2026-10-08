@@ -17,7 +17,9 @@ Execute an edit() API call to modify the details for the specified item.
 - qp: Dict[str,Any], optional.
 
 
-## Query parameters
+## Body fields
+
+These are sent in the JSON request body; pass them as keyword arguments.
 
 **Project and Package**
 

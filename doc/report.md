@@ -18,9 +18,14 @@ Execute a report() API call for the specified `project`, `package`, `version`.
 
 This operation always needs the report name string specified in the parameter `report_type`.
 
-The current valid list of report names is available from `SpectraAssureApiOperations.current_report_names()`.
+## Report types
 
-If the requested report name is invalid, the operation will raise an exception `SpectraAssureInvalidAction`.
+The SDK does not check `report_type`; it is passed to the Portal as given, in lowercase,
+and the Portal checks it. If the Portal doesn't recognize the specified report type, it responds with an
+error status (400 or 404). The SDK does not raise an exception for unsupported report types.
+
+The Portal currently supports the following report types:
+`cyclonedx`, `rl-checks`, `rl-cve`, `rl-diff`, `rl-json`, `rl-summary-pdf`, `rl-uri`, `sarif`, `spdx`.
 
 ## Query parameters
 

@@ -1,16 +1,34 @@
+"""Shared plumbing for every operation: routing, URLs, parameter filtering.
+
+Where an operation lives and which parameters it accepts now come from the
+compiled API specification. The public `qp_*` helpers are kept
+-- they are part of the customer-facing surface --
+but they are thin views over the specification instead of separate lists that
+have to be updated alongside it.
+"""
+
+from __future__ import annotations
+
 import logging
-import os
-import sys
+import time
 from abc import ABC, abstractmethod
-from pathlib import Path
+from collections.abc import Callable
 from typing import (
     Any,
 )
+from urllib.parse import quote
+
+import requests
 
 from spectra_assure_api_client.communication.api import SpectraAssureApi
 from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureInvalidAction,
+    SpectraAssureWaitTimeoutExceeded,
 )
+from spectra_assure_api_client.communication.post import BodyKind
+from spectra_assure_api_client.spec import Operation, SpectraAssureSpecError, resolve
+
+from .constants import _ARCHIVE_POLL_INTERVAL
 
 logger = logging.getLogger(__name__)
 
@@ -19,36 +37,481 @@ class SpectraAssureApiOperationsBase(
     ABC,
     SpectraAssureApi,
 ):
+    # ------------------------------------------------------------------ routing
+
+    def _resolve(self, action: str, what: str) -> Operation:
+        """Find the specification operation backing this call."""
+        try:
+            return resolve(action, what)
+        except SpectraAssureSpecError as exc:
+            # Presented to the caller as an invalid action: from their side an
+            # unroutable combination is exactly that.
+            raise SpectraAssureInvalidAction(message=str(exc)) from exc
+
+    def _context_path_values(self) -> dict[str, str]:
+        """Path values every organization-scoped operation shares.
+
+        The API specification spells them `{organization}` and `{group}`; the
+        File Stream endpoints used `{organization_name}` and `{group_name}`
+        while they had a document of their own. Both spellings are supplied and
+        `render_path` uses whichever the template declares.
+        """
+        organization = str(self.organization)
+        group = str(self.group)
+        return {
+            "organization": organization,
+            "organization_name": organization,
+            "group": group,
+            "group_name": group,
+        }
+
+    def _url_for(self, operation: Operation, **path_values: str) -> str:
+        values = {**self._context_path_values(), **path_values}
+        return self.base_url + operation.render_path(**values)
+
+    def _make_current_url(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        action: str,
+        project: str | None = None,
+        package: str | None = None,
+        version: str | None = None,
+        report_type: str | None = None,
+    ) -> str:
+        """Build the URL for a group/project/package/version operation.
+
+        The purl ladder used to be assembled segment by segment here. The
+        specification already spells each rung out as its own path template --
+        `/list/{organization}/{group}`, `/list/{organization}/{group}/pkg:rl/{project}`,
+        and so on -- so the rung is chosen by routing and the template rendered.
+        """
+        what = self._what(project=project, package=package, version=version)
+        operation = self._resolve(action, what)
+
+        values: dict[str, str] = {}
+        if project is not None:
+            values["project"] = project
+        if package is not None:
+            values["package"] = package
+        if version is not None:
+            values["version"] = version
+        if report_type is not None:
+            values["report_type"] = report_type
+
+        return self._url_for(operation, **values)
+
+    def _make_current_url_community(
+        self,
+        *,
+        action: str,
+        repository: str | None = None,  # mandatory for community_report_*
+        package: str | None = None,  # mandatory, may have a namespace embedded
+        version: str | None = None,  # optional
+    ) -> str:
+        """Build the URL for a community operation.
+
+        Community paths cannot simply be rendered from their template.
+        The specification writes them fully qualified --
+        `/community/report/package/pkg:{community}/{namespace}/{package}@{version}`
+        -- but the SDK accepts a package with the namespace already folded in and
+        treats the version as optional. So the fixed prefix is taken from the
+        specification and the variable tail is appended to match what the SDK
+        has always sent.
+        """
+        operation = self._resolve(action, "community")
+
+        prefix = "/".join(segment for segment in operation.path.split("/") if "{" not in segment)
+        base = self.base_url + prefix
+
+        if repository is None:
+            return base
+
+        if package is None:
+            msg = f"package must not be None when a repository is given ('{action}')"
+            raise SpectraAssureInvalidAction(message=msg)
+
+        # Every value is percent-encoded, as it is for the other paths, so that it
+        # cannot change the shape of the URL: a '?' or '#' in a version would
+        # otherwise start a query string or a fragment, and requests drops a
+        # fragment before sending. Two characters are kept as they are in the
+        # package: the '/' between a namespace and a package name, which the
+        # specification writes as a separator of its own, and the '@' that opens an
+        # npm scope, which has always been sent unescaped.
+        tail = f"/pkg:{quote(repository, safe='')}/{quote(package, safe='/@')}"
+
+        if version is None:
+            return base + tail
+
+        return base + tail + "@" + quote(version, safe="")
+
+    # -------------------------------------------------- parameter filtering
+
     @staticmethod
-    def _what(
+    def _qp_edit(
+        *,
+        what: str,
+        **qp: Any,
+    ) -> dict[str, Any]:
+        return SpectraAssureApiOperationsBase._accepted("edit", what, qp)
+
+    @staticmethod
+    def _qp_reject(
+        *,
+        what: str,
+        **qp: Any,
+    ) -> dict[str, Any]:
+        return SpectraAssureApiOperationsBase._accepted("reject", what, qp)
+
+    @staticmethod
+    def _qp_revoke(
+        *,
+        what: str,
+        **qp: Any,
+    ) -> dict[str, Any]:
+        return SpectraAssureApiOperationsBase._accepted("revoke", what, qp)
+
+    @staticmethod
+    def _qp_scan(
+        *,
+        what: str,
+        **qp: Any,
+    ) -> dict[str, Any]:
+        r = SpectraAssureApiOperationsBase._accepted("scan", what, qp)
+
+        # A reproducible build takes its inputs from the recorded build, so
+        # there is nothing to force or to diff against. The specification
+        # states the incompatibility in prose only, so it stays checked here.
+        if "build" in r and str(r["build"]).lower() == "repro":
+            for k in ("force", "diff_with"):
+                if k in r:
+                    msg = f"'scan' query parameter {k} cannot be combined with 'build=repro'"
+                    raise SpectraAssureInvalidAction(message=msg)
+
+        return r
+
+    @staticmethod
+    def _qp_report(
+        what: str,
+        **qp: Any,
+    ) -> dict[str, Any]:
+        return SpectraAssureApiOperationsBase._accepted("report", what, qp)
+
+    @staticmethod
+    def _link_request_failure(status_code: int, what: str) -> str:
+        """The message for a download-link request the Portal refused.
+
+        The start is unchanged, so searches for it still match. A 402 means
+        "Insufficient remaining capacity" in the specification: every download
+        link draws on the group's download capacity, and what is left does not
+        cover this artifact. It used to be reported only by its number (I-48).
+        """
+        msg = f"we get {status_code} from status lookup for {what}"
+        if status_code == 402:
+            msg += (
+                ": insufficient remaining capacity; the download capacity left does not cover this artifact"
+                " (every download link draws on it)"
+            )
+        return msg
+
+    @staticmethod
+    def _link_request_throttle(per_call: bool | None) -> bool:
+        """Whether a download-link request retries on 429.
+
+        The specification limits the status call with `download` to 10 requests
+        a minute and tells clients to wait as long as Retry-After says. A download
+        of more than ten versions therefore runs into the limit by design, and
+        failing there leaves it half done (I-46). So link requests retry on 429,
+        waiting as Retry-After says, even when the client's throttle handling is
+        off; only an explicit `auto_adapt_to_throttle=False` for the call turns
+        that off. Every other request follows the usual setting.
+        """
+        return per_call is not False
+
+    @staticmethod
+    def _import_body(  # pylint: disable=too-many-arguments
+        *,
+        action: str,
+        key: str,
+        value: str,
+        auth_user: str | None,
+        auth_pass: str | None,
+        bearer_token: str | None,
+    ) -> dict[str, Any]:
+        """Check an import's source and credentials, and build its JSON body.
+
+        One set of rules for url_import, purl_import and their File Stream
+        twins (I-22), which each used to keep their own and did not agree:
+
+        - a URL must contain '://', and a PURL must start with 'pkg:';
+        - a bearer token cannot be combined with a user name or password, as
+          the specification says for both import operations;
+        - an empty credential counts as not given and is left out.
+
+        The specification spells the credential keys with hyphens, which are not
+        valid Python identifiers, so the SDK takes underscored arguments and
+        maps them here.
+        """
+        if key == "url" and "://" not in value:
+            msg = f"'{action}' no '://' in '{value}'; url must be in uri format '<proto>://<host>[:<port>]/<path>'"
+            raise SpectraAssureInvalidAction(message=msg)
+
+        if key == "purl" and not value.lower().startswith("pkg:"):
+            msg = f"'{action}' no 'pkg:' in '{value}'; purl must start with 'pkg:'"
+            raise SpectraAssureInvalidAction(message=msg)
+
+        if bearer_token and (auth_user or auth_pass):
+            msg = f"'{action}': a bearer token cannot be combined with a user name and password"
+            raise SpectraAssureInvalidAction(message=msg)
+
+        body: dict[str, Any] = {key: value}
+        for name, credential in (("auth-user", auth_user), ("auth-pass", auth_pass), ("bearer-token", bearer_token)):
+            if credential:
+                body[name] = credential
+        return body
+
+    @staticmethod
+    def _body_kind(operation: Operation, *, has_fields: bool) -> BodyKind:
+        """The body a POST sends, from the media type the specification declares for it.
+
+        A JSON body whose fields are all optional is left out when none is given,
+        so `create` without a description sends no body, as before.
+        """
+        media = operation.body_media_types
+        if "application/octet-stream" in media:
+            return "file"
+        if "multipart/form-data" in media:
+            return "form"
+        if "application/json" in media and (has_fields or operation.body_required):
+            return "json"
+        return "none"
+
+    @staticmethod
+    def _qp_status(
+        *,
+        what: str,
+        **qp: Any,
+    ) -> dict[str, Any]:
+        return SpectraAssureApiOperationsBase._accepted_query("status", what, qp)
+
+    @staticmethod
+    def _accepted_query(action: str, what: str, qp: dict[str, Any]) -> dict[str, Any]:
+        """Keep only the query parameters the specification declares for this operation.
+
+        For operations that build their request body from named arguments, such
+        as the imports. They must not use `_accepted`, which also keeps body
+        fields: a body field passed in `**qp` (for example `auth-pass`) would
+        then be sent in the query string, in the URL. Unroutable combinations
+        yield an empty dict, as with `_accepted`.
+        """
+        try:
+            operation = resolve(action, what)
+        except SpectraAssureSpecError:
+            return {}
+
+        query = set(operation.query_params)
+        return {k: v for k, v in qp.items() if k in query}
+
+    @staticmethod
+    def _accepted(action: str, what: str, qp: dict[str, Any]) -> dict[str, Any]:
+        """Keep only the arguments the specification declares for this operation.
+
+        Unroutable combinations yield an empty dict rather than raising:
+        the `qp_*` helpers have always answered that way for parameters
+        that do not apply at a given level,
+        and callers rely on passing one shared bag of arguments across operations
+        that accept different subsets of it.
+        """
+        try:
+            operation = resolve(action, what)
+        except SpectraAssureSpecError:
+            return {}
+
+        accepted = set(operation.accepted_parameters)
+        return {k: v for k, v in qp.items() if k in accepted}
+
+    @staticmethod
+    def _require_reason(*, action: str, qp: dict[str, Any]) -> None:
+        """Insist on the `reason` that approve, reject and revoke cannot do without.
+
+        The specification (TPRMReason) requires a request body with a `reason`.
+        Without one the SDK sent a request with no body at all, which the Portal
+        can only refuse, so it is refused here instead, before anything is sent.
+
+        The specification puts no minimum on the length, so an empty string is
+        passed on and left to the Portal to judge.
+        """
+        if not isinstance(qp.get("reason"), str):
+            msg = f"'{action}' requires a 'reason' (a string): the Portal API declares it mandatory"
+            raise SpectraAssureInvalidAction(message=msg)
+
+    # ------------------------------------------------------------- dispatch
+
+    def _simple_operation(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        project: str | None = None,
+        package: str | None = None,
+        version: str | None = None,
+        action: str,
+        verb: str,
+        supported: list[str],
+        auto_adapt_to_throttle: bool | None = None,
+        file_path: str | None = None,
+        **qp: Any,
+    ) -> requests.Response:
+        what = self._what(
+            project=project,
+            package=package,
+            version=version,
+        )
+
+        logger.debug(
+            "Pr: %s, Pa: %s, Ve: %s, Act: %s, Verb: %s, Supp: %s, Qp: %s",
+            project,
+            package,
+            version,
+            action,
+            verb,
+            supported,
+            qp,
+        )
+
+        if what not in supported:
+            x = " and ".join(supported)
+            msg = f"'{action}' is only supported for: {x}"
+            raise SpectraAssureInvalidAction(message=msg)
+
+        operation = self._resolve(action, what)
+
+        # `scan` carries the incompatibility check that the specification only
+        # states in prose, so it keeps its dedicated helper.
+        filtered = self._qp_scan(what=what, **qp) if action == "scan" else self._accepted(action, what, qp)
+
+        query_params, body_params = operation.split_parameters(filtered)
+
+        url = self._make_current_url(
+            action=action,
+            project=project,
+            package=package,
+            version=version,
+        )
+
+        if verb == "delete":
+            # The previous implementation computed these and then dropped them:
+            # `_do_it_delete` was called with the (empty) body bag and never with
+            # the query parameters, so `delete(..., build=...)` had no effect.
+            return self._do_it_delete(
+                url=url,
+                auto_adapt_to_throttle=auto_adapt_to_throttle,
+                url_params={k: str(v) for k, v in query_params.items()} or None,
+            )
+
+        if verb == "put":
+            return self._do_it_put(
+                url=url,
+                auto_adapt_to_throttle=auto_adapt_to_throttle,
+                url_params={k: str(v) for k, v in query_params.items()} or None,
+                **body_params,
+            )
+
+        if verb == "post":
+            # Query parameters in the query string, body properties in the body,
+            # as the specification declares them; the kind of body as well.
+            return self._post(
+                action=action,
+                url=url,
+                body=self._body_kind(operation, has_fields=bool(body_params)),
+                file_path=file_path,
+                post_data=dict(body_params) if body_params else None,
+                auto_adapt_to_throttle=auto_adapt_to_throttle,
+                **query_params,
+            )
+
+        if verb == "get":
+            return self._do_it_get(
+                url=url,
+                auto_adapt_to_throttle=auto_adapt_to_throttle,
+                **query_params,
+            )
+
+        if verb == "patch":
+            return self._do_it_patch(
+                url=url,
+                auto_adapt_to_throttle=auto_adapt_to_throttle,
+                **body_params,
+            )
+
+        msg = f"Unsupported operation: {verb}"
+        raise ValueError(msg)
+
+    def _wait_for_rl_safe_archive(
+        self,
+        *,
+        fetch: Callable[[], requests.Response],
+        what: str,
+        max_wait_time: int,
+    ) -> requests.Response:
+        """Request an RL-SAFE archive link, waiting while the archive is still being prepared.
+
+        The API answers 202 until the analysis has finished and the archive can
+        be produced, for project/package/version archives and for File Stream
+        files alike. That is normally a step on the way, not a failure, so it is
+        waited out rather than raised. Any other status than 200 is a real error
+        and is raised at once.
+
+        The specification gives two messages for that 202: "not done with
+        analysis" and "does not have complete analysis". The second may never
+        resolve, and it is waited out just the same; when the budget runs out
+        the API's message is included in the exception so the cause is visible.
+
+        `fetch` issues one request; `what` names the archive in messages.
+        `max_wait_time` of 0 fails on the first 202.
+        """
+        waited = 0
+
+        while True:
+            data = fetch()
+
+            if data.status_code == 200:
+                return data
+
+            if data.status_code != 202:
+                msg = f"Error: rl-safe requests returns: {data.status_code} {data.text}"
+                raise SpectraAssureInvalidAction(message=msg)
+
+            if waited >= max_wait_time:
+                # The API gives two reasons for a 202: the analysis is not done
+                # yet, or the version has no complete analysis. Only the first
+                # resolves by waiting, and the two cannot be told apart without
+                # reading the message, so it is passed on to the caller.
+                reason = " ".join(data.text.split())[:200]
+                msg = (
+                    f"the rl-safe archive for {what} was still being prepared "
+                    f"after {waited}s (the API kept answering 202)"
+                )
+                if reason:
+                    msg += f": {reason}"
+                raise SpectraAssureWaitTimeoutExceeded(message=msg)
+
+            logger.info(
+                "rl-safe archive for %s is not ready yet (max %ds, current %ds)",
+                what,
+                max_wait_time,
+                waited,
+            )
+            time.sleep(_ARCHIVE_POLL_INTERVAL)
+            waited += _ARCHIVE_POLL_INTERVAL
+
+    # --------------------------------------------------------------- STATIC
+
+    @staticmethod
+    def _what(  # gppv
         *,
         project: str | None = None,
         package: str | None = None,
         version: str | None = None,
     ) -> str:
-        """Action:
-            Determine the context of the operation we are executing.
 
-        Args:
-          - project: str | None;
-            If we don't have a project name,
-            we are doing something with a group.
-
-          - package: str | None;
-            If we don't have a package name,
-            we are doing something with a project.
-
-          - version: str | None;
-            If we don't have a version name,
-            we are doing something with a package.
-
-          - If all args are not None,
-            we are doing something with a version.
-
-        Return:
-          - what: str.
-
-        """
         if project is None:
             return "group"
 
@@ -60,331 +523,7 @@ class SpectraAssureApiOperationsBase(
 
         return "version"
 
-    @staticmethod
-    def _extract_hashes(data: list[list[str]]) -> dict[str, Any]:
-        rr: dict[str, Any] = {}
-        for item in data:
-            rr[item[0]] = item[1]
-        return rr
-
-    @staticmethod
-    def _get_path(
-        *,
-        path: str,
-        data: Any,
-    ) -> Any | None:
-        """Action:
-            Perform a naive traverse of data by dict keys
-            (naive as we don't support arrays).
-
-        Args:
-         - path: str, mandatory.
-           A path string of steps separated by '/'.
-         - data: Any.
-           The data we will try to treat as a dict of dicts.
-
-        Return:
-         - If there is no path, we return None.
-         - If the data we have is None, we return None.
-         - If there is no '/', we try the path as-is with the default of None.
-         - Otherwise we iterate over the path elements and try to walk the whole path.
-
-        """
-        if not path:
-            return None
-
-        if data is None:
-            return None
-
-        if "/" not in path:
-            return data.get(path, None)
-
-        p_list = path.split("/")
-
-        r: Any = data
-        if r is None:
-            return None
-
-        for p_item in p_list:
-            r = r.get(p_item, None)
-            if r is None:
-                return None
-
-        return r
-
-    @staticmethod
-    def _flatten_list(
-        data: dict[str, Any],
-        *,
-        multiple: str,
-        single: str,
-        with_sort: bool = True,
-    ) -> list[str]:
-        """Action:
-            Try to flatten a dict into a list.
-
-        Args:
-         - data: Dict[str, Any], mandatory.
-            The data we work on.
-         - multiple: str , mandatory.
-            The name of the top-level collection.
-         - single: str, mandatory:
-            The name of each item to extract.
-         - with_sort: bool , default True, optional.
-            If True, the result is sorted,
-            otherwise the result is unsorted.
-
-        Return:
-            Return the flattened list,
-            optionally sorted,
-            based on the provided selectors.
-
-        Note:
-            Used on the results of list() for any level lower than 'version' to find:
-             - the versions in a package or
-             - the packages in a project or
-             - the projects in a group.
-
-        """
-        p_list = data.get(multiple)
-        if not p_list:
-            return []
-
-        rr = [item[single] for item in p_list if item.get(single)]
-
-        if with_sort:
-            return sorted(rr)
-
-        return rr
-
-    def _make_current_url(  # pylint: disable=too-many-arguments
-        self,
-        *,
-        action: str,
-        project: str | None = None,
-        package: str | None = None,
-        version: str | None = None,
-        report_type: str | None = None,
-    ) -> str:
-        what = self._what(  # enum: 'group', 'project', 'package', 'version'
-            project=project,
-            package=package,
-            version=version,
-        )
-        # action_base + tail:
-        # tail = /pkg:rl/{project}/{package}@{version}
-        # note when using namespace here the namespace is already part of the package parameter
-
-        # https://{portalUrl}/{community-api}/find/packages
-        #   with: community-api: 'api/public/v1/community'
-
-        # for profile export/import this will return https://server..../api/public/v1/profile
-        #   and as what == group we can handle all the rest by the caller
-        base = self._render_action_org_group_url(action)
-        tail = ""
-        if what == "group":
-            return base
-
-        assert project is not None
-        tail = tail + "/pkg:rl/" + project  # now we have: /pkg:rl/{project}
-        if what == "project":
-            return base + tail
-
-        assert package is not None
-        # namespace is embedded in package when using a namespace
-
-        tail = tail + "/" + package  # now we have: /pkg:rl/{project}/{package}
-        if what == "package":
-            return base + tail
-
-        assert version is not None
-        tail = tail + "@" + version  # now we have: /pkg:rl/{project}/{package}@{version}
-
-        if what == "version":
-            if action not in ["report"]:
-                return base + tail
-
-            # note report has the report_type in the middle of the url (not orthogonal)
-            tail = f"/{report_type}{tail}"
-            return base + tail
-
-        msg = f"'_make_current_url' {action} with unsupported parameters: {what}"
-        raise SpectraAssureInvalidAction(message=msg)
-
-    def _make_current_url_community(  # pylint: disable=too-many-arguments
-        self,
-        *,
-        action: str,
-        repository: str | None = None,  # mandatory for community_report_*
-        package: str | None = None,  # mandatory, may have a namespace embedded
-        version: str | None = None,  # optional
-    ) -> str:
-        # action_base + tail:
-        base = self._render_action_org_group_url(action)
-        tail = ""
-
-        if repository is None:
-            return base + tail
-
-        assert repository is not None
-        tail = tail + f"/pkg:{repository}"  # now we have: /pkg:{repo}
-
-        assert package is not None
-        tail = tail + f"/{package}"  # now we have: /pkg:{repo}/{package} with a optional namespace in front of package.
-
-        if version is None:
-            return base + tail
-
-        assert version is not None
-        tail = tail + "@" + version  # now we have: /pkg:{repo}/{package}@{version}
-
-        return base + tail
-
-    # Public
-
-    @staticmethod
-    def exists_posix_path(
-        *,
-        item_path: str,
-    ) -> tuple[bool, str]:
-        """Action:
-            Test if the path exists and check if it is a file or a directory.
-
-        Args:
-         - item_path: str, mandatory.
-            The path to be checked.
-
-        Return:
-         - Tuple[exists: bool, type: str]
-           - exists:
-             - True if the path exists
-             - False otherwise
-           - type:
-             - If the path points to a 'directory', type is "D"
-             - If the path points to a 'file', type is "F"
-             - Otherwise type is ""
-
-        """
-        fp = Path(item_path)
-        exists = fp.exists()
-        what = ""
-        if exists:
-            if fp.is_dir():
-                what = "D"
-            elif fp.is_file():
-                what = "F"
-
-        return exists, what
-
-    @staticmethod
-    def simple_path_to_posix(
-        *,
-        target_path: str,
-    ) -> str:
-        """Action:
-            Return a path with more POSIX-like separators
-            (path does not need to exist).
-
-        Args:
-         - target_path: str, mandatory.
-
-        Return:
-         - aPath: str.
-
-        Notes:
-            We simply change all occurrences of \\ into /
-            Linux, Mac and Windows all support POSIX paths.
-
-        """
-        return target_path.replace("\\", "/")
-
-    @staticmethod
-    def qp_status(
-        *,
-        what: str,
-        **qp: Any,
-    ) -> dict[str, Any]:
-        """Action:
-            Filter a query parameter dict for the status() call.
-
-        Args:
-         - what: str, mandatory: what operation are we performing.
-             status only works for 'version'
-         - qp: Dict[str,Any], Optional
-             status supports the query parameters:
-              - build
-              - download
-
-        Return:
-            A new dict. All unknown or unsupported query parameters will have been removed in the returned dict.
-
-        """
-        r: dict[str, Any] = {}
-        if what in ["version"]:
-            for k in ["build", "download"]:
-                if k in qp:
-                    r[k] = qp[k]
-        return r
-
-    @classmethod
-    def make_logger(
-        cls,
-        *,
-        my_logger: logging.Logger,
-    ) -> None:
-        """Action:
-            Using the provided myLogger,
-            set up a default myLogger
-             - that writes to stderr
-             - and to a logfile.
-
-        Args:
-            my_logger: logging.Logger, mandatory.
-
-        Returns:
-            None
-
-        Raises:
-            no specific exceptions are raised by the implementation.
-
-        Notes:
-            The log file is derived from the current executing program name
-            and if the program name ends with '.py' that part is stripped.
-
-            Supports reading LOG_LEVEL from the environment for stderr .
-            the file always uses DEBUG
-
-        """
-        assert my_logger is not None
-        my_logger.setLevel(logging.DEBUG)
-
-        my_level = os.getenv("LOG_LEVEL", "WARNING")
-        my_env = os.getenv("ENVIRONMENT", "PRODUCTION")
-
-        prog_name = os.path.basename(sys.argv[0])
-        if prog_name.lower().endswith(".py"):
-            prog_name = prog_name[:-3]
-        file_name = f"{prog_name}.log"
-
-        fh = logging.FileHandler(file_name)
-        fh.setLevel(logging.INFO)
-
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        if my_env.lower() in ["development", "testing"]:
-            formatter = logging.Formatter(
-                "%(asctime)s - %(pathname)s:%(lineno)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            fh.setLevel(logging.DEBUG)
-
-        ch = logging.StreamHandler()
-        ch.setLevel(my_level)
-
-        ch.setFormatter(formatter)
-        fh.setFormatter(formatter)
-
-        # add the handlers to my_logger
-        my_logger.addHandler(ch)
-        my_logger.addHandler(fh)
+    # ------------------------------------------------------ PUBLIC ABSTRACT
 
     @abstractmethod
     def status(
@@ -393,7 +532,7 @@ class SpectraAssureApiOperationsBase(
         project: str,
         package: str,
         version: str,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         **qp: Any,
     ) -> Any:
         """Needed here for the download operation"""
@@ -405,7 +544,7 @@ class SpectraAssureApiOperationsBase(
         project: str | None = None,
         package: str | None = None,
         version: str | None = None,
-        auto_adapt_to_throttle: bool = False,
-        **qp: Any,  # not actually used in list
+        auto_adapt_to_throttle: bool | None = None,
+        # **qp: Any,  # not actually used in list
     ) -> Any:
         """Needed here for the download operation"""

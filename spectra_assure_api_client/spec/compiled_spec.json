@@ -1,0 +1,1892 @@
+{
+ "excluded_operations": [
+  "createUser",
+  "deleteUser",
+  "getUser",
+  "modifyUserAttributes",
+  "queryUser",
+  "replaceUserAttributes",
+  "searchUsers"
+ ],
+ "operations": {
+  "approveFilestreamFile": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "reason"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "reason"
+   ],
+   "method": "PUT",
+   "path": "/approve/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "approveVersion": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "reason"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "reason"
+   ],
+   "method": "PUT",
+   "path": "/approve/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Approval"
+   ]
+  },
+  "createAuditExportAPI": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "datetime_end",
+    "datetime_start",
+    "filters",
+    "name",
+    "should_create_cef",
+    "should_create_ndjson"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "datetime_end",
+    "datetime_start",
+    "name",
+    "should_create_cef",
+    "should_create_ndjson"
+   ],
+   "method": "POST",
+   "path": "/audit-log/{organization}/export",
+   "path_params": [
+    "organization"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Audit"
+   ]
+  },
+  "deleteFilestreamFile": {
+   "method": "DELETE",
+   "path": "/delete/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "204",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "deletePackage": {
+   "method": "DELETE",
+   "path": "/delete/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "204",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Package"
+   ]
+  },
+  "deleteProject": {
+   "method": "DELETE",
+   "path": "/delete/{organization}/{group}/pkg:rl/{project}",
+   "path_params": [
+    "organization",
+    "group",
+    "project"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "204",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Project"
+   ]
+  },
+  "deleteVersion": {
+   "method": "DELETE",
+   "path": "/delete/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "default": "version",
+     "enum": [
+      "repro",
+      "version"
+     ],
+     "in": "query",
+     "name": "build",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "204",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "exportGroupRlProfile": {
+   "method": "GET",
+   "path": "/profile/{organization}/{group}/export",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Profile"
+   ]
+  },
+  "exportOrganizationRlProfile": {
+   "method": "GET",
+   "path": "/profile/{organization}/export",
+   "path_params": [
+    "organization"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Profile"
+   ]
+  },
+  "getAuditExportStatus": {
+   "method": "GET",
+   "path": "/audit-log/{organization}/export/{job_id}/status",
+   "path_params": [
+    "organization",
+    "job_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Audit"
+   ]
+  },
+  "getCommunityPackageMetadata": {
+   "method": "GET",
+   "path": "/community/report/package/pkg:{community}/{namespace}/{package}@{version}",
+   "path_params": [
+    "community",
+    "namespace",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "in": "query",
+     "name": "artifact",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "artifact_tag",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "match_pattern",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "match_expression",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "default": 0,
+     "in": "query",
+     "name": "offset",
+     "required": false,
+     "type": "integer"
+    },
+    {
+     "default": 5,
+     "in": "query",
+     "name": "limit",
+     "required": false,
+     "type": "integer"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Community"
+   ]
+  },
+  "getCommunityVersionAssessment": {
+   "method": "GET",
+   "path": "/community/report/version/pkg:{community}/{namespace}/{package}@{version}",
+   "path_params": [
+    "community",
+    "namespace",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "in": "query",
+     "name": "artifact",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "artifact_tag",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Community"
+   ]
+  },
+  "getFilestreamFileChecks": {
+   "method": "GET",
+   "path": "/checks/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "getFilestreamFileStatus": {
+   "method": "GET",
+   "path": "/status/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [
+    {
+     "default": false,
+     "in": "query",
+     "name": "download",
+     "required": false,
+     "type": "boolean"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "getFilestreamReport": {
+   "method": "GET",
+   "path": "/report/{organization}/{group}/{report_type}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "report_type",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "getRlSafeFilestreamArchive": {
+   "method": "GET",
+   "path": "/pack/safe/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "getRlSafeVersionArchive": {
+   "method": "GET",
+   "path": "/pack/safe/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "default": "version",
+     "enum": [
+      "repro",
+      "version"
+     ],
+     "in": "query",
+     "name": "build",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "getUserAccountDetails": {
+   "method": "GET",
+   "path": "/community/user/account",
+   "path_params": [],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Community"
+   ]
+  },
+  "getVersionChecks": {
+   "method": "GET",
+   "path": "/checks/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "getVersionReport": {
+   "method": "GET",
+   "path": "/report/{organization}/{group}/{report_type}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version",
+    "report_type"
+   ],
+   "query_params": [
+    {
+     "default": "version",
+     "enum": [
+      "repro",
+      "version"
+     ],
+     "in": "query",
+     "name": "build",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "getVersionStatus": {
+   "method": "GET",
+   "path": "/status/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "default": "version",
+     "enum": [
+      "repro",
+      "version"
+     ],
+     "in": "query",
+     "name": "build",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "default": false,
+     "in": "query",
+     "name": "download",
+     "required": false,
+     "type": "boolean"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "importFilestreamPURL": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "auth-pass",
+    "auth-user",
+    "bearer-token",
+    "purl"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "purl"
+   ],
+   "method": "POST",
+   "path": "/purl-import/{organization}/{group}/filestream",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [
+    {
+     "default": "Generic",
+     "in": "query",
+     "name": "version",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "product",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "publisher",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "category",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "license",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "platform",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "release_date",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "max_size",
+     "required": false,
+     "type": "integer"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "importFilestreamURL": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "auth-pass",
+    "auth-user",
+    "bearer-token",
+    "url"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "url"
+   ],
+   "method": "POST",
+   "path": "/url-import/{organization}/{group}/filestream",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [
+    {
+     "default": "Generic",
+     "in": "query",
+     "name": "version",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "product",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "publisher",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "category",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "license",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "platform",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "release_date",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "max_size",
+     "required": false,
+     "type": "integer"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "importGroupRlProfile": {
+   "body_media_types": [
+    "multipart/form-data"
+   ],
+   "body_required": true,
+   "form_properties": [
+    "configuration_file",
+    "replace"
+   ],
+   "method": "POST",
+   "path": "/profile/{organization}/{group}/import",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Profile"
+   ]
+  },
+  "importOrganizationRlProfile": {
+   "body_media_types": [
+    "multipart/form-data"
+   ],
+   "body_required": true,
+   "form_properties": [
+    "configuration_file",
+    "replace"
+   ],
+   "method": "POST",
+   "path": "/profile/{organization}/import",
+   "path_params": [
+    "organization"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Profile"
+   ]
+  },
+  "importVersion": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "auth-pass",
+    "auth-user",
+    "bearer-token",
+    "url"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "url"
+   ],
+   "method": "POST",
+   "path": "/url-import/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "in": "query",
+     "name": "max_size",
+     "required": false,
+     "type": "integer"
+    },
+    {
+     "default": false,
+     "in": "query",
+     "name": "replace",
+     "required": false,
+     "type": "boolean"
+    },
+    {
+     "default": false,
+     "in": "query",
+     "name": "force",
+     "required": false,
+     "type": "boolean"
+    },
+    {
+     "in": "query",
+     "name": "diff_with",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "product",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "publisher",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "category",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "license",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "platform",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "release_date",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "importVersionPURL": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "auth-pass",
+    "auth-user",
+    "bearer-token",
+    "purl"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "purl"
+   ],
+   "method": "POST",
+   "path": "/purl-import/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "default": false,
+     "in": "query",
+     "name": "replace",
+     "required": false,
+     "type": "boolean"
+    },
+    {
+     "default": false,
+     "in": "query",
+     "name": "force",
+     "required": false,
+     "type": "boolean"
+    },
+    {
+     "in": "query",
+     "name": "diff_with",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "product",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "publisher",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "category",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "license",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "platform",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "release_date",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "max_size",
+     "required": false,
+     "type": "integer"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "listFilestreamFiles": {
+   "method": "GET",
+   "path": "/list/{organization}/{group}/filestream",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [
+    {
+     "default": 10,
+     "in": "query",
+     "name": "limit",
+     "required": false,
+     "type": "integer"
+    },
+    {
+     "default": 0,
+     "in": "query",
+     "name": "offset",
+     "required": false,
+     "type": "integer"
+    },
+    {
+     "in": "query",
+     "name": "file_name",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "user",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "enum": [
+      "Undetermined",
+      "Approved",
+      "ApprovalRejected",
+      "ApprovalRevoked"
+     ],
+     "in": "query",
+     "name": "approval_status",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "deleted_in_days",
+     "required": false,
+     "type": "integer"
+    },
+    {
+     "default": "-upload_date",
+     "enum": [
+      "file_name",
+      "+file_name",
+      "-file_name",
+      "upload_date",
+      "+upload_date",
+      "-upload_date"
+     ],
+     "in": "query",
+     "name": "sort_by",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "listGroupProjects": {
+   "method": "GET",
+   "path": "/list/{organization}/{group}",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Group"
+   ]
+  },
+  "listGroupUsage": {
+   "method": "GET",
+   "path": "/usage/{organization}/{group}",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Group"
+   ]
+  },
+  "listGroups": {
+   "method": "GET",
+   "path": "/list/{organization}",
+   "path_params": [
+    "organization"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Group"
+   ]
+  },
+  "listOrganizationUsage": {
+   "method": "GET",
+   "path": "/usage/{organization}",
+   "path_params": [
+    "organization"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Group"
+   ]
+  },
+  "listPackages": {
+   "method": "GET",
+   "path": "/list/{organization}/{group}/pkg:rl/{project}",
+   "path_params": [
+    "organization",
+    "group",
+    "project"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Project"
+   ]
+  },
+  "listVersions": {
+   "method": "GET",
+   "path": "/list/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Package"
+   ]
+  },
+  "patchPackage": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "description",
+    "name"
+   ],
+   "body_required": true,
+   "body_required_properties": [],
+   "method": "PATCH",
+   "path": "/edit/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Package"
+   ]
+  },
+  "patchProject": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "description",
+    "name"
+   ],
+   "body_required": true,
+   "body_required_properties": [],
+   "method": "PATCH",
+   "path": "/edit/{organization}/{group}/pkg:rl/{project}",
+   "path_params": [
+    "organization",
+    "group",
+    "project"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Project"
+   ]
+  },
+  "patchVersion": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "category",
+    "is_released",
+    "license",
+    "platform",
+    "product",
+    "publisher",
+    "release_date"
+   ],
+   "body_required": true,
+   "body_required_properties": [],
+   "method": "PATCH",
+   "path": "/edit/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "postFindPackageMetadata": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_required": true,
+   "method": "POST",
+   "path": "/community/find/packages",
+   "path_params": [],
+   "query_params": [
+    {
+     "default": 0,
+     "in": "query",
+     "name": "offset",
+     "required": false,
+     "type": "integer"
+    },
+    {
+     "default": 5,
+     "in": "query",
+     "name": "limit",
+     "required": false,
+     "type": "integer"
+    },
+    {
+     "default": false,
+     "in": "query",
+     "name": "compact",
+     "required": false,
+     "type": "boolean"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "402",
+    "403",
+    "413",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Community"
+   ]
+  },
+  "postPackage": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "description"
+   ],
+   "body_required": false,
+   "body_required_properties": [],
+   "method": "POST",
+   "path": "/create/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Package"
+   ]
+  },
+  "postProject": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "description"
+   ],
+   "body_required": false,
+   "body_required_properties": [],
+   "method": "POST",
+   "path": "/create/{organization}/{group}/pkg:rl/{project}",
+   "path_params": [
+    "organization",
+    "group",
+    "project"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Project"
+   ]
+  },
+  "rejectFilestreamFile": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "reason"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "reason"
+   ],
+   "method": "PUT",
+   "path": "/reject/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "rejectVersion": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "reason"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "reason"
+   ],
+   "method": "PUT",
+   "path": "/reject/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Approval"
+   ]
+  },
+  "revokeFilestreamFile": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "reason"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "reason"
+   ],
+   "method": "PUT",
+   "path": "/revoke/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "revokeVersion": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "reason"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "reason"
+   ],
+   "method": "PUT",
+   "path": "/revoke/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Approval"
+   ]
+  },
+  "scanFilestreamFile": {
+   "body_media_types": [
+    "application/octet-stream"
+   ],
+   "body_required": true,
+   "method": "POST",
+   "path": "/scan/{organization}/{group}/filestream",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [
+    {
+     "default": "Generic",
+     "in": "query",
+     "name": "version",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "product",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "publisher",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "category",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "license",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "platform",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "release_date",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "429",
+    "500",
+    "502"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "scanVersion": {
+   "body_media_types": [
+    "application/octet-stream"
+   ],
+   "body_required": true,
+   "method": "POST",
+   "path": "/scan/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [
+    {
+     "default": "version",
+     "enum": [
+      "repro",
+      "version"
+     ],
+     "in": "query",
+     "name": "build",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "default": false,
+     "in": "query",
+     "name": "replace",
+     "required": false,
+     "type": "boolean"
+    },
+    {
+     "default": false,
+     "in": "query",
+     "name": "force",
+     "required": false,
+     "type": "boolean"
+    },
+    {
+     "in": "query",
+     "name": "diff_with",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "product",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "publisher",
+     "required": false,
+     "type": "string"
+    },
+    {
+     "in": "query",
+     "name": "category",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "license",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "platform",
+     "required": false
+    },
+    {
+     "in": "query",
+     "name": "release_date",
+     "required": false,
+     "type": "string"
+    }
+   ],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500",
+    "502"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "syncFilestreamFile": {
+   "method": "POST",
+   "path": "/sync/{organization}/{group}/filestream/{file_id}",
+   "path_params": [
+    "organization",
+    "group",
+    "file_id"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "File Stream"
+   ]
+  },
+  "syncVersion": {
+   "method": "POST",
+   "path": "/sync/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "202",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  },
+  "versionInfo": {
+   "method": "GET",
+   "path": "/list/{organization}/{group}/pkg:rl/{project}/{package}@{version}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "version"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Version"
+   ]
+  }
+ },
+ "server_template": "https://{portalUrl}/api/public/v1",
+ "sources": [
+  "spectra-assure-portal-public-api.yaml"
+ ]
+}

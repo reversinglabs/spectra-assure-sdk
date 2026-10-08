@@ -12,6 +12,13 @@ class SpectraAssureInvalidAction(SpectraAssureExceptions):
         super().__init__(message)
 
 
+class SpectraAssureWaitTimeoutExceeded(SpectraAssureExceptions):
+    """A custom exception class for Spectra Assure Api."""
+
+    def __init__(self, message: str = "The maximum wait timout has been exceeded"):
+        super().__init__(message)
+
+
 class SpectraAssureInvalidPath(SpectraAssureExceptions):
     """A custom exception class for Spectra Assure Api."""
 

@@ -25,7 +25,7 @@ For valid query types, see the [Portal API documentation](https://docs.secure.so
 | artifact_tag     | `string` |         | optional   |
 | match_pattern    | `string` |         | Should not be used together with `version` or `match_expression`. |
 | match_expression | `string` |         | Should not be used together with `version` or `match_pattern`. |
-| offset_integer   | `int`    | 0       | optional   |
+| offset           | `int`    | 0       | optional   |
 | limit            | `int`    | 5       | range [1 .. 100] |
 
 ## Responses

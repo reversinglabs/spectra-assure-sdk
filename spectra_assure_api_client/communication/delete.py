@@ -6,7 +6,6 @@ from typing import (
 import requests
 
 from .core import (
-    Executor,
     SpectraAssureApiCore,
 )
 
@@ -16,89 +15,28 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiDelete(
     SpectraAssureApiCore,
 ):
-    def _delete_with_retry(
+    def _do_it_delete(
         self,
         *,
         url: str,
-        payload: dict[str, Any] | None,
-        headers: dict[str, str],
-        auto_adapt_to_throttle: bool = False,
-    ) -> requests.Response | None:
-        executor = Executor(
-            url=url,
-            proxies=self.proxies,
-            timeout=self.timeout,
-            payload=payload,
-            headers=headers,
-            url_params=None,
-            request_callable=requests.delete,
-            no_ssl_verify=self.no_ssl_verify,
-        )
-
-        logger.debug("Proxies: %s ", self.proxies)
-        return self.execute_with_retry(
-            auto_adapt_to_throttle=auto_adapt_to_throttle or self.auto_adapt_to_throttle,
-            executor=executor,
-        )
-
-    def _basic_delete(
-        self,
-        *,
-        url: str,
-        headers: dict[str, str],
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None,
+        url_params: dict[str, str] | None = None,
         **qp: Any,
     ) -> requests.Response:
-        _ = qp  # qp is not used in delete
+        """Delete a project, package or version.
 
+        `url_params` carries anything the specification declares as a query parameter
+        -- `build` on a version delete.
+        Without it those values would land in the request body, where the Portal does not look for them.
+        The keyword mirrors `_do_it_put`, which has always had one.
+        """
         logger.debug(url)
 
-        response = self._delete_with_retry(
+        return self._basic_xx(
             url=url,
-            payload=None,
-            headers=headers,
+            headers=self._make_headers(),
             auto_adapt_to_throttle=auto_adapt_to_throttle,
-        )
-        assert response is not None
-        return self._log_response_status(
-            url=url,
-            response=response,
-        )
-
-    def _basic_delete_with_exception_handled(
-        self,
-        *,
-        url: str,
-        headers: dict[str, str],
-        auto_adapt_to_throttle: bool = False,
-        **qp: Any,
-    ) -> tuple[int, Any]:
-        try:
-            r = self._basic_delete(
-                url=url,
-                headers=headers,
-                auto_adapt_to_throttle=auto_adapt_to_throttle,
-                **qp,
-            )
-            return r.status_code, r
-        except Exception as e:  # pylint:disable=broad-exception-caught; later
-            logger.exception("get: %s raises: %s", url, e)
-            raise e
-
-    def do_it_delete(
-        self,
-        *,
-        url: str,
-        auto_adapt_to_throttle: bool,
-        **qp: Any,
-    ) -> requests.Response:
-        logger.debug(url)
-
-        headers = self._make_headers()
-
-        return self._basic_delete(
-            url=url,
-            headers=headers,
-            auto_adapt_to_throttle=auto_adapt_to_throttle,
+            action="DELETE",
+            url_params=url_params,
             **qp,
         )

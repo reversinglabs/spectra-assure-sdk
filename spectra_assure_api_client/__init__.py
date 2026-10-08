@@ -17,8 +17,10 @@ from spectra_assure_api_client.communication.exceptions import (
     SpectraAssureNoDownloadUrlInResult,
     SpectraAssureUnexpectedNoDataFound,
     SpectraAssureUnsupportedStrategy,
+    SpectraAssureWaitTimeoutExceeded,
 )
 
+from .spec import SpectraAssureSpecError
 from .spectra_assure_api_operations import SpectraAssureApiOperations
 from .version import VERSION
 
@@ -31,6 +33,8 @@ __all__ = [
     "SpectraAssureUnexpectedNoDataFound",
     "SpectraAssureNoDownloadUrlInResult",
     "SpectraAssureUnsupportedStrategy",
+    "SpectraAssureWaitTimeoutExceeded",
+    "SpectraAssureSpecError",
     #
     "SpectraAssureApiOperations",
     "SpectraAssureDownloadCriteria",

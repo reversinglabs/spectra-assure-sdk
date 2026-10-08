@@ -1,81 +1,36 @@
-"""def:: community-api: 'api/public/v1/community'
-def:: COMMUNITIES: [ "gem" "npm" "nuget" "psgallery" "pypi" "vsx" ]
-
-[ ] https://{portalUrl}/{community-api}/find/packages
-    [ ] POST :: may return multiple packages/versions
-    [ ] Request Body schema: application/json top level is a array/list
-
-    query Parameters:
-        offset [optional], integer, Default: 0
-            This parameter is used for pagination to specify the starting index
-            when enumerating package versions in the response.
-        limit [optional] , integer, Validate [ 1 .. 100 ] , Default: 5
-            Specify the maximum number of package versions to include in the response.
-        compact [optional], boolean, Default: false
-            When this parameter is specified in the request,
-              all optional response fields are automatically removed from the response to reduce its size.
-            Intended for OEM and product integrations.
-
-    POST DATA:
-            THE POST DATA SECTION IS NOT VALIDATED CURRENTLY only that the top level element must be a list
-"""
-
 import logging
 from typing import (
     Any,
 )
 
-# from spectra_assure_api_client.communication.exceptions import SpectraAssureInvalidAction
+import requests
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
-
-COMMUNITIES: list[str] = [
-    "gem",
-    "npm",
-    "nuget",
-    "psgallery",
-    "pypi",
-    "vsx",
-]
 
 
 class SpectraAssureApiOperationsCommunityFindPackages(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
     @staticmethod
-    def _qp_create(
+    def _qp_comm_find_packages(
         **qp: Any,
     ) -> dict[str, Any]:
-        """Query Parameters:
-        offset [optional], integer, Default: 0
-            This parameter is used for pagination to specify the starting index
-            when enumerating package versions in the response.
-        limit [optional] , integer, Validate [ 1 .. 100 ] , Default: 5
-            Specify the maximum number of package versions to include in the response.
-        compact [optional], boolean, Default: false
-            When this parameter is specified in the request,
-              all optional response fields are automatically removed from the response to reduce its size.
-            Intended for OEM and product integrations.
-
-        """
-        r: dict[str, Any] = {}
-        for k in ["offset", "limit", "compact"]:
-            if k in qp:
-                r[k] = qp[k]
-        return r
+        # The query parameters come from the specification, not from a list kept here.
+        return SpectraAssureApiOperationsBase._accepted_query("community_find_packages", "community", qp)
 
     def community_find_packages(
         self,
-        *,  # force name based params
+        *,
         post_data: list[Any],  # MUST BE IN LIST FORM
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         **qp: Any,
-    ) -> Any:
+    ) -> requests.Response:
         """ """
         action = "community_find_packages"
 
-        valid_qp: dict[str, Any] = self._qp_create(**qp)
+        valid_qp: dict[str, Any] = self._qp_comm_find_packages(**qp)
         url = self._make_current_url_community(
             action=action,
         )
@@ -84,9 +39,10 @@ class SpectraAssureApiOperationsCommunityFindPackages(  # pylint: disable=too-ma
         logger.debug("qp is now: %s", qp)
         logger.debug("post_data is now: %s", post_data)
 
-        return self.do_it_post(
+        return self._post(
             action=action,
             url=url,
+            body="json",
             auto_adapt_to_throttle=auto_adapt_to_throttle,
             post_data=post_data,
             **valid_qp,

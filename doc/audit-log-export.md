@@ -11,8 +11,8 @@ The audit log interface.
 - name: str, mandatory.
 - datetime_start: str, mandatory.
 - datetime_end: str, mandatory.
-- should_create_cef: bool, mandatory.
-- should_create_ndjson: bool, mandatory.
+- should_create_cef: bool, default False, optional. Export the report in CEF format.
+- should_create_ndjson: bool, default False, optional. Export the report in NDJSON format.
 - filters: list[Any] | None, optional.
 - auto_adapt_to_throttle: bool, default False, optional.
 
@@ -22,7 +22,7 @@ None
 
 ## Responses
 
-Returns the 'requests.result' of the community_user_account() API call.
+Returns the 'requests.result' of the audit_log_export() API call.
 
 May raise exceptions on issues with the HTTP connection or wrong parameters:
 

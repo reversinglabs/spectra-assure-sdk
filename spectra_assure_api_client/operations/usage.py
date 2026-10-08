@@ -8,6 +8,8 @@ from typing import (
     Any,
 )
 
+import requests
+
 from .base import SpectraAssureApiOperationsBase
 
 logger = logging.getLogger(__name__)
@@ -20,38 +22,19 @@ class SpectraAssureApiOperationsUsage(  # pylint: disable=too-many-ancestors
         self,
         *,
         group: str | None = None,
-        auto_adapt_to_throttle: bool = False,
-        **qp: Any,
-    ) -> Any:
-        """Action:
-            Execute a usage() api call
+        auto_adapt_to_throttle: bool | None = None,
+    ) -> requests.Response:
+        # The group argument overrides the client's configured group here:
+        # `usage(group=...)` reports on that group, not on the session default.
+        if group is None:
+            operation = self._resolve("usage", "organization")
+            url = self._url_for(operation)
+        else:
+            operation = self._resolve("usage", "group")
+            url = self._url_for(operation, group=group)
 
-        Args:
-         - group: str, optional
-         - auto_adapt_to_throttle: bool, default False, optional.
-         - qp: Dict[str,Any] , optional.
-
-        Return:
-            The 'requests.result' of the usage API call.
-
-        Raises:
-            May raise exceptions on issues with the HTTP connection or wrong parameters.
-            - SpectraAssureInvalidAction: our exception.
-            - <any other exception> from requests.get().
-
-        QueryParameters:
-            'usage' has no query parameters.
-
-        Notes:
-            When 'group' is not specified, we list usage of the organization
-
-        """
-        url = f"{self.base_url}/usage/{self.organization}"
-        if group is not None:
-            url = f"{url}/{group}"
-
-        qp = {}
-        return self.do_it_get(
+        qp: dict[str, Any] = {}
+        return self._do_it_get(
             url=url,
             auto_adapt_to_throttle=auto_adapt_to_throttle,
             **qp,

@@ -1,5 +1,13 @@
-class UrlDownloaderExceptions(Exception):
-    """A communication class for Spectra Assure exceptions."""
+from .exceptions import SpectraAssureExceptions
+
+
+class UrlDownloaderExceptions(SpectraAssureExceptions):
+    """The base of the UrlDownloader exceptions.
+
+    It derives from SpectraAssureExceptions, so `except SpectraAssureExceptions`
+    catches every exception the SDK raises. Before, the two families had
+    separate roots and a caller had to catch both.
+    """
 
     def __init__(self, message: str = ""):
         super().__init__(message)

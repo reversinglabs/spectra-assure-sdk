@@ -9,7 +9,7 @@ Execute a usage() API call.
 
 ## Arguments
 
-- group, string | None, default None, optional.
+- group: str | None, default None, optional. When not specified, the usage for the whole organization is returned; when specified, returns only the usage for that group.
 - auto_adapt_to_throttle: bool, default False, optional.
 
 ## Query parameters

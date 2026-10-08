@@ -1,6 +1,9 @@
 import logging
+import os
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from spectra_assure_api_client.communication.downloader import UrlDownloader
 from spectra_assure_api_client.communication.exceptions import (
@@ -8,6 +11,7 @@ from spectra_assure_api_client.communication.exceptions import (
 )
 
 from .base import SpectraAssureApiOperationsBase
+from .constants import _ARCHIVE_MAX_WAIT
 
 logger = logging.getLogger(__name__)
 
@@ -15,59 +19,16 @@ logger = logging.getLogger(__name__)
 class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsBase,
 ):  # pylint: disable=too-many-instance-attributes
-    @staticmethod
-    def qp_report(
-        what: str,
-        **qp: Any,
-    ) -> dict[str, Any]:
-        r: dict[str, Any] = {}
-        if what in ["version"]:
-            for k in ["build"]:
-                if k in qp:
-                    r[k] = qp[k]
-        return r
-
     def rl_safe(  # pylint: disable=too-many-arguments
         self,
         *,
         project: str,
         package: str,
         version: str,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         **qp: Any,
-    ) -> Any:
-        """https://docs.secure.software/api-reference/#tag/Version/operation/getRlSafeVersionArchive
+    ) -> requests.Response:
 
-        Action:
-            Execute a pack/safe api call
-            for the specified 'project/package@version'
-
-        Args:
-         - project: str, mandatory.
-         - package: str, mandatory.
-         - version: str, mandatory.
-
-         - auto_adapt_to_throttle: bool, default False, optional.
-         - qp: Dict[str,Any] , optional.
-            build: Default: "version"; Enum: "repro" "version"
-
-        Return:
-            The 'requests.result' of the report API call.
-            See Notes for the expected response format.
-
-        Raises:
-            May raise exceptions on issues with the HTTP connection or wrong parameters.
-            - SpectraAssureInvalidAction: our exception.
-            - <any other exception> from requests.get().
-
-        QueryParameters:
-            report supports one query parameter:
-             -  build: Default: "version"; Enum: "repro" "version"
-
-        Notes:
-            This will return a download url for the rl-safe archive (with limited validity)
-
-        """
         action = "rl_safe"
         what = self._what(
             project=project,
@@ -77,20 +38,19 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
 
         supported = ["version"]
         if what not in supported:
-            msg = f"'{action}' is only supported for {'and '.join(supported)}"
+            msg = f"'{action}' is only supported for {' and '.join(supported)}"
             raise SpectraAssureInvalidAction(message=msg)
 
-        valid_qp: dict[str, Any] = self.qp_report(
-            what=what,
-            **qp,
-        )
+        # rl_safe's own query parameters, from the specification; it used to
+        # borrow the report action's list, which matched only by coincidence.
+        valid_qp: dict[str, Any] = self._accepted_query("rl_safe", what, qp)
         url = self._make_current_url(
             action=action,
             project=project,
             package=package,
             version=version,
         )
-        return self.do_it_get(
+        return self._do_it_get(
             url=url,
             auto_adapt_to_throttle=auto_adapt_to_throttle,
             **valid_qp,
@@ -103,39 +63,47 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
         project: str,
         package: str,
         version: str,
-        auto_adapt_to_throttle: bool = False,
+        auto_adapt_to_throttle: bool | None = None,
         rename_archive: bool = True,
+        max_wait_time_for_archive: int = _ARCHIVE_MAX_WAIT,
         **qp: Any,
     ) -> tuple[bool, str]:
-        """Download a rl-safe archive
+        """Download the RL-SAFE archive of a version to `target_dir`.
 
-        - by default rename it to <project>/<package>@<version>.rl-safe in the target_dir
-        - always overwrite
-
-        Return: Tuple[downloaded: bool, file_path: str]
-            If downloaded is False, we dod not download the file,
-
-            If downloaded is True, we downloaded the file,
-                we report the resulting file path
-
-        return the path of the archive
+        While the analysis is still running the API answers 202 and no archive
+        exists yet. That is a normal step, not a failure, so this waits up to
+        `max_wait_time_for_archive` seconds for the archive to become available
+        (pass 0 to fail on the first 202), as `filestream_rl_safe_download` does.
+        `rl_safe` itself returns the response as it is, 202 included.
         """
-        data = self.rl_safe(
-            project=project,
-            package=package,
-            version=version,
-            auto_adapt_to_throttle=auto_adapt_to_throttle,
-            **qp,
+        data = self._wait_for_rl_safe_archive(
+            fetch=lambda: self.rl_safe(
+                project=project,
+                package=package,
+                version=version,
+                auto_adapt_to_throttle=auto_adapt_to_throttle,
+                **qp,
+            ),
+            what=f"{project}/{package}@{version}",
+            max_wait_time=max_wait_time_for_archive,
         )
-        logger.debug("rl-_safe return data: %s", data)
+        logger.debug("rl-safe return data: %s", data)
+
         download_url = data.json().get("download_link")
+        if not download_url:
+            msg = "missing download url in rl-safe download request"
+            raise SpectraAssureInvalidAction(message=msg)
 
         ud = UrlDownloader(
             target_dir=target_dir,
             with_overwrite_existing_files=True,
             with_verify_after_download=False,
             with_verify_existing_files=False,
-            no_ssl_verify=self.no_ssl_verify,
+            no_ssl_verify=bool(self.no_ssl_verify),
+            proxies=self.proxies,
+            session=self.session,
+            read_timeout=self.read_timeout,
+            connect_timeout=self.connect_timeout,
         )
         download_ok, file_path = ud.download_file_from_url(
             download_url=download_url,
@@ -161,8 +129,10 @@ class SpectraAssureApiOperationsRlSafe(  # pylint: disable=too-many-ancestors
             )
 
         if not p.exists():
-            p.mkdir()
+            p.mkdir(parents=True, exist_ok=True)
 
-        f = Path(file_path)
-        f.rename(new_file_name)
+        # os.replace overwrites an existing file on every platform. Path.rename
+        # only does on Unix and raises FileExistsError on Windows, which made the
+        # re-download of an archive fail there.
+        os.replace(file_path, new_file_name)
         return download_ok, new_file_name
