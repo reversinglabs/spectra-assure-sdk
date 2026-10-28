@@ -16,6 +16,11 @@ from spectra_assure_api_client.operations.audit_log_status import (
     SpectraAssureApiOperationsAuditLogStatus,
 )
 
+# catalog
+from spectra_assure_api_client.operations.catalog import (
+    SpectraAssureApiOperationsCatalog,
+)
+
 # real operations
 from spectra_assure_api_client.operations.checks import SpectraAssureApiOperationsChecks
 
@@ -115,6 +120,8 @@ class SpectraAssureApiOperations(  # pylint: disable=too-many-ancestors
     SpectraAssureApiOperationsAuditLogStatus,
     # file stream: standalone files keyed by file_id, no project/package/version
     SpectraAssureApiOperationsFilestream,
+    # catalog: import packages from external catalogs, publish them to the group's catalog
+    SpectraAssureApiOperationsCatalog,
 ):
     """A class that combines all operations"""
 

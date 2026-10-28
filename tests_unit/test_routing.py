@@ -271,6 +271,17 @@ def test_calls_with_nothing_to_say_send_no_body(
         ("create", lambda c: c.create(project="pr", description="d"), {"description": "d"}),
         ("approve", lambda c: c.approve(project="pr", package="pk", version="1.0", reason="ok"), {"reason": "ok"}),
         ("edit", lambda c: c.edit(project="pr", name="n"), {"name": "n"}),
+        # fields the updated specification added; the SDK used to drop them as undeclared
+        (
+            "edit package",
+            lambda c: c.edit(project="pr", package="pk", overview="# o", external_catalog={"automatic_sync": True}),
+            {"overview": "# o", "external_catalog": {"automatic_sync": True}},
+        ),
+        (
+            "edit version",
+            lambda c: c.edit(project="pr", package="pk", version="1.0", architecture="x64"),
+            {"architecture": "x64"},
+        ),
     ],
 )
 def test_calls_with_a_body_still_send_it(

@@ -27,6 +27,8 @@ These are sent in the JSON request body; pass them as keyword arguments.
 | --            | --                    | --        | --         |
 | name          | `string`              |           | Special characters \/:*?"<>\| are not supported. |
 | description   | `string`              |           | <= 500 characters |
+| overview      | `string`              |           | Package only. <= 16384 characters, Markdown, shown on the package's software catalog page |
+| external_catalog | `object`           |           | Package only, for a package imported from an external catalog (400 otherwise): `{"automatic_sync": true}` imports new versions automatically; while it is on, `update_from_catalog` is refused |
 
 
 **Version**
@@ -39,6 +41,7 @@ These are sent in the JSON request body; pass them as keyword arguments.
 | category      | `string`              | "Other"   | Enum: |
 | license       | `string`              | "Unknown" | Enum: |
 | platform      | `string`              | "Other"   | Enum: |
+| architecture  | `string`              | "Generic" | Enum; must be valid for the platform, otherwise the API answers 400 |
 | release_date  | `string` <date-time>  |           |       |
 
 

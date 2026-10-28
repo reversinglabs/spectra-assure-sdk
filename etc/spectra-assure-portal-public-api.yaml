@@ -271,6 +271,7 @@ x-tagGroups:
       - Project
       - Package
       - Approval
+      - Catalog
   - name: Portal Administration
     tags:
       - Group
@@ -372,6 +373,11 @@ tags:
       These endpoints are also available to Spectra Intelligence customers as
       part of the [TCA-0701
       API](https://docs.reversinglabs.com/SpectraIntelligence/API-reference/#tag/Supply-Chain-Security).
+
+
+      Error responses from Spectra Assure Community are returned with their
+      original status code, as `{"error": "<Spectra Assure Community response
+      body>"}`.
   - name: Profile
     description: >-
       **Endpoints in this category help you manage organization and group
@@ -412,6 +418,10 @@ tags:
     description: >-
       **Endpoints in this category help you automate actions available in the
       Portal File Stream.**
+  - name: Catalog
+    description: >-
+      **Endpoints in this category help you curate the software catalog in the
+      Portal.**
 paths:
   /scan/{organization}/{group}/pkg:rl/{project}/{package}@{version}:
     parameters:
@@ -453,7 +463,7 @@ paths:
           the 400 error response. 
 
 
-          This parameter is incompatible with `build=repro`.
+          This parameter is incompatible with `build=repro` and `replace=true`.
         schema:
           type: boolean
           default: false
@@ -479,6 +489,7 @@ paths:
       - $ref: '#/components/parameters/category'
       - $ref: '#/components/parameters/license'
       - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/architecture'
       - $ref: '#/components/parameters/release_date'
       - $ref: '#/components/parameters/content_disposition'
       - in: header
@@ -498,7 +509,9 @@ paths:
       description: >-
         Scan a file and add it as a new package version to a project in the
         Portal. If the project or package specified in the request don't exist
-        in the Portal, they will be automatically created.
+        in the Portal, they will be automatically created. A package imported
+        from an external catalog cannot receive new versions through this
+        endpoint; use the **Catalog update** endpoint instead.
 
 
         For a file to be successfully uploaded and analyzed on the Portal, your
@@ -659,7 +672,8 @@ paths:
           package should be deleted to make space for the version you're
           uploading. If this parameter is set to **false** and the package
           already has the maximum allowed number of versions, the API returns
-          the 400 error response.
+          the 400 error response. This parameter is incompatible with
+          `replace=true`.
         schema:
           type: boolean
           default: false
@@ -674,8 +688,7 @@ paths:
           command. Versions connected to the specified version that were
           analyzed with an older engine version or a different policy
           configuration, or have no completed analysis, are reanalyzed as well,
-          and their reports are updated with the new results. This parameter is
-          incompatible with build=repro.
+          and their reports are updated with the new results.
         schema:
           $ref: '#/components/schemas/DiffWithVersion'
       - $ref: '#/components/parameters/product'
@@ -683,6 +696,7 @@ paths:
       - $ref: '#/components/parameters/category'
       - $ref: '#/components/parameters/license'
       - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/architecture'
       - $ref: '#/components/parameters/release_date'
     post:
       operationId: importVersion
@@ -691,7 +705,9 @@ paths:
         Specify a URL from which to download a file and import it as a new
         package version into the Portal. If the project or package specified in
         the request don't exist in the Portal, they will be automatically
-        created.
+        created. A package imported from an external catalog cannot receive new
+        versions through this endpoint; use the **Catalog update** endpoint
+        instead.
 
 
         Only one package version can be imported per request.
@@ -845,7 +861,8 @@ paths:
           the package should be deleted to make space for the version you're
           uploading. If this parameter is set to **false** and the package
           already has the maximum allowed number of versions, the API returns
-          the 400 error response. Will be ignored if build=repro.
+          the 400 error response. This parameter is incompatible with
+          `replace=true`.
         schema:
           type: boolean
           default: false
@@ -860,8 +877,7 @@ paths:
           command. Versions connected to the specified version that were
           analyzed with an older engine version or a different policy
           configuration, or have no completed analysis, are reanalyzed as well,
-          and their reports are updated with the new results. This parameter is
-          incompatible with build=repro.
+          and their reports are updated with the new results.
         schema:
           $ref: '#/components/schemas/DiffWithVersion'
       - $ref: '#/components/parameters/product'
@@ -869,6 +885,7 @@ paths:
       - $ref: '#/components/parameters/category'
       - $ref: '#/components/parameters/license'
       - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/architecture'
       - $ref: '#/components/parameters/release_date'
       - $ref: '#/components/parameters/max_size'
     post:
@@ -878,7 +895,9 @@ paths:
         Specify a PURL from which to download a file and import it as a new
         package version into the Portal. If the project or package specified in
         the request don't exist in the Portal, they will be automatically
-        created.
+        created. A package imported from an external catalog cannot receive new
+        versions through this endpoint; use the **Catalog update** endpoint
+        instead.
 
 
         Only one package version can be imported per request.
@@ -1327,8 +1346,9 @@ paths:
                       - report
                     properties:
                       schema:
-                        type: number
-                        example: 2
+                        type: integer
+                        enum:
+                          - 1
                         description: >-
                           Version of the report schema. Version number is
                           incremented to indicate a break of backwards
@@ -1355,7 +1375,7 @@ paths:
                       report:
                         $ref: '#/components/schemas/ChecksReport'
         '202':
-          $ref: '#/components/responses/ReportWithoutAnalysis'
+          $ref: '#/components/responses/ChecksWithoutAnalysis'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1404,7 +1424,8 @@ paths:
         By default, the endpoint returns the report for the main
         (representative) artifact in the package version. To get the report for
         a reproducible build artifact, use the `build` query parameter set to
-        the `repro` value.
+        the `repro` value. The `build` parameter is **not supported for the
+        rl-checks report format**.
 
 
         If a reproducible build artifact does not exist for the requested
@@ -1646,6 +1667,7 @@ paths:
                     example: report.rl-safe
                   expiration_timestamp:
                     type: string
+                    format: date-time
                     description: >-
                       The date and time when the download URL for the RL-SAFE
                       archive expires.
@@ -1679,8 +1701,10 @@ paths:
         uploaded to a project in the Portal. With this endpoint, you can change
         the release status of a package version and modify parts of the package
         version metadata (product name, publisher name, software category,
-        license, platform, and release date). Only one package version can be
-        modified per request.
+        license, platform, architecture, and release date). Only one package
+        version can be modified per request. For a package imported from an
+        external catalog, only the release status (with `is_released`) and
+        release date can be changed.
       tags:
         - Version
       x-codeSamples:
@@ -1773,6 +1797,15 @@ paths:
                   $ref: '#/components/schemas/SoftwareLicense'
                 platform:
                   $ref: '#/components/schemas/SoftwarePlatform'
+                architecture:
+                  allOf:
+                    - $ref: '#/components/schemas/SoftwarePlatformArchitecture'
+                    - description: >-
+                        Processor or runtime architecture of the software. It
+                        must be valid for the version's platform, for example
+                        `x64` for `Windows` or `Chromium` for `Browser`. If you
+                        change only the platform and the current architecture
+                        does not fit it, the architecture is set to `Generic`.
                 release_date:
                   allOf:
                     - $ref: '#/components/schemas/DateTime'
@@ -1787,7 +1820,17 @@ paths:
         '200':
           $ref: '#/components/responses/OK'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                SoftwareLinkedToExternalCatalog:
+                  value:
+                    error: >-
+                      Package is linked to an external catalog and its software
+                      info cannot be edited
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1833,6 +1876,8 @@ paths:
       responses:
         '204':
           $ref: '#/components/responses/Deleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1914,6 +1959,7 @@ paths:
               properties:
                 description:
                   type: string
+                  nullable: true
                   example: An example project
                   description: >-
                     Optional brief description to associate with the new
@@ -1964,10 +2010,13 @@ paths:
                     case-sensitive. Special characters `\/:*?"<>|` are not
                     supported.
                   type: string
+                  maxLength: 200
                   example: New project name
                 description:
                   description: Optional brief description to associate with the project.
                   type: string
+                  nullable: true
+                  maxLength: 500
                   example: New short project description
       responses:
         '200':
@@ -1996,7 +2045,9 @@ paths:
       summary: List packages in a project
       description: >-
         Display basic information about a project that was previously created in
-        the Portal, along with the names of all packages in the project.
+        the Portal. The response includes the names of all packages in the
+        project and shows whether each package is published in a software
+        catalog.
       tags:
         - Project
       responses:
@@ -2020,6 +2071,7 @@ paths:
                     $ref: '#/components/schemas/UUID'
                   description:
                     type: string
+                    nullable: true
                     description: Optional brief description to associate with the project.
                     example: This is an example project used for testing purposes
                   packages:
@@ -2030,6 +2082,7 @@ paths:
                       required:
                         - name
                         - name_id
+                        - in_catalog
                       properties:
                         name:
                           description: Package name as created and displayed in the Portal.
@@ -2037,6 +2090,11 @@ paths:
                           example: Demo package
                         name_id:
                           $ref: '#/components/schemas/UUID'
+                        in_catalog:
+                          type: boolean
+                          description: >-
+                            Indicates if the package is published in the group's
+                            software catalog.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2093,7 +2151,8 @@ paths:
 
 
         All projects in a Portal organization can jointly contain at most 10,000
-        packages. The account you're using must have [the appropriate
+        packages. When this limit is reached, the API returns the 400 error
+        response. The account you're using must have [the appropriate
         permissions](https://docs.secure.software/portal/members#roles-and-permissions)
         in the Portal organization to be able to create packages.
 
@@ -2173,6 +2232,7 @@ paths:
               properties:
                 description:
                   type: string
+                  nullable: true
                   example: This is my new package
                   description: >-
                     Optional brief description to associate with the new
@@ -2207,8 +2267,10 @@ paths:
       description: >-
         Update the information about a package that was previously created in a
         project in the Portal. With this endpoint, you can change the package
-        name and description. The package name must be unique in the specified
-        project. Only one package can be modified per request.
+        name, description and overview. The package name must be unique in the
+        specified project. You can also turn automatic sync on or off for a
+        package imported from an external catalog. Only one package can be
+        modified per request.
       tags:
         - Package
       requestBody:
@@ -2224,16 +2286,65 @@ paths:
                     case-sensitive. Special characters `\/:*?"<>|` are not
                     supported.
                   type: string
+                  maxLength: 200
                   example: New package name
                 description:
                   description: Optional brief description to associate with the package.
                   type: string
+                  nullable: true
+                  maxLength: 500
                   example: New short package description
+                overview:
+                  description: >-
+                    Optional full description of the package in Markdown, shown
+                    on its software catalog page. Up to 16,384 characters.
+                    Leading and trailing whitespace is removed automatically
+                    before saving the description. Raw HTML, links or images
+                    whose target is not an https URL, and control characters are
+                    rejected.
+                  type: string
+                  maxLength: 16384
+                  example: |-
+                    # 7-Zip
+
+                    7-Zip is a free and open-source file archiver.
+
+                    ## Key Features
+
+                    - 7z, ZIP and TAR formats
+                external_catalog:
+                  type: object
+                  description: >-
+                    Settings for a package imported from an external catalog.
+                    Rejected with 400 when the package was not imported from a
+                    catalog.
+                  required:
+                    - automatic_sync
+                  properties:
+                    automatic_sync:
+                      type: boolean
+                      description: >-
+                        Import new versions from the catalog automatically after
+                        each Portal update. While it is on, the catalog update
+                        endpoint is refused.
       responses:
         '200':
           $ref: '#/components/responses/OK'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                NotLinked:
+                  value:
+                    error: Package is not linked to an external catalog
+                OverviewPolicy:
+                  value:
+                    error: >-
+                      Overview must be Markdown without raw HTML; links and
+                      images must use https.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2258,7 +2369,7 @@ paths:
       description: >-
         Display basic information about a package that was previously created in
         a project in the Portal, along with all versions associated with the
-        package.
+        package and its software catalog state.
       tags:
         - Package
       responses:
@@ -2273,6 +2384,9 @@ paths:
                   - name_id
                   - description
                   - versions
+                  - in_catalog
+                  - overview
+                  - external_catalog
                 properties:
                   name:
                     type: string
@@ -2282,16 +2396,20 @@ paths:
                     $ref: '#/components/schemas/UUID'
                   description:
                     type: string
+                    nullable: true
                     description: Optional brief description to associate with the package.
                     example: Windows packages for Zoom
                   versions:
                     type: array
-                    description: List of all versions of the requested package.
+                    description: >-
+                      List of all versions of the requested package, newest
+                      first.
                     items:
                       type: object
                       required:
                         - version
                         - version_id
+                        - version_in_catalog
                       properties:
                         version:
                           type: string
@@ -2301,6 +2419,29 @@ paths:
                           example: '5.12'
                         version_id:
                           $ref: '#/components/schemas/UUID'
+                        version_in_catalog:
+                          type: boolean
+                          description: >-
+                            Whether this is the version the software catalog
+                            offers: the latest approved version of a published
+                            package. True for the one version the software
+                            catalog currently offers for this package (its
+                            latest approved version). False for every version
+                            when the package is not published.
+                  in_catalog:
+                    type: boolean
+                    description: >-
+                      Whether the package is published in the group's software
+                      catalog.
+                  overview:
+                    type: string
+                    description: >-
+                      Full Markdown description of the package, shown on its
+                      software catalog page. Empty when none was set.
+                  external_catalog:
+                    nullable: true
+                    allOf:
+                      - $ref: '#/components/schemas/ExternalCatalogLink'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2380,6 +2521,7 @@ paths:
                           $ref: '#/components/schemas/UUID'
                         description:
                           type: string
+                          nullable: true
                           description: >-
                             Optional brief description to associate with the
                             group.
@@ -2491,6 +2633,7 @@ paths:
                 required:
                   - organization_usage
                   - groups_usage
+                  - cli_usage
                 properties:
                   organization_usage:
                     $ref: '#/components/schemas/OrganizationUsage'
@@ -2727,10 +2870,6 @@ paths:
                     error: >-
                       Only a version with the 'Undetermined' and 'Rejected'
                       approval statuses can be approved
-                NoOrganization:
-                  $ref: '#/components/examples/NoOrganization'
-                NoGroup:
-                  $ref: '#/components/examples/NoGroup'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2788,10 +2927,6 @@ paths:
                     error: >-
                       Only a version with the 'Undetermined' approval status can
                       be rejected
-                NoOrganization:
-                  $ref: '#/components/examples/NoOrganization'
-                NoGroup:
-                  $ref: '#/components/examples/NoGroup'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2850,10 +2985,6 @@ paths:
                     error: >-
                       Only a version with the 'Approved' approval status can be
                       revoked
-                NoOrganization:
-                  $ref: '#/components/examples/NoOrganization'
-                NoGroup:
-                  $ref: '#/components/examples/NoGroup'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -3127,12 +3258,11 @@ paths:
             Content-Disposition:
               schema:
                 type: string
-                example: attachment; filename="organization-profile.json"
+                example: attachment; filename="organization_profile.json"
           content:
             application/json:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/ProfileExport'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -3193,12 +3323,11 @@ paths:
             Content-Disposition:
               schema:
                 type: string
-                example: attachment; filename="group-profile.json"
+                example: attachment; filename="group_profile.json"
           content:
             application/json:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/ProfileExport'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -3368,7 +3497,7 @@ paths:
           $ref: '#/components/responses/ScimServerError'
     post:
       tags:
-        - SCIM (System for Cross-domain Identity Management)
+        - SCIM
       summary: Create a new user
       description: >-
         Create a new user account in the Portal and return the created user
@@ -3398,7 +3527,7 @@ paths:
           $ref: '#/components/responses/ScimConflict'
         '500':
           $ref: '#/components/responses/ScimServerError'
-  /scim/v2/Users/{userId}:
+  /scim/v2/Users/{uuid}:
     get:
       tags:
         - SCIM
@@ -3434,7 +3563,7 @@ paths:
           $ref: '#/components/responses/ScimServerError'
     patch:
       tags:
-        - SCIM (System for Cross-domain Identity Management)
+        - SCIM
       summary: Modify specific user information
       operationId: modifyUserAttributes
       description: >-
@@ -3485,7 +3614,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     put:
       tags:
-        - SCIM (System for Cross-domain Identity Management)
+        - SCIM
       summary: Update all user information
       description: >-
         Replace all attributes of a resource. 
@@ -3516,8 +3645,8 @@ paths:
                 $ref: '#/components/schemas/UpdateUserResponse'
         '400':
           description: >-
-            An invalid value was passed in the payload or there was an attempt
-            to update an immutable attribute
+            An invalid value was passed in the payload or the user ID is not a
+            valid UUID
           content:
             application/scim+json:
               schema:
@@ -3536,7 +3665,7 @@ paths:
           $ref: '#/components/responses/ScimServerError'
     delete:
       tags:
-        - SCIM (System for Cross-domain Identity Management)
+        - SCIM
       summary: Delete a user
       description: Remove a specific user account from the Spectra Assure Portal instance.
       operationId: deleteUser
@@ -3545,6 +3674,12 @@ paths:
       responses:
         '204':
           description: Successfully removed the user
+        '400':
+          description: The user ID is not a valid UUID
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           $ref: '#/components/responses/ScimUnauthorized'
         '403':
@@ -3553,6 +3688,14 @@ paths:
           $ref: '#/components/responses/ScimUnknownId'
         '406':
           $ref: '#/components/responses/ScimNotAcceptable'
+        '409':
+          description: >-
+            The user cannot be deleted: it is a staff user, the user making the
+            request, or the last Organization Administrator
+          content:
+            application/scim+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/ScimServerError'
   /scim/v2/Users/.search:
@@ -3590,8 +3733,8 @@ paths:
                 $ref: '#/components/schemas/QueryUserResponse'
         '400':
           description: >-
-            Parameter count exceeds the maximum allowed value, the filter
-            supplied was unparsable, or invalid schema in search request
+            The filter is missing or unparsable, `count` or `startIndex` is
+            lower than 1, or the search request schema is invalid
           content:
             application/scim+json:
               schema:
@@ -3613,7 +3756,9 @@ paths:
         required: false
         description: >-
           Specify the number of files to return per page. The maximum supported
-          number is 100.
+          number is 100. If a larger number is provided in the request, it is
+          capped at 100. If an invalid value is provided in the request, the API
+          falls back to the default value.
         schema:
           type: integer
           default: 10
@@ -3626,6 +3771,7 @@ paths:
         schema:
           type: integer
           default: 0
+          minimum: 0
       - in: query
         name: file_name
         required: false
@@ -3660,7 +3806,7 @@ paths:
           Return only files that the retention policy will automatically delete
           within the specified number of days. The maximum supported number
           corresponds to the configured file retention period on the Portal (90
-          days).
+          days). Larger values return the 400 error response.
         schema:
           type: integer
           minimum: 0
@@ -3737,6 +3883,7 @@ paths:
       - $ref: '#/components/parameters/category'
       - $ref: '#/components/parameters/license'
       - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/architecture'
       - $ref: '#/components/parameters/release_date'
       - $ref: '#/components/parameters/content_disposition'
       - in: header
@@ -3813,6 +3960,7 @@ paths:
       - $ref: '#/components/parameters/category'
       - $ref: '#/components/parameters/license'
       - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/architecture'
       - $ref: '#/components/parameters/release_date'
       - $ref: '#/components/parameters/max_size'
     post:
@@ -3861,6 +4009,7 @@ paths:
       - $ref: '#/components/parameters/category'
       - $ref: '#/components/parameters/license'
       - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/architecture'
       - $ref: '#/components/parameters/release_date'
       - $ref: '#/components/parameters/max_size'
     post:
@@ -4100,7 +4249,7 @@ paths:
                       report:
                         $ref: '#/components/schemas/ChecksReport'
         '202':
-          $ref: '#/components/responses/ReportWithoutAnalysis'
+          $ref: '#/components/responses/ChecksWithoutAnalysis'
         '400':
           $ref: '#/components/responses/FilestreamUnsupportedParameter'
         '401':
@@ -4241,6 +4390,7 @@ paths:
                     type: string
                   expiration_timestamp:
                     type: string
+                    format: date-time
                     example: '2024-11-26T06:48:39.412093+00:00'
         '202':
           $ref: '#/components/responses/ReportWithoutAnalysis'
@@ -4415,6 +4565,330 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/ServerError'
+  /catalog/list/{organization}/{group}:
+    parameters:
+      - $ref: '#/components/parameters/organization'
+      - $ref: '#/components/parameters/group'
+    get:
+      operationId: listCatalogPackages
+      summary: List packages in group catalog
+      description: >-
+        Lists every package published in the group's software catalog, with the
+        external catalog it was imported from, if any. Unpublished packages,
+        including imported packages without an approved version, are not listed.
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - packages
+                properties:
+                  packages:
+                    type: array
+                    description: >-
+                      Published packages, ordered by project name and package
+                      name.
+                    items:
+                      $ref: '#/components/schemas/CatalogPackage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /catalog/publish/{organization}/{group}/pkg:rl/{project}/{package}:
+    parameters:
+      - $ref: '#/components/parameters/organization'
+      - $ref: '#/components/parameters/group'
+      - $ref: '#/components/parameters/project'
+      - $ref: '#/components/parameters/package'
+    put:
+      operationId: publishPackageToCatalog
+      summary: Publish package to group catalog
+      description: >-
+        Adds a package to the group's software catalog, which offers its latest
+        approved version to the organization. The package must have at least one
+        approved version. Packages imported from an external catalog are
+        published automatically the first time one of their versions is
+        approved; use this endpoint to publish packages you built yourself, or
+        to publish an imported package again after it was unpublished.
+        Publishing a package that is already published has no effect.
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: The package is in the catalog
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                NoApprovedVersion:
+                  value:
+                    error: >-
+                      Only packages with at least one approved version can be
+                      published to the catalog.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      operationId: unpublishPackageFromCatalog
+      summary: Remove package from group catalog
+      description: >-
+        Removes a package from the group's software catalog. The package, its
+        versions and analysis results are kept, and you can publish it again at
+        any time. A package imported from an external catalog is not published
+        again automatically after you unpublish it, even when newer versions are
+        approved. Unpublishing a package that is not published has no effect.
+      tags:
+        - Catalog
+      responses:
+        '204':
+          description: The package is not in the catalog
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /catalog/list/{catalog}:
+    parameters:
+      - $ref: '#/components/parameters/catalog'
+    get:
+      operationId: getExternalCatalog
+      summary: List external catalog contents
+      description: >-
+        Returns the full document of an external software catalog: every
+        software entry with its streams, versions and files. Use it to choose
+        what to import; the import endpoint takes an entry's `id` and the `id`
+        of one of its streams. The document is the same for every group.
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalCatalogDocument'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /catalog/import/{organization}/{group}/{catalog}/pkg:rl/{project}/{package}:
+    parameters:
+      - $ref: '#/components/parameters/organization'
+      - $ref: '#/components/parameters/group'
+      - $ref: '#/components/parameters/project'
+      - $ref: '#/components/parameters/package'
+      - $ref: '#/components/parameters/catalog'
+    post:
+      operationId: importFromCatalog
+      summary: Import package from external catalog
+      description: >-
+        Creates a package from software in an external catalog and imports the
+        selected versions, creating the project if it does not exist. Pick the
+        software and one of its streams from the catalog document. The package
+        stays linked to the catalog, so newer versions can be imported later
+        with the catalog update endpoint or automatically. A package keeps at
+        most 16 versions; importing more deletes the oldest, including approved
+        ones. Versions are analyzed in the background (check progress with the
+        version status endpoint) and count against the group's analysis
+        capacity.
+      tags:
+        - Catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogImportRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogImportResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                StreamAlreadyImported:
+                  value:
+                    error: >-
+                      This catalog package has already been imported into the
+                      group for this artifact stream
+                UnknownStream:
+                  value:
+                    error: Software declares no stream
+                VersionNotInStream:
+                  value:
+                    error: Version has no artifact for the selected stream
+                NothingImportable:
+                  value:
+                    error: The catalog stream has no versions that can be imported
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/InsufficientRemainingCapacity'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: A package with this name already exists in the project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /catalog/update/{organization}/{group}/pkg:rl/{project}/{package}:
+    parameters:
+      - $ref: '#/components/parameters/organization'
+      - $ref: '#/components/parameters/group'
+      - $ref: '#/components/parameters/project'
+      - $ref: '#/components/parameters/package'
+    post:
+      operationId: updateFromCatalog
+      summary: Update package from external catalog
+      description: >-
+        Imports versions from the external catalog into a package created by the
+        catalog import endpoint. Without `versions`, imports all versions newer
+        than the package's newest one. Not available while automatic sync is on
+        for the package. A package keeps at most 16 versions; importing more
+        deletes the oldest, including approved ones. Versions are analyzed in
+        the background (check progress with the version status endpoint) and
+        count against the group's analysis capacity.
+      tags:
+        - Catalog
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogUpdateRequest'
+      responses:
+        '200':
+          description: Nothing newer to import
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogImportResult'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogImportResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                NotLinked:
+                  value:
+                    error: Package is not linked to an external catalog
+                AutomaticSyncEnabled:
+                  value:
+                    error: >-
+                      New versions are synced automatically; turn off automatic
+                      sync to import versions manually
+                VersionNotInStream:
+                  value:
+                    error: Version has no artifact for the selected stream
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/InsufficientRemainingCapacity'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Version already exists in the package
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /catalog/detach/{organization}/{group}/pkg:rl/{project}/{package}:
+    parameters:
+      - $ref: '#/components/parameters/organization'
+      - $ref: '#/components/parameters/group'
+      - $ref: '#/components/parameters/project'
+      - $ref: '#/components/parameters/package'
+    delete:
+      operationId: detachFromCatalog
+      summary: Detach package from external catalog
+      description: >-
+        Unlinks a package from the external catalog it was imported from. The
+        package and its versions are kept, but are no longer updated from the
+        catalog.
+      tags:
+        - Catalog
+      responses:
+        '204':
+          description: Detached
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                NotLinked:
+                  value:
+                    error: Package is not linked to an external catalog
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/ServerError'
 components:
   schemas:
     FilestreamFileReference:
@@ -4508,6 +4982,7 @@ components:
         reason:
           description: User-specified reason for changing the approval status.
           type: string
+          minLength: 1
           maxLength: 500
     OrganizationUsage:
       type: object
@@ -4744,8 +5219,6 @@ components:
         - $ref: '#/components/schemas/Schemas'
         - $ref: '#/components/schemas/CommonAttributes'
         - type: object
-          required:
-            - userName
           properties:
             userName:
               $ref: '#/components/schemas/UserName'
@@ -4998,6 +5471,8 @@ components:
           location: https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646
     SearchRequest:
       type: object
+      required:
+        - schemas
       properties:
         schemas:
           type: array
@@ -5008,7 +5483,8 @@ components:
         filter:
           type: string
           description: >-
-            An expression specifying the search criteria. Check the [official
+            An expression specifying the search criteria. Required, unless the
+            `filter` query parameter is provided instead. Check the [official
             documentation](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.2).
           example: userName eq "john@company.com"
       description: >-
@@ -5039,63 +5515,6 @@ components:
         detail:
           type: string
           description: A detailed human-readable error message.
-    filter: &ref_1
-      name: filter
-      in: query
-      schema:
-        type: string
-      description: >
-        Using the filter query parameter returns only specific resources. The
-        value should be a filter expression, and only matching resources will be
-        included in the response. The expression supports attributes and literal
-        values.
-
-
-        Filtering is case-insensitive for both attribute names and operators.
-
-
-        For more on filtering with SCIM routes, check the [official
-        documentation](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.2).
-      example: userName eq "john@company.com"
-    startIndex: &ref_2
-      name: startIndex
-      in: query
-      schema:
-        type: integer
-      description: >-
-        The position of the first result, where indexing starts at 1. Check
-        [Section 3.4.2.4 of RFC
-        7644](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4) for
-        details about pagination.
-      example: 1
-    count: &ref_3
-      name: count
-      in: query
-      schema:
-        type: integer
-      description: >-
-        Maximum results per page. Check [Section 3.4.2.4 of RFC
-        7644](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4) for
-        details about pagination.
-      example: 10
-    userId: &ref_4
-      name: userId
-      in: path
-      description: ID of the user.
-      required: true
-      schema:
-        type: string
-        format: uuid
-      example: 2819c223-7f76-453a-919d-413861904646
-    jobId: &ref_0
-      name: job_id
-      in: path
-      description: The ID of an audit export job.
-      required: true
-      schema:
-        type: string
-        format: uuid
-      example: 2819c223-7f76-453a-919d-413861904646
     Violations:
       type: array
       description: Lists policy violations that triggered the risk.
@@ -5220,9 +5639,6 @@ components:
       description: >-
         Indicates whether the SAFE assessment category is evaluated during
         software analysis.
-      enum:
-        - true
-        - false
       example: true
     Assessments:
       description: Information displayed in the SAFE assessment card.
@@ -5860,6 +6276,7 @@ components:
         - Manufacturing
         - Specialized
         - None
+        - AI
     SoftwareLicense:
       description: SPDX-compliant license name under which the software is distributed.
       type: string
@@ -6344,11 +6761,39 @@ components:
         - Containers
         - Browser
         - Mobile
+        - AI
+    SoftwarePlatformArchitecture:
+      description: >-
+        Platform-specific architecture. Valid values depend on the software
+        platform.
+      type: string
+      default: Generic
+      enum:
+        - Generic
+        - x86
+        - x64
+        - ARM64
+        - ARM64EC
+        - ARM32
+        - Universal
+        - Apple Silicon
+        - MIPS
+        - PowerPC
+        - RISC-V
+        - LLM
+        - SLM
+        - Multimodal
+        - Neural Network
+        - Decision Tree
+        - Skills
+        - Agents
+        - WebKit
+        - Chromium
+        - Gecko
     UUID:
       type: string
       description: Automatically generated unique identifier.
       format: uuid
-      example: 593ea5fd-a588-4790-bb60-ce5648d19a83
     Date:
       type: string
       format: date
@@ -6498,9 +6943,9 @@ components:
           type: string
           description: >
             The comparison operator. Allowed operators depend on the `filter_by`
-            field: with `action` and `resource_type`, all four operators can be
-            used; with `group_id`, only `is` and `is_any` can be used; all other
-            fields allow only `is`. `is` / `is_not` use only the first value.
+            field: with `action`, all four operators can be used; with
+            `group_id`, only `is` and `is_any` can be used; all other fields
+            allow only `is`. `is` / `is_not` use only the first value.
           enum:
             - is
             - is_not
@@ -6523,6 +6968,9 @@ components:
           - package.deleted
     CreateExportJobRequest:
       type: object
+      description: >-
+        At least one of `should_create_cef` and `should_create_ndjson` must be
+        true.
       required:
         - name
         - should_create_cef
@@ -6532,6 +6980,9 @@ components:
       properties:
         name:
           type: string
+          description: >-
+            Name of the export. Special characters `\/:*?"<>|` are not
+            supported.
           maxLength: 255
           example: April audit export
         filters:
@@ -6554,7 +7005,7 @@ components:
           format: date-time
           description: >-
             Start of the time range (inclusive) for the events in the audit log.
-            Must be earlier than `datetime_end`.
+            Must be earlier than `datetime_end` and not older than 365 days.
           example: '2025-01-01T00:00:00Z'
         datetime_end:
           type: string
@@ -6592,10 +7043,9 @@ components:
             - DONE
             - FAILED
             - NOT_SELECTED
-          nullable: true
           description: >-
-            Current status of the CEF export. This field returns `null` when the
-            CEF log format was not requested.
+            Current status of the CEF export. This field returns `NOT_SELECTED`
+            when the CEF log format was not requested.
           example: DONE
         cef_presigned_url:
           type: string
@@ -6623,10 +7073,9 @@ components:
             - DONE
             - FAILED
             - NOT_SELECTED
-          nullable: true
           description: >-
-            Current status of the NDJSON export. This field returns `null` when
-            the NDJSON log format was not requested.
+            Current status of the NDJSON export. This field returns
+            `NOT_SELECTED` when the NDJSON log format was not requested.
           example: IN_PROGRESS
         ndjson_presigned_url:
           type: string
@@ -6660,7 +7109,9 @@ components:
       example: My group
     UserName:
       type: string
-      description: Unique email of the user.
+      description: >-
+        Unique email of the user. Required unless an email is provided in
+        `emails`.
     UserActive:
       type: boolean
       description: Administrative status of the user.
@@ -6683,6 +7134,376 @@ components:
         - properties:
             violations:
               $ref: '#/components/schemas/Violations'
+    ExternalCatalogLink:
+      type: object
+      description: >-
+        The external catalog stream the package was imported from. `null` if the
+        package was not imported from a catalog.
+      required:
+        - catalog
+        - software_id
+        - platform
+        - architecture
+        - stream
+        - automatic_sync
+        - last_synced_on
+      properties:
+        catalog:
+          type: string
+          description: Identifier of the external catalog, for example `reversinglabs`.
+          example: reversinglabs
+        software_id:
+          type: string
+          description: The `id` of the software entry in the external catalog document.
+          example: RL00042
+        platform:
+          type: string
+          description: Platform of the linked artifact stream.
+          example: Windows
+        architecture:
+          type: string
+          description: Architecture of the linked artifact stream.
+          example: x64
+        stream:
+          type: string
+          description: >-
+            Identifier of the linked stream, one of the software entry's
+            `streams` in the catalog document.
+          example: RL00042-Se95b70bb
+        automatic_sync:
+          type: boolean
+          description: >-
+            Whether new versions are imported automatically after each Portal
+            update.
+        last_synced_on:
+          nullable: true
+          description: When versions were last imported from the catalog into this package.
+          allOf:
+            - $ref: '#/components/schemas/DateTime'
+    ExternalCatalogDocument:
+      type: object
+      description: >-
+        An external software catalog. Only the properties needed for importing
+        are documented; the document may contain others.
+      additionalProperties: true
+      required:
+        - software
+      properties:
+        display_name:
+          type: string
+          example: ReversingLabs
+        software:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required:
+              - id
+              - versions
+            properties:
+              id:
+                type: string
+                description: >-
+                  Identifier of the software entry, the `software_id` the import
+                  endpoint takes.
+                example: RL00042
+              name:
+                type: string
+                example: 7-Zip
+              publisher:
+                type: string
+                nullable: true
+                example: Igor Pavlov
+              category:
+                type: string
+                nullable: true
+                example: Compression
+              streams:
+                type: array
+                description: >-
+                  The software's artifact streams. An imported package follows
+                  exactly one of them.
+                items:
+                  type: object
+                  additionalProperties: true
+                  required:
+                    - id
+                  properties:
+                    id:
+                      type: string
+                      description: Stream identifier, the `stream` of every artifact in it.
+                      example: RL00042-Se95b70bb
+                    format:
+                      type: string
+                      example: exe
+                    platform:
+                      type: string
+                      example: Windows
+                    architecture:
+                      type: string
+                      example: x64
+                    will_receive_updates:
+                      type: boolean
+                      description: Whether the catalog still adds versions to this stream.
+              versions:
+                type: array
+                description: Versions of the software, newest first.
+                items:
+                  type: object
+                  additionalProperties: true
+                  required:
+                    - version
+                    - artifacts
+                  properties:
+                    version:
+                      type: string
+                      description: >-
+                        Catalog version string, as accepted in the `versions` of
+                        the import endpoints.
+                      example: '24.08'
+                    artifacts:
+                      type: array
+                      items:
+                        type: object
+                        additionalProperties: true
+                        properties:
+                          product:
+                            type: string
+                            description: File name of the artifact.
+                            example: 7z2408-x64.exe
+                          platform:
+                            type: string
+                            example: Windows
+                          architecture:
+                            type: string
+                            example: x64
+                          stream:
+                            type: string
+                            description: Identifier of the stream the artifact belongs to.
+                            example: RL00042-Se95b70bb
+                          size:
+                            type: integer
+                            nullable: true
+                          released:
+                            type: string
+                            nullable: true
+                          previous:
+                            type: string
+                            nullable: true
+                            description: >-
+                              Version string of the preceding version in this
+                              stream.
+    CatalogImportRequest:
+      type: object
+      required:
+        - software_id
+        - stream
+      properties:
+        software_id:
+          type: string
+          maxLength: 200
+          description: The `id` of the software entry in the catalog document.
+          example: RL00042
+        stream:
+          type: string
+          maxLength: 200
+          description: >-
+            The `id` of the stream to import, one of the software entry's
+            `streams`.
+          example: RL00042-Swindows-x64-exe
+        versions:
+          type: array
+          items:
+            type: string
+          description: >-
+            Catalog versions to import, at most 16; duplicates are ignored. Omit
+            or leave empty to import the stream's newest versions.
+          example:
+            - '24.07'
+            - '24.08'
+        auto_sync:
+          type: boolean
+          default: false
+          description: >-
+            Import new versions from the catalog automatically after each Portal
+            update. While it is on, the catalog update endpoint is refused.
+        project_description:
+          type: string
+          maxLength: 500
+          description: Description for the project when this request creates it.
+        package_description:
+          type: string
+          maxLength: 500
+          description: >-
+            Brief description of the package. Defaults to the catalog entry's
+            summary.
+        notify_on_completion:
+          type: boolean
+          default: false
+          description: Email you when all imported versions are analyzed.
+    CatalogUpdateRequest:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            type: string
+          description: >-
+            Catalog versions to import, at most 16; duplicates are ignored. Omit
+            or leave empty to import all versions newer than the package's
+            newest one.
+          example:
+            - '24.09'
+        notify_on_completion:
+          type: boolean
+          default: false
+          description: Email you when all imported versions are analyzed.
+    CatalogImportResult:
+      type: object
+      required:
+        - project_id
+        - package_id
+        - imported_versions
+      properties:
+        project_id:
+          $ref: '#/components/schemas/UUID'
+        package_id:
+          $ref: '#/components/schemas/UUID'
+        imported_versions:
+          type: array
+          items:
+            type: string
+          description: >-
+            Versions imported by this request, oldest first. Empty when the
+            package was already up to date.
+          example:
+            - '24.07'
+            - '24.08'
+    CatalogPackage:
+      type: object
+      description: A package published in a group's software catalog.
+      required:
+        - project_name
+        - project_id
+        - package_name
+        - package_id
+        - description
+        - external_catalog
+      properties:
+        project_name:
+          type: string
+          example: 7zip
+        project_id:
+          $ref: '#/components/schemas/UUID'
+        package_name:
+          type: string
+          example: 7zip-windows
+        package_id:
+          $ref: '#/components/schemas/UUID'
+        description:
+          type: string
+          nullable: true
+          description: Brief description of the package, shown on its catalog card.
+          example: 7-Zip file archiver for Windows x64.
+        external_catalog:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ExternalCatalogLink'
+    ProfileExport:
+      type: object
+      required:
+        - rl-profile
+      properties:
+        rl-profile:
+          type: object
+          required:
+            - schema
+            - name
+            - info
+            - timestamp
+            - configuration
+          properties:
+            schema:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: Profile
+            info:
+              type: string
+              example: >-
+                Profile exported from Spectra Assure Portal: Example Org /
+                Example Group
+            timestamp:
+              type: string
+              format: date-time
+            configuration:
+              type: object
+              required:
+                - policy
+              properties:
+                policy:
+                  type: object
+                  required:
+                    - rl_scan_level
+                    - rl_auto_approval
+                    - overrides
+                    - min_catalogue
+                  properties:
+                    rl_scan_level:
+                      type: integer
+                      nullable: true
+                      minimum: 0
+                      maximum: 5
+                      description: >-
+                        RL-SAFE level. `null` when the level is inherited from
+                        the organization.
+                    rl_auto_approval:
+                      type: boolean
+                    min_catalogue:
+                      type: integer
+                      description: >-
+                        Version of the policy catalogue the profile was exported
+                        with.
+                    overrides:
+                      type: object
+                      description: Policy overrides keyed by policy ID.
+                      additionalProperties:
+                        type: object
+                        required:
+                          - enabled
+                          - blocker
+                          - audit
+                          - apply_to
+                        properties:
+                          enabled:
+                            type: boolean
+                          blocker:
+                            type: string
+                            enum:
+                              - pass
+                              - fail
+                          audit:
+                            type: object
+                            required:
+                              - reason
+                              - author
+                              - timestamp
+                            properties:
+                              reason:
+                                type: string
+                              author:
+                                type: string
+                              timestamp:
+                                type: string
+                                format: date-time
+                          apply_to:
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                                - group
+                                - organization
     uuid:
       type: string
       description: >-
@@ -8206,8 +9027,7 @@ components:
         Date and time to set and display as the release date for the software
         package you're uploading to the Portal. If it's not specified, the
         software package is marked as unreleased in the Portal. You can change
-        the release status at any time directly through the Portal interface or
-        through the API.
+        the release status at any time directly through the Portal interface.
       schema:
         $ref: '#/components/schemas/DateTime'
     replace:
@@ -8274,6 +9094,85 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/VersionMetadataVersion'
+    filter:
+      name: filter
+      in: query
+      schema:
+        type: string
+      description: >
+        Using the filter query parameter returns only specific resources. The
+        value should be a filter expression, and only matching resources will be
+        included in the response. The expression supports attributes and literal
+        values.
+
+
+        Filtering is case-insensitive for both attribute names and operators.
+
+
+        For more on filtering with SCIM routes, check the [official
+        documentation](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.2).
+      example: userName eq "john@company.com"
+    startIndex:
+      name: startIndex
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: >-
+        The position of the first result, where indexing starts at 1. Check
+        [Section 3.4.2.4 of RFC
+        7644](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4) for
+        details about pagination.
+      example: 1
+    count:
+      name: count
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 50
+      description: >-
+        Maximum results per page. Check [Section 3.4.2.4 of RFC
+        7644](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4) for
+        details about pagination.
+      example: 10
+    userId:
+      name: uuid
+      in: path
+      description: ID of the user.
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 2819c223-7f76-453a-919d-413861904646
+    jobId:
+      name: job_id
+      in: path
+      description: The ID of an audit export job.
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 2819c223-7f76-453a-919d-413861904646
+    catalog:
+      in: path
+      name: catalog
+      required: true
+      schema:
+        type: string
+      example: reversinglabs
+      description: Identifier of an external software catalog. Currently `reversinglabs`.
+    architecture:
+      in: query
+      name: architecture
+      required: false
+      description: >-
+        Processor or runtime architecture of the software. It must be valid for
+        the specified platform, otherwise the API returns the 400 error
+        response.
+      schema:
+        $ref: '#/components/schemas/SoftwarePlatformArchitecture'
     query_offset:
       name: offset
       in: query
@@ -8391,11 +9290,6 @@ components:
       example: <= 18.3.0
       schema:
         type: string
-    jobId: *ref_0
-    filter: *ref_1
-    startIndex: *ref_2
-    count: *ref_3
-    userId: *ref_4
   securitySchemes:
     TokenAuthentication:
       type: http
@@ -8494,6 +9388,9 @@ components:
             VersionDoesntHaveRepro:
               value:
                 error: Provided version does not have a reproducible build
+            VersionDoesntHavePredecessor:
+              value:
+                error: Cannot get rl-diff report for version without a predecessor
     ReportWithoutAnalysis:
       description: Accepted
       content:
@@ -8509,6 +9406,24 @@ components:
                 message: >-
                   Cannot get report for version that does not have complete
                   analysis
+    ChecksWithoutAnalysis:
+      description: Accepted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Messages'
+          examples:
+            VersionNotDoneWithAnalysis:
+              value:
+                message: Cannot get checks for version that is not done with analysis
+            VersionWithNoCompleteAnalysis:
+              value:
+                message: >-
+                  Cannot get checks for version that does not have complete
+                  analysis
+            FileNotDoneWithAnalysis:
+              value:
+                message: Cannot get checks for file that is not done with analysis
     Created:
       description: Created
       content:
@@ -8555,13 +9470,15 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
     ScimUnauthorized:
-      description: Unauthorized
+      description: >-
+        Missing or invalid token, or the token's user lacks Organization
+        Administrator permissions
       content:
         application/scim+json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
     ScimForbidden:
-      description: Access denied or SSO is not enabled
+      description: SSO is not enabled, so SCIM cannot be used
       content:
         application/scim+json:
           schema:
@@ -8612,39 +9529,40 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-        examples:
-          UnsupportedBuildParameter:
-            value:
-              error: File Stream files do not support the 'build' parameter.
-          UnsupportedReplaceParameter:
-            value:
-              error: File Stream files do not support the 'replace' parameter.
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: string
+                description: >-
+                  File Stream files do not support the `build`, `diff_with`,
+                  `force`, `is_released` and `replace` parameters.
     FilestreamFileNotFound:
       description: Not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-        examples:
-          FileDoesntExist:
-            value:
-              error: Provided file doesn't exist.
-          ReportFileNotFound:
-            value:
-              error: >-
-                Report unavailable. Reprocess the file and try downloading the
-                report again.
+          examples:
+            FileDoesntExist:
+              value:
+                error: Provided file doesn't exist.
+            ReportFileNotFound:
+              value:
+                error: >-
+                  Report unavailable. Reprocess the file and try downloading the
+                  report again.
     FilestreamFileDoesntExist:
       description: Not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-        examples:
-          FileDoesntExist:
-            value:
-              error: Provided file doesn't exist.
+          examples:
+            FileDoesntExist:
+              value:
+                error: Provided file doesn't exist.
     oss-search:
       description: OK
       content:

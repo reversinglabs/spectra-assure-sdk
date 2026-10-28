@@ -23,6 +23,15 @@ make tests ENDPOINT=staging    # run the tests only
 make sweep ENDPOINT=staging    # remove what interrupted runs left (see below)
 ```
 
+### Only the Catalog API
+
+```
+make tests-staging ONLY_CATALOG=1         # from the repository root
+make ENDPOINT=staging ONLY_CATALOG=1      # from this directory
+```
+
+`ONLY_CATALOG=1` tests the Catalog API and nothing else. It is meant for an endpoint where the Catalog API is new and there is little other data to test against, such as staging. Only `test_example.py` runs, and the example program runs only its Catalog section (it gets `RLPORTAL_ONLY_CATALOG=1`). `tests-all` refuses the flag, because it copies the example to `../examples/` only after a full run.
+
 `tests-all` stops at the first failing test, including on the endpoints it has not reached yet. Only when all three endpoints have passed does it copy `api_client_example.py` to `../examples/`.
 
 ## Endpoints
@@ -80,11 +89,15 @@ Before any endpoint is touched, `make` runs a selftest. It proves that a deliber
 
 ## Results
 
-Each run writes `results/<endpoint>/<date-time>/`:
+Each run writes `results/<endpoint>/<date-time>/`, whether it passes or fails:
 
+- `pytest.1`, `pytest.2`: pytest's stdout and stderr, as shown on the terminal;
 - `junit.xml`: one entry per test;
 - `run.log`: the INFO-level log;
-- `downloads/`: what the tests downloaded.
+- `downloads/`: what the tests downloaded;
+- `api_client_example.1`, `api_client_example.2`, `api_client_example.log`: the example program's stdout, stderr and DEBUG-level log.
+
+The results of earlier runs are kept: `make ENDPOINT=<name>` cleans everything else first, but not `results/`. Only `make clean`, here or at the top level, removes them; the top-level `prep`, `build` and the `tests-*` targets clean everything else. Git ignores `results/`.
 
 ## Test data, and `make sweep`
 
@@ -116,7 +129,7 @@ The scan tests upload `eicarcom2.zip`, the EICAR test file. The Makefile copies 
 
 The tests pass it the run id as `RLPORTAL_RUN_ID`, so its project gets a unique name. Run by hand, it uses fixed names and handles a rerun over them.
 
-It scans itself, and writes `downloads/`, `export_profile.*.json` and a log into this directory. `make test_clean` removes them.
+It scans itself, and writes `downloads/`, `export_profile.*.json` and a log into this directory. `make test_clean` removes them. Under the tests, the log is moved to the run's results folder when the program ends.
 
 ## Type checking
 

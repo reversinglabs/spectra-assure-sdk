@@ -33,6 +33,7 @@ If the file is not readable (or does not exist in the provided path), the operat
 | category      | `string`              | "Other"   | Enum: |
 | license       | `string`              | "Unknown" | Enum: |
 | platform      | `string`              | "Other"   | Enum: |
+| architecture  | `string`              | "Generic" | Enum; must be valid for the platform, otherwise the API answers 400 |
 | release_date  | `string` <date-time>  |           |       |
 
 

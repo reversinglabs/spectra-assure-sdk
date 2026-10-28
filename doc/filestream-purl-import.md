@@ -44,6 +44,7 @@ use `filestream_status()` to track the download and analysis progress.
 | category | `string` | "Other" | Enum: |
 | license | `string` | "Unknown" | Enum: |
 | platform | `string` | "Other" | Enum: |
+| architecture | `string` | "Generic" | Enum; must be valid for the platform, otherwise the API answers 400 |
 | release_date | `string` <date-time> |  |  |
 | max_size | `integer` |  | Maximum file size to attempt to download, in bytes. |
 

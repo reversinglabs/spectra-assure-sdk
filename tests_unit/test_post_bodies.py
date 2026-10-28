@@ -53,6 +53,10 @@ POSTS: dict[tuple[str, str], Call] = {
     ("filestream_url_import", "filestream"): lambda c, d: c.filestream_url_import(url="https://example.com/a.tgz"),
     ("filestream_purl_import", "filestream"): lambda c, d: c.filestream_purl_import(purl="pkg:npm/a@1.0"),
     ("filestream_sync", "filestream"): lambda c, d: c.filestream_sync(file_id="f-1"),
+    ("import_from_catalog", "catalog"): lambda c, d: c.import_from_catalog(
+        catalog="reversinglabs", project="pr", package="pk", software_id="RL00042", stream="RL00042-S1"
+    ),
+    ("update_from_catalog", "catalog"): lambda c, d: c.update_from_catalog(project="pr", package="pk", versions=["1"]),
 }
 
 

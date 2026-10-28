@@ -3,8 +3,10 @@
 # Kept out of the repository's own Makefile deliberately: merge these targets
 # in rather than replacing what is already there.
 
-# One OpenAPI document since the Portal API merged the File Stream into it.
-SPEC_YAML := ./etc/spectra-assure-portal-public-api.yaml
+# The Portal API document, Catalog and File Stream included. The compiler takes
+# every etc/spectra-assure-*.yaml, in the order tests_unit/test_tools.py
+# compiles them in; today there is one.
+SPEC_YAML := $(sort $(wildcard ./etc/spectra-assure-*.yaml))
 SPEC_JSON := spectra_assure_api_client/spec/compiled_spec.json
 
 .PHONY: all spec contract test check typecheck lint build clean

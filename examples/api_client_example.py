@@ -24,6 +24,16 @@ logger = logging.getLogger()
 # is the rate limit, which the SDK waits out itself (auto_adapt_to_throttle).
 ACCEPTED_ERRORS = {409, 429}
 
+# Run the Catalog section of x_main(): import a package from an external catalog,
+# update it, publish, unpublish and detach it. Turn it off for an endpoint that
+# does not offer the Catalog API yet; there every catalog call answers an error.
+USE_CATALOG_API = True
+
+# Run the Catalog section of x_main() and nothing else: for an endpoint where the
+# Catalog API is new and there is little other data to test against (staging).
+# tests/Makefile sets RLPORTAL_ONLY_CATALOG=1 when it is run with ONLY_CATALOG=1.
+ONLY_CATALOG = os.environ.get("RLPORTAL_ONLY_CATALOG") == "1"
+
 
 def fail_on_error(response: requests.Response, *args: Any, **kwargs: Any) -> None:
     """Stop the program on any error answer, so a run that is incomplete fails.
@@ -1445,6 +1455,300 @@ def filestream_main(
             )
 
 
+# CATALOG: READ AN EXTERNAL CATALOG
+def catalog_get_external_catalog(
+    api_client: SpectraAssureApiOperations,
+    catalog: str = "reversinglabs",
+) -> Any:
+    rr = api_client.get_external_catalog(
+        catalog=catalog,
+    )
+    print("Catalog get_external_catalog", rr.status_code)
+
+    if rr.status_code != 200:
+        raise RuntimeError(f"expected 200, got {rr.status_code}: {rr.text[:300]}")
+
+    # every entry's `id` is a software_id; each of its `streams` has an `id` to import
+    return rr.json()
+
+
+# CATALOG: LIST THE PACKAGES PUBLISHED IN THE GROUP'S CATALOG
+def catalog_list_catalog_packages(
+    api_client: SpectraAssureApiOperations,
+) -> Any:
+    rr = api_client.list_catalog_packages()
+    print("Catalog list_catalog_packages", rr.status_code, rr.text)
+    return rr.json()
+
+
+# CATALOG: IMPORT SOFTWARE FROM AN EXTERNAL CATALOG
+def catalog_import_from_catalog(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    software_id: str,
+    stream: str,
+    catalog: str = "reversinglabs",
+    versions: list[str] | None = None,
+) -> Any:
+    # the project is created if it does not exist; the package must not exist yet
+    rr = api_client.import_from_catalog(
+        catalog=catalog,
+        project=project,
+        package=package,
+        software_id=software_id,
+        stream=stream,
+        versions=versions,  # None: the stream's newest versions
+        auto_sync=False,
+        package_description="imported from the catalog",
+    )
+    print("Catalog import_from_catalog", rr.status_code, rr.text)
+
+    if rr.status_code != 201:
+        raise RuntimeError(f"expected 201, got {rr.status_code}: {rr.text[:300]}")
+
+    return rr.json().get("imported_versions")
+
+
+# CATALOG: IMPORT NEWER VERSIONS FROM THE LINKED CATALOG
+def catalog_update_from_catalog(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    versions: list[str] | None = None,
+) -> Any:
+    rr = api_client.update_from_catalog(
+        project=project,
+        package=package,
+        versions=versions,  # None: every version newer than the package's newest one
+    )
+    print("Catalog update_from_catalog", rr.status_code, rr.text)
+
+    # 201: versions were imported; 200: there was nothing newer
+    if rr.status_code not in [200, 201]:
+        raise RuntimeError(f"expected 200 or 201, got {rr.status_code}: {rr.text[:300]}")
+
+    return rr.json().get("imported_versions")
+
+
+# CATALOG: PUBLISH A PACKAGE TO THE GROUP'S CATALOG
+def catalog_publish_package_to_catalog(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+) -> Any:
+    # the package needs at least one approved version
+    rr = api_client.publish_package_to_catalog(
+        project=project,
+        package=package,
+    )
+    print("Catalog publish_package_to_catalog", rr.status_code, rr.text)
+    return rr
+
+
+# CATALOG: REMOVE A PACKAGE FROM THE GROUP'S CATALOG
+def catalog_unpublish_package_from_catalog(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+) -> Any:
+    rr = api_client.unpublish_package_from_catalog(
+        project=project,
+        package=package,
+    )
+    print("Catalog unpublish_package_from_catalog", rr.status_code, rr.text)
+    return rr
+
+
+# CATALOG: UNLINK A PACKAGE FROM ITS EXTERNAL CATALOG
+def catalog_detach_from_catalog(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+) -> Any:
+    # the package and its versions are kept, but no longer updated from the catalog
+    rr = api_client.detach_from_catalog(
+        project=project,
+        package=package,
+    )
+    print("Catalog detach_from_catalog", rr.status_code, rr.text)
+    return rr
+
+
+# CATALOG: THE SCENARIO x_main() RUNS WHEN USE_CATALOG_API IS ON
+def catalog_candidates(
+    document: Any,
+    skip_streams: set[str],
+) -> list[tuple[str, str, str, str]]:
+    """Streams worth importing for a test, smallest first: (software_id, stream, older, newer).
+
+    A stream qualifies when it has at least two versions, so one can be imported
+    and the other added later with update_from_catalog(). Streams already
+    imported into the group are skipped: the API refuses a second import (400).
+    """
+    found: list[tuple[int, str, str, str, str]] = []
+    for software in document.get("software", []):
+        for stream in software.get("streams") or []:
+            stream_id = stream.get("id")
+            if not stream_id or stream_id in skip_streams:
+                continue
+            # versions are listed newest first; keep those with an artifact in this stream
+            versions = [
+                v
+                for v in software.get("versions", [])
+                if any(a.get("stream") == stream_id for a in v.get("artifacts", []))
+            ]
+            if len(versions) < 2:
+                continue
+            size = max(
+                a.get("size") or 10**12  # unknown sizes last
+                for v in versions[:2]
+                for a in v["artifacts"]
+                if a.get("stream") == stream_id
+            )
+            found.append((size, software["id"], stream_id, versions[1]["version"], versions[0]["version"]))
+    return [entry[1:] for entry in sorted(found)]
+
+
+def catalog_is_published(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+) -> bool:
+    data = catalog_list_catalog_packages(api_client=api_client)
+    return any(p.get("project_name") == project and p.get("package_name") == package for p in data.get("packages", []))
+
+
+def catalog_wait_for_version(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    version: str,
+    max_wait: int = 1800,
+) -> None:
+    """Imported versions are analyzed in the background; approval needs a finished analysis."""
+    n = 0
+    step = 15
+
+    while True:
+        status = status_version(
+            api_client=api_client,
+            project=project,
+            package=package,
+            version=version,
+        )
+        state = str(status.get("analysis", {}).get("status", "")).lower()
+        if state == "done":
+            return
+        if state == "error":
+            raise RuntimeError(f"the analysis of {project}/{package}@{version} ended in ERROR")
+        if n >= max_wait:
+            raise RuntimeError(f"the analysis of {project}/{package}@{version} took more than {max_wait} s")
+
+        time.sleep(step)
+        n = n + step
+        print(f"wait for the imported version to be analyzed: {n}")
+
+
+def catalog_main(
+    api_client: SpectraAssureApiOperations,
+    project: str,
+    package: str,
+    catalog: str = "reversinglabs",
+    with_delete: bool = True,
+) -> None:
+    print("==================== Catalog =========================")
+
+    # a manual run uses fixed names: remove what an earlier run left
+    if any(p["name"] == project for p in list_projects(api_client=api_client)["projects"]):
+        delete_project(api_client=api_client, project=project)
+
+    # 1. read the external catalog and pick something small to import
+    document = catalog_get_external_catalog(api_client=api_client, catalog=catalog)
+    published = catalog_list_catalog_packages(api_client=api_client)
+    imported_streams = {
+        p["external_catalog"]["stream"] for p in published.get("packages", []) if p.get("external_catalog")
+    }
+    candidates = catalog_candidates(document, imported_streams)
+    print(f"Catalog {catalog}: {len(document.get('software', []))} entries, {len(candidates)} candidate streams")
+    if not candidates:
+        raise RuntimeError(f"catalog {catalog} offers no stream with two versions to import")
+
+    # 2. import the older of two versions; a stream that is already imported
+    #    (but not published, so not seen above) is refused with 400: try the next
+    for candidate in candidates[:5]:
+        software_id, stream, older, newer = candidate
+        try:
+            imported = catalog_import_from_catalog(
+                api_client=api_client,
+                project=project,
+                package=package,
+                software_id=software_id,
+                stream=stream,
+                catalog=catalog,
+                versions=[older],
+            )
+            break
+        except RuntimeError as exc:
+            if "already been imported" not in str(exc):
+                raise
+            print(f"stream {stream} is already imported into the group; trying the next one")
+    else:
+        raise RuntimeError("the first five candidate streams are all imported into the group already")
+
+    print(f"imported {software_id} stream {stream}: {imported}")
+
+    # 3. the package is linked to the catalog
+    package_data = list_package(api_client=api_client, project=project, package=package)
+    link = package_data.get("external_catalog") or {}
+    if (link.get("software_id"), link.get("stream")) != (software_id, stream):
+        raise RuntimeError(f"expected the package to be linked to {software_id}/{stream}, got {link}")
+    first_version = package_data["versions"][0]["version"]
+
+    # 4. import the newer version; asking for it again answers 409 (it exists)
+    updated = catalog_update_from_catalog(
+        api_client=api_client,
+        project=project,
+        package=package,
+        versions=[newer],
+    )
+    print(f"update imported: {updated}")
+    rr = api_client.update_from_catalog(project=project, package=package, versions=[newer])
+    if rr.status_code != 409:
+        raise RuntimeError(f"importing {newer} a second time: expected 409, got {rr.status_code}: {rr.text[:300]}")
+
+    # 5. approving the first version publishes an imported package automatically
+    catalog_wait_for_version(api_client=api_client, project=project, package=package, version=first_version)
+    approve_version(
+        api_client=api_client,
+        project=project,
+        package=package,
+        version=first_version,
+        reason="Catalog API test: approve to publish",
+    )
+    if not catalog_is_published(api_client=api_client, project=project, package=package):
+        raise RuntimeError("the imported package was not published when its first version was approved")
+
+    # 6. publishing again has no effect; unpublish removes it; publish brings it back
+    catalog_publish_package_to_catalog(api_client=api_client, project=project, package=package)
+    catalog_unpublish_package_from_catalog(api_client=api_client, project=project, package=package)
+    if catalog_is_published(api_client=api_client, project=project, package=package):
+        raise RuntimeError("the package is still listed after unpublishing it")
+    catalog_publish_package_to_catalog(api_client=api_client, project=project, package=package)
+    if not catalog_is_published(api_client=api_client, project=project, package=package):
+        raise RuntimeError("the package is not listed after publishing it")
+
+    # 7. detach: the package stays, the link goes
+    catalog_detach_from_catalog(api_client=api_client, project=project, package=package)
+    package_data = list_package(api_client=api_client, project=project, package=package)
+    if package_data.get("external_catalog") is not None:
+        raise RuntimeError(f"the package is still linked after detaching it: {package_data['external_catalog']}")
+
+    if with_delete:
+        catalog_unpublish_package_from_catalog(api_client=api_client, project=project, package=package)
+        delete_project(api_client=api_client, project=project)
+
+
 def x_main() -> None:
     prefix = "RLPORTAL_"
 
@@ -1465,6 +1769,19 @@ def x_main() -> None:
     )
     with_reject = False
     with_delete = True
+
+    if ONLY_CATALOG:
+        if not USE_CATALOG_API:
+            raise RuntimeError("RLPORTAL_ONLY_CATALOG=1 asks for the Catalog section, but USE_CATALOG_API is off")
+        run_id = os.environ.get(f"{prefix}RUN_ID")
+        catalog_main(
+            api_client=api_client,
+            project=f"{run_id}-catalog" if run_id else "SDKTestCatalog202604",
+            package="SDKTestCatalogPackage",
+            with_delete=with_delete,
+        )
+        print("Done (Catalog only)")
+        return
 
     list_groups(
         api_client=api_client,
@@ -1705,6 +2022,14 @@ def x_main() -> None:
         with_reject=with_reject,
         with_delete=with_delete,
     )
+
+    if USE_CATALOG_API:
+        catalog_main(
+            api_client=api_client,
+            project=f"{run_id}-catalog" if run_id else "SDKTestCatalog202604",
+            package="SDKTestCatalogPackage",
+            with_delete=with_delete,
+        )
 
     name = str(uuid.uuid1())
     should_create_cef = True

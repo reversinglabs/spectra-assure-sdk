@@ -64,6 +64,15 @@ PYTEST_MODULES := integration/test_connection.py integration/test_groups.py \
 	integration/test_projects.py integration/test_packages.py integration/test_versions.py \
 	integration/test_community.py integration/test_audit_log.py integration/test_example.py
 
+# ONLY_CATALOG=1: test the Catalog API and nothing else, for an endpoint where it
+# is new and there is little other data to test against (staging). Only the
+# example program runs, and it runs only its Catalog section.
+ifneq ($(ONLY_CATALOG),)
+PYTEST_MODULES := integration/test_example.py
+RLPORTAL_ONLY_CATALOG := 1
+export RLPORTAL_ONLY_CATALOG
+endif
+
 # --maxfail=1: the first failing test stops the run, and make fails exactly when
 # pytest does. --tb=short: the long traceback prints each function's arguments,
 # and with them the token (in the client's settings and in the request headers).
@@ -73,18 +82,28 @@ PYTEST := python -m pytest --maxfail=1 --tb=short -p no:cacheprovider \
 	-W ignore::urllib3.exceptions.InsecureRequestWarning
 
 # ---------------------------------------
-.PHONY: all tests pytests test_clean venv selftest selftest-run check-endpoint sweep mypy mypy-stubs
+.PHONY: all tests pytests clean test_clean venv selftest selftest-run check-endpoint sweep mypy mypy-stubs
 
 all: test_clean mypy-stubs mypy tests
 
+# Appended to a { command group; }: its stdout is kept in $(1).1 and its stderr
+# in $(1).2, and both are still shown. With pipefail the group's exit status
+# survives the tee.
+KEEP_OUTPUT = 2> >(tee $(1).2 >&2) | tee $(1).1
+
 # The endpoint's env file is read with `.` and without tracing, so nothing
-# secret is echoed.
+# secret is echoed. Everything the run produces stays in $(RESULTS) until
+# `make clean`: pytest's output (pytest.1, pytest.2), its log (run.log),
+# junit.xml, the downloads, and the example program's api_client_example.1,
+# .2 and .log.
 tests: check-endpoint venv selftest $(INPUT_PATH)
 	mkdir -p $(RESULTS)
-	$(ACTIVATE) eval . $(ENV_FILE); \
+	$(ACTIVATE) { eval . $(ENV_FILE); \
 	INPUT_PATH=$(abspath $(INPUT_PATH)) RLPORTAL_RESULTS=$(abspath $(RESULTS)) \
 	$(PYTEST) $(PYTEST_MODULES) -o junit_family=xunit2 \
-		--junitxml=$(RESULTS)/junit.xml -o log_file=$(RESULTS)/run.log -o log_file_level=INFO
+		--junitxml=$(RESULTS)/junit.xml -o log_file=$(RESULTS)/run.log -o log_file_level=INFO; \
+	} $(call KEEP_OUTPUT,$(RESULTS)/pytest)
+	@echo "results: $(abspath $(RESULTS))"
 
 # The name used while the old scripts still ran beside the pytest suite.
 pytests: tests
@@ -106,7 +125,7 @@ check-endpoint:
 	@if [ -z "$(filter $(ENDPOINT),$(ENDPOINTS))" ] || [ "$(words $(ENDPOINT))" != "1" ]; then \
 		echo "FATAL: unknown endpoint '$(ENDPOINT)'; choose one of: $(ENDPOINTS)" >&2; exit 2; fi
 	@if ! eval test -r $(ENV_FILE); then echo "FATAL: env file $(ENV_FILE) for endpoint $(ENDPOINT) is missing or unreadable" >&2; exit 2; fi
-	@echo "endpoint: $(ENDPOINT) ($(ENV_FILE)), TLS verification: $(if $(RLPORTAL_NO_SSL_VERIFY),off,on)"
+	@echo "endpoint: $(ENDPOINT) ($(ENV_FILE)), TLS verification: $(if $(RLPORTAL_NO_SSL_VERIFY),off,on)$(if $(ONLY_CATALOG), - Catalog API only)"
 
 # Prove, before any endpoint is touched, that a failing test fails the make
 # run and a passing one does not: both go through selftest-run, a recipe that
@@ -123,7 +142,7 @@ selftest: venv
 	@echo "selftest: a failing test fails the make run, a passing one does not"
 
 selftest-run:
-	$(ACTIVATE) $(PYTEST) $(SELFTEST_MODULE)
+	$(ACTIVATE) { $(PYTEST) $(SELFTEST_MODULE); } $(call KEEP_OUTPUT,$(basename $(SELFTEST_MODULE)))
 
 # this breaks under globalprotect: use a local file
 $(INPUT_PATH):
@@ -131,8 +150,13 @@ $(INPUT_PATH):
 	cp ~/Downloads/eicar/$(ARTIFACT) ./input/
 	# curl -o ./input/$(ARTIFACT) -sS https://secure.eicar.org/$(ARTIFACT)
 
+# test_clean runs before every `make ENDPOINT=<name>` and keeps results/, so the
+# output of earlier runs stays available; `make clean` removes it as well.
+clean: test_clean
+	rm -rf results
+
 test_clean:
-	rm -rf $(PYTEST_VENV) $(MYPY_VENV) results selftest input
+	rm -rf $(PYTEST_VENV) $(MYPY_VENV) selftest input
 	# what the example program writes where it runs
 	rm -rf downloads* export_profile*.json *.log
 	# what the old scripts left

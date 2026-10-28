@@ -28,8 +28,8 @@ PIP_INSTALL := pip3 -q \
 
 PY := $(VENV)/bin/python
 
-.PHONY: prep all tests format check mypy testLocalInstall build
-.PHONY: test tests-staging tests-playground1 tests-playground2 tests-production tests-canada tests-all tests-simple
+.PHONY: prep all tests format check mypy testLocalInstall build clean clean-keep-results
+.PHONY: test tests-staging tests-playground1 tests-playground2 tests-production tests-canada tests-all tests-all-check tests-simple
 
 # ---------------------------------------
 simple:  prep
@@ -38,12 +38,17 @@ all: prep tests
 
 # ---------------------------------------
 # prep: clean format check mypy mypy2 unit_test makeStubs pyreverse build
-prep: clean format check mypy mypy2 makeStubs pyreverse build
+# prep and build clean everything but the integration test results
+# (tests/results/), which only an explicit `make clean` removes.
+prep: clean-keep-results format check mypy mypy2 makeStubs pyreverse build
 
 unit_test:
 	make -f Makefile.unit_test
 
-clean: cleanupVenv
+clean: clean-keep-results
+	(cd tests; make clean)
+
+clean-keep-results: cleanupVenv
 	rm -rf stubs out
 	rm -rf dist
 	rm -rf .mypy_cache */.mypy_cache
@@ -95,7 +100,7 @@ pyreverse:
 	pyreverse -o svg $(PACKAGE_NAME); \
 	mv *.svg *.dot $(DOC_DIR)
 
-build: clean
+build: clean-keep-results
 	$(COMMON_VENV) \
 	python3 --version ; \
 	which $(MIN_PYTHON_VERSION) ; \
@@ -110,23 +115,29 @@ testpypi: build
 test: tests
 
 # tests: tests-simple
-tests: tests-staging
+# tests: tests-playground1 tests-playground2
+tests: tests-all
 
 testLocalInstall: build
 	./bin/testLocalWhl.sh $$( realpath . )
 
 # One target per endpoint; the endpoint table is in tests/Makefile.
 # Production and Canada run only on demand.
+# ONLY_CATALOG=1 (e.g. make tests-staging ONLY_CATALOG=1) tests the Catalog API only.
 tests-staging tests-playground1 tests-playground2 tests-production tests-canada: tests-%: testLocalInstall
 	( cd tests && $(MAKE) ENDPOINT=$* )
 
 # The regular endpoints, one after the other: the first failing test stops the
 # run, endpoints not yet run included. Only when all have passed is the example
-# copied to examples/.
-tests-all: testLocalInstall
+# copied to examples/, so a partial run (ONLY_CATALOG) is refused.
+tests-all: tests-all-check testLocalInstall
 	( cd tests && $(MAKE) ENDPOINT=staging ) && \
 	( cd tests && $(MAKE) ENDPOINT=playground1 ) && \
 	( cd tests && $(MAKE) ENDPOINT=playground2 )
 	cp tests/api_client_example.py examples/
+
+tests-all-check:
+	@if [ -n "$(ONLY_CATALOG)" ]; then \
+		echo "FATAL: tests-all runs everything; use ONLY_CATALOG=1 with one endpoint, e.g. make tests-staging ONLY_CATALOG=1" >&2; exit 2; fi
 
 tests-simple: tests-staging

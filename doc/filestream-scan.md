@@ -42,6 +42,7 @@ This file ID is required by every other File Stream call to work with the upload
 | category | `string` | "Other" | Enum: |
 | license | `string` | "Unknown" | Enum: |
 | platform | `string` | "Other" | Enum: |
+| architecture | `string` | "Generic" | Enum; must be valid for the platform, otherwise the API answers 400 |
 | release_date | `string` <date-time> |  |  |
 
 ## Responses

@@ -1,3 +1,3 @@
 """This module only makes the version available for toml dynamic versioning"""
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"

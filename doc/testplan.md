@@ -19,6 +19,8 @@ These are the requirements as you stated them.
 - **Every test must finish without errors.** The first error must stop the rest of the `make` run.
 - **Endpoint settings are never committed.** They are read from hidden files in the user's home directory.
 - **The example program** `tests/api_client_example.py` is copied to `examples/` after it has run successfully.
+- **A new API can be tested on its own** on an endpoint that has little other data yet: staging, for the Catalog API.
+- **Every run's output is kept** (stdout, stderr and logs, of pytest and of the example program) until an explicit `make clean`.
 
 ## 2. Decisions
 
@@ -36,10 +38,13 @@ The decisions behind the way the tests work:
 | 8 | Canada's env file? | `~/.envfile_rl-scanner-cloud-canada`, with `RLPORTAL_HOST="ca.secure.software"` and `RLPORTAL_SERVER="test2"`. |
 | 9 | When is the example copied to `examples/`? | Only after all tests have passed. |
 | 10 | Is a 404 a failure? | Yes, always: an answer the full test does not expect means the run did not produce the expected results. For example, an endpoint without the File Stream answers the example's File Stream calls with 404, and the run fails. (Only clean-up treats a 404 as "already deleted".) |
+| 11 | How is the Catalog API tested on staging, which has little other data? | `ONLY_CATALOG=1` (`make tests-staging ONLY_CATALOG=1`): only `test_example.py` runs, and the example program runs only its Catalog section. `tests-all` refuses the flag, because it copies the example to `examples/` only after a full run. Without the flag, every endpoint runs everything. |
+| 12 | Where does a run's output go, and for how long? | `tests/results/<endpoint>/<date-time>/`, passed or failed: `pytest.1` and `pytest.2` (stdout and stderr), `run.log`, `junit.xml`, `downloads/`, and `api_client_example.1`, `.2` and `.log`. Only `make clean` removes them; `prep`, `build` and the `tests-*` targets leave them. Git ignores them. |
 
 ## 3. Possible later additions
 
 None of these is needed now.
 
 - a `test_filestream.py` module of its own; the example program covers the File Stream today, and all the regular endpoints now have it;
+- a `test_catalog.py` module of its own; the example program covers the Catalog API today;
 - an `rl-diff` report test, once its behaviour on a first version is known;

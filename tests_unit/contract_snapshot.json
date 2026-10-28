@@ -451,6 +451,27 @@
             }
           ]
         },
+        "detach_from_catalog": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
         "do_it_delete": {
           "kind": "method",
           "parameters": [
@@ -1127,6 +1148,22 @@
           "kind": "method",
           "parameters": []
         },
+        "get_external_catalog": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "catalog"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
         "get_path": {
           "kind": "method",
           "parameters": [
@@ -1139,6 +1176,72 @@
               "annotation": "typing.Any",
               "kind": "KEYWORD_ONLY",
               "name": "data"
+            }
+          ]
+        },
+        "import_from_catalog": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "catalog"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "software_id"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "stream"
+            },
+            {
+              "annotation": "list[str] | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "versions"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_sync"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "project_description"
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "package_description"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "notify_on_completion"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
             }
           ]
         },
@@ -1224,6 +1327,17 @@
             }
           ]
         },
+        "list_catalog_packages": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
         "list_groups": {
           "kind": "method",
           "parameters": [
@@ -1242,6 +1356,27 @@
               "annotation": "<class 'logging.Logger'>",
               "kind": "KEYWORD_ONLY",
               "name": "my_logger"
+            }
+          ]
+        },
+        "publish_package_to_catalog": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
             }
           ]
         },
@@ -1715,6 +1850,60 @@
               "annotation": "<class 'str'>",
               "kind": "KEYWORD_ONLY",
               "name": "version"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "unpublish_package_from_catalog": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "auto_adapt_to_throttle"
+            }
+          ]
+        },
+        "update_from_catalog": {
+          "kind": "method",
+          "parameters": [
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "project"
+            },
+            {
+              "annotation": "str",
+              "kind": "KEYWORD_ONLY",
+              "name": "package"
+            },
+            {
+              "annotation": "list[str] | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "versions"
+            },
+            {
+              "annotation": "bool | None",
+              "default": "None",
+              "kind": "KEYWORD_ONLY",
+              "name": "notify_on_completion"
             },
             {
               "annotation": "bool | None",

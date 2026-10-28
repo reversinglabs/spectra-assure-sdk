@@ -1,4 +1,4 @@
-"""The README and the reference pages say what the code does.
+"""The README, the Operations page and the reference pages say what the code does.
 
 Each check compares a statement in the documentation with the code it
 describes, so the two cannot drift apart unnoticed.
@@ -19,6 +19,8 @@ from spectra_assure_api_client import SpectraAssureApiOperations
 
 ROOT = Path(__file__).resolve().parents[1]
 README = (ROOT / "README.md").read_text(encoding="utf-8")
+# One entry per operation, moved out of the README; the README's Operations section links to it.
+OPERATIONS = (ROOT / "Operations.md").read_text(encoding="utf-8")
 
 
 def returns_something_else(name: str) -> bool:
@@ -51,8 +53,8 @@ def test_the_readme_names_exactly_the_calls_that_do_not_return_the_response() ->
     assert "All operations return a `requests.Response`" not in README
 
 
-def test_the_readme_does_not_claim_filestream_scan_returns_the_file_id() -> None:
-    entry = README[README.index("[`filestream_scan`]") : README.index("[`filestream_url_import`]")]
+def test_the_operations_page_does_not_claim_filestream_scan_returns_the_file_id() -> None:
+    entry = OPERATIONS[OPERATIONS.index("[`filestream_scan`]") : OPERATIONS.index("[`filestream_url_import`]")]
 
     assert "Returns the new `file_id`." not in entry
     assert 'response.json()["id"]' in entry
@@ -88,6 +90,8 @@ def level_of(path: str) -> str:
         return "File Stream file"
     if "/community/" in path:
         return "Community"
+    if path.startswith("/catalog/"):  # before the purl test: catalog paths carry pkg:rl/ too
+        return "Catalog"
     if "pkg:rl/" in path:
         if "@{version}" in path:
             return "Version"
@@ -139,9 +143,9 @@ def operations_by_class() -> dict[str, list[str]]:
     return found
 
 
-def readme_sections() -> dict[str, tuple[str, list[str]]]:
-    """method -> (heading line, table lines), for every operation entry in the README."""
-    lines = README.splitlines()
+def operation_entries() -> dict[str, tuple[str, list[str]]]:
+    """method -> (heading line, table lines), for every operation entry on the Operations page."""
+    lines = OPERATIONS.splitlines()
     found: dict[str, tuple[str, list[str]]] = {}
     i = 0
     while i < len(lines):
@@ -174,15 +178,28 @@ def public_operations() -> list[str]:
     return sorted(m for methods in operations_by_class().values() for m in methods if m not in NOT_OPERATIONS)
 
 
-def test_every_operation_is_named_in_the_readme() -> None:
+def test_every_operation_is_named_on_the_operations_page() -> None:
     """The README introduced twelve operations by class name only, so their method names appeared nowhere."""
-    assert [m for m in public_operations() if m not in readme_sections()] == []
+    assert [m for m in public_operations() if m not in operation_entries()] == []
+
+
+def test_the_readme_leaves_the_operation_entries_to_the_operations_page() -> None:
+    """The entries moved out of the README; it links to each part of the page instead."""
+    section = README[README.index("## Operations") : README.index("## Community repositories")]
+    parts = [heading_anchor(t) for t in re.findall(r"^## (.+)$", OPERATIONS, re.M)]
+
+    assert operation_entries()
+    assert not re.search(r"^\[`[a-z_]+`", README, re.M)
+    assert parts == ["general-operations", "file-stream", "catalog"]
+    assert [f"](./Operations.md#{part})" in section for part in parts] == [True] * len(parts)
+    # the page's own list of its parts
+    assert re.findall(r"^- \[[^\]]+\]\(#([^)]+)\)", OPERATIONS, re.M) == parts
 
 
 def test_every_operation_table_matches_the_routes() -> None:
     wrong: dict[str, object] = {}
     for method in public_operations():
-        _heading, table = readme_sections()[method]
+        _heading, table = operation_entries()[method]
         if not table:
             wrong[method] = "no table"
             continue
@@ -197,9 +214,9 @@ def test_the_project_tables_use_one_column_layout() -> None:
     """Some tables dropped the Project column, so their marks sat under other headings."""
     layouts = set()
     for method in public_operations():
-        _heading, table = readme_sections()[method]
+        _heading, table = operation_entries()[method]
         header, _rows = parse_table(table)
-        if header not in (["File Stream file"], ["Community"]):
+        if header not in (["File Stream file"], ["Community"], ["Catalog"]):
             layouts.add(tuple(header))
 
     assert layouts == {PROJECT_LEVELS}
@@ -209,7 +226,7 @@ def test_the_project_tables_use_one_column_layout() -> None:
 
 
 def page_of(method: str) -> Path:
-    heading, _table = readme_sections()[method]
+    heading, _table = operation_entries()[method]
     link = re.search(r"\]\((\./doc/[^)]+)\)", heading)
     assert link, heading
     return ROOT / link.group(1)
@@ -220,7 +237,7 @@ def primary_methods() -> list[str]:
     seen: set[str] = set()
     methods = []
     for method in public_operations():
-        heading, _table = readme_sections()[method]
+        heading, _table = operation_entries()[method]
         first = re.findall(r"`([a-z_]+)`", heading.split("](")[0])[0]
         if first not in seen:
             seen.add(first)
@@ -280,7 +297,7 @@ def test_every_reference_page_says_which_call_it_returns() -> None:
     for method in primary_methods():
         page = page_of(method)
         named = re.findall(r"of the (\w+)\(\) API call", page.read_text(encoding="utf-8"))
-        heading, _table = readme_sections()[method]
+        heading, _table = operation_entries()[method]
         own = set(re.findall(r"`([a-z_]+)`", heading.split("](")[0])) | {"listGroups"}
         wrong += [f"{page.name}: {name}()" for name in named if name not in own]
 
@@ -297,9 +314,10 @@ def test_the_scan_page_names_the_real_exception() -> None:
 # ------------------------------------------------------------------ wording and links (I-29)
 
 
-def test_every_relative_link_in_the_readme_points_at_a_file() -> None:
+@pytest.mark.parametrize("text", [README, OPERATIONS], ids=["README.md", "Operations.md"])
+def test_every_relative_link_points_at_a_file(text: str) -> None:
     """The license link pointed at LICENSE.MD; the file is LICENSE."""
-    targets = re.findall(r"\]\((\./[^)#]+)", README)
+    targets = re.findall(r"\]\((\./[^)#]+)", text)
     missing = sorted({t for t in targets if not (ROOT / t).exists()})
 
     assert targets
@@ -309,6 +327,7 @@ def test_every_relative_link_in_the_readme_points_at_a_file() -> None:
 def test_known_typos_are_gone() -> None:
     for typo in ("notend", "waite timout", "audir_log_status", "the provides file"):
         assert typo not in README, typo
+        assert typo not in OPERATIONS, typo
 
 
 def test_the_sessions_section_describes_the_present() -> None:
@@ -324,12 +343,12 @@ def test_each_operation_has_its_own_description() -> None:
     """The community report-package entry repeated the find-packages description."""
     descriptions: dict[str, str] = {}
     for method in public_operations():
-        heading, _table = readme_sections()[method]
-        entry = README[README.index(heading) :]
+        heading, _table = operation_entries()[method]
+        entry = OPERATIONS[OPERATIONS.index(heading) :]
         match = re.search(r"\n\*\*(.+?)\*\*", entry)
         assert match, method
         descriptions.setdefault(match.group(1), heading)
-    entries = {readme_sections()[m][0] for m in public_operations()}
+    entries = {operation_entries()[m][0] for m in public_operations()}
 
     assert len(descriptions) == len(entries)
 
@@ -398,10 +417,11 @@ def test_the_readme_logging_claim_holds_the_token_and_proxy_password_are_never_l
 
 
 def test_operation_descriptions_say_what_the_call_does() -> None:
-    assert "List all groups, projects, packages, and versions" not in README  # groups come from list_groups
-    assert "**Sync a version.**" not in README
-    assert "**Rescan a version**" in README
-    assert "The file name is arbitrary." not in README  # it must end in .json
+    for text in (README, OPERATIONS):
+        assert "List all groups, projects, packages, and versions" not in text  # groups come from list_groups
+        assert "**Sync a version.**" not in text
+        assert "The file name is arbitrary." not in text  # it must end in .json
+    assert "**Rescan a version**" in OPERATIONS
 
 
 # ------------------------------------------------------------------ README completeness
@@ -462,11 +482,17 @@ CHANGES = (ROOT / "CHANGES.md").read_text(encoding="utf-8")
 
 def test_the_changes_since_the_last_release_are_listed() -> None:
     """The release notes, in CHANGES.md, compare the version about to be published with the previous one."""
-    assert "## Changes in 1.1.0" in CHANGES
+    from spectra_assure_api_client import VERSION
+
+    # the notes for the version about to be published, whatever version.py says it is
+    assert f"## Changes in {VERSION}" in CHANGES
+    assert "Compared with 1.1.0, the previous published version." in CHANGES
+    # it is not published yet, so nothing may describe changes "since" it.
+    assert f"## Changes since {VERSION}" not in CHANGES
+    # the newest release comes first, and the 1.1.0 notes are kept
+    assert CHANGES.index(f"## Changes in {VERSION}") < CHANGES.index("## Changes in 1.1.0")
     assert "Compared with 1.0.14, the previous published version." in CHANGES
-    # 1.1.0 is not published yet, so nothing may describe changes "since" it.
-    assert "## Changes since 1.1.0" not in CHANGES
-    # the timeouts the notes give are the SDK's real defaults
+    # the timeouts the 1.1.0 notes give are the SDK's real defaults
     from spectra_assure_api_client.communication.constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT
 
     notes = CHANGES[CHANGES.index("## Changes in 1.1.0") : CHANGES.index("## Deprecations")]
@@ -474,6 +500,7 @@ def test_the_changes_since_the_last_release_are_listed() -> None:
     assert f"a read timeout of {DEFAULT_READ_TIMEOUT} seconds by default" in notes
     # the README points to them, and keeps the version history
     assert "](./CHANGES.md)" in README
+    assert f"| v{VERSION}  |" in README
     assert "| v1.1.0  |" in README
 
 
@@ -542,7 +569,7 @@ def headings_of(path: Path) -> set[str]:
     return {heading_anchor(title) for title in re.findall(r"^#{1,4} (.+)$", path.read_text(encoding="utf-8"), re.M)}
 
 
-@pytest.mark.parametrize("name", ["README.md", "CHANGES.md"])
+@pytest.mark.parametrize("name", ["README.md", "Operations.md", "CHANGES.md"])
 def test_every_section_link_reaches_a_heading(name: str) -> None:
     """A link to #section, or to file.md#section, must name a heading that exists in that file.
 

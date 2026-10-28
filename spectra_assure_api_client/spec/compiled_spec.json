@@ -211,6 +211,7 @@
    "source": "spectra-assure-portal-public-api.yaml",
    "statuses": [
     "204",
+    "400",
     "401",
     "403",
     "404",
@@ -219,6 +220,30 @@
    ],
    "tags": [
     "Version"
+   ]
+  },
+  "detachFromCatalog": {
+   "method": "DELETE",
+   "path": "/catalog/detach/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "204",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Catalog"
    ]
   },
   "exportGroupRlProfile": {
@@ -384,6 +409,26 @@
    ],
    "tags": [
     "Community"
+   ]
+  },
+  "getExternalCatalog": {
+   "method": "GET",
+   "path": "/catalog/list/{catalog}",
+   "path_params": [
+    "catalog"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Catalog"
    ]
   },
   "getFilestreamFileChecks": {
@@ -714,6 +759,36 @@
      "required": false
     },
     {
+     "default": "Generic",
+     "enum": [
+      "Generic",
+      "x86",
+      "x64",
+      "ARM64",
+      "ARM64EC",
+      "ARM32",
+      "Universal",
+      "Apple Silicon",
+      "MIPS",
+      "PowerPC",
+      "RISC-V",
+      "LLM",
+      "SLM",
+      "Multimodal",
+      "Neural Network",
+      "Decision Tree",
+      "Skills",
+      "Agents",
+      "WebKit",
+      "Chromium",
+      "Gecko"
+     ],
+     "in": "query",
+     "name": "architecture",
+     "required": false,
+     "type": "string"
+    },
+    {
      "in": "query",
      "name": "release_date",
      "required": false,
@@ -797,6 +872,36 @@
      "required": false
     },
     {
+     "default": "Generic",
+     "enum": [
+      "Generic",
+      "x86",
+      "x64",
+      "ARM64",
+      "ARM64EC",
+      "ARM32",
+      "Universal",
+      "Apple Silicon",
+      "MIPS",
+      "PowerPC",
+      "RISC-V",
+      "LLM",
+      "SLM",
+      "Multimodal",
+      "Neural Network",
+      "Decision Tree",
+      "Skills",
+      "Agents",
+      "WebKit",
+      "Chromium",
+      "Gecko"
+     ],
+     "in": "query",
+     "name": "architecture",
+     "required": false,
+     "type": "string"
+    },
+    {
      "in": "query",
      "name": "release_date",
      "required": false,
@@ -822,6 +927,50 @@
    ],
    "tags": [
     "File Stream"
+   ]
+  },
+  "importFromCatalog": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "auto_sync",
+    "notify_on_completion",
+    "package_description",
+    "project_description",
+    "software_id",
+    "stream",
+    "versions"
+   ],
+   "body_required": true,
+   "body_required_properties": [
+    "software_id",
+    "stream"
+   ],
+   "method": "POST",
+   "path": "/catalog/import/{organization}/{group}/{catalog}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package",
+    "catalog"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Catalog"
    ]
   },
   "importGroupRlProfile": {
@@ -961,6 +1110,36 @@
      "required": false
     },
     {
+     "default": "Generic",
+     "enum": [
+      "Generic",
+      "x86",
+      "x64",
+      "ARM64",
+      "ARM64EC",
+      "ARM32",
+      "Universal",
+      "Apple Silicon",
+      "MIPS",
+      "PowerPC",
+      "RISC-V",
+      "LLM",
+      "SLM",
+      "Multimodal",
+      "Neural Network",
+      "Decision Tree",
+      "Skills",
+      "Agents",
+      "WebKit",
+      "Chromium",
+      "Gecko"
+     ],
+     "in": "query",
+     "name": "architecture",
+     "required": false,
+     "type": "string"
+    },
+    {
      "in": "query",
      "name": "release_date",
      "required": false,
@@ -1055,6 +1234,36 @@
      "required": false
     },
     {
+     "default": "Generic",
+     "enum": [
+      "Generic",
+      "x86",
+      "x64",
+      "ARM64",
+      "ARM64EC",
+      "ARM32",
+      "Universal",
+      "Apple Silicon",
+      "MIPS",
+      "PowerPC",
+      "RISC-V",
+      "LLM",
+      "SLM",
+      "Multimodal",
+      "Neural Network",
+      "Decision Tree",
+      "Skills",
+      "Agents",
+      "WebKit",
+      "Chromium",
+      "Gecko"
+     ],
+     "in": "query",
+     "name": "architecture",
+     "required": false,
+     "type": "string"
+    },
+    {
      "in": "query",
      "name": "release_date",
      "required": false,
@@ -1081,6 +1290,27 @@
    ],
    "tags": [
     "Version"
+   ]
+  },
+  "listCatalogPackages": {
+   "method": "GET",
+   "path": "/catalog/list/{organization}/{group}",
+   "path_params": [
+    "organization",
+    "group"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Catalog"
    ]
   },
   "listFilestreamFiles": {
@@ -1298,7 +1528,9 @@
    ],
    "body_properties": [
     "description",
-    "name"
+    "external_catalog",
+    "name",
+    "overview"
    ],
    "body_required": true,
    "body_required_properties": [],
@@ -1364,6 +1596,7 @@
     "application/json"
    ],
    "body_properties": [
+    "architecture",
     "category",
     "is_released",
     "license",
@@ -1507,6 +1740,30 @@
    ],
    "tags": [
     "Project"
+   ]
+  },
+  "publishPackageToCatalog": {
+   "method": "PUT",
+   "path": "/catalog/publish/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Catalog"
    ]
   },
   "rejectFilestreamFile": {
@@ -1692,6 +1949,36 @@
      "required": false
     },
     {
+     "default": "Generic",
+     "enum": [
+      "Generic",
+      "x86",
+      "x64",
+      "ARM64",
+      "ARM64EC",
+      "ARM32",
+      "Universal",
+      "Apple Silicon",
+      "MIPS",
+      "PowerPC",
+      "RISC-V",
+      "LLM",
+      "SLM",
+      "Multimodal",
+      "Neural Network",
+      "Decision Tree",
+      "Skills",
+      "Agents",
+      "WebKit",
+      "Chromium",
+      "Gecko"
+     ],
+     "in": "query",
+     "name": "architecture",
+     "required": false,
+     "type": "string"
+    },
+    {
      "in": "query",
      "name": "release_date",
      "required": false,
@@ -1788,6 +2075,36 @@
      "required": false
     },
     {
+     "default": "Generic",
+     "enum": [
+      "Generic",
+      "x86",
+      "x64",
+      "ARM64",
+      "ARM64EC",
+      "ARM32",
+      "Universal",
+      "Apple Silicon",
+      "MIPS",
+      "PowerPC",
+      "RISC-V",
+      "LLM",
+      "SLM",
+      "Multimodal",
+      "Neural Network",
+      "Decision Tree",
+      "Skills",
+      "Agents",
+      "WebKit",
+      "Chromium",
+      "Gecko"
+     ],
+     "in": "query",
+     "name": "architecture",
+     "required": false,
+     "type": "string"
+    },
+    {
      "in": "query",
      "name": "release_date",
      "required": false,
@@ -1858,6 +2175,65 @@
    ],
    "tags": [
     "Version"
+   ]
+  },
+  "unpublishPackageFromCatalog": {
+   "method": "DELETE",
+   "path": "/catalog/publish/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "204",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Catalog"
+   ]
+  },
+  "updateFromCatalog": {
+   "body_media_types": [
+    "application/json"
+   ],
+   "body_properties": [
+    "notify_on_completion",
+    "versions"
+   ],
+   "body_required": false,
+   "body_required_properties": [],
+   "method": "POST",
+   "path": "/catalog/update/{organization}/{group}/pkg:rl/{project}/{package}",
+   "path_params": [
+    "organization",
+    "group",
+    "project",
+    "package"
+   ],
+   "query_params": [],
+   "source": "spectra-assure-portal-public-api.yaml",
+   "statuses": [
+    "200",
+    "201",
+    "400",
+    "401",
+    "402",
+    "403",
+    "404",
+    "409",
+    "429",
+    "500"
+   ],
+   "tags": [
+    "Catalog"
    ]
   },
   "versionInfo": {

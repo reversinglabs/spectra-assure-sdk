@@ -101,6 +101,23 @@ ROUTES.update(
     }
 )
 
+# Catalog. External software catalogs that a package can be imported from and
+# kept up to date with, and the group's own catalog that packages are published
+# to. The method names are the operation ids in snake case. The ladder position
+# is the constant "catalog", which `_what` never returns, so these routes cannot
+# be reached from the purl-based calls and vice versa.
+ROUTES.update(
+    {
+        ("get_external_catalog", "catalog"): "getExternalCatalog",
+        ("list_catalog_packages", "catalog"): "listCatalogPackages",
+        ("import_from_catalog", "catalog"): "importFromCatalog",
+        ("update_from_catalog", "catalog"): "updateFromCatalog",
+        ("publish_package_to_catalog", "catalog"): "publishPackageToCatalog",
+        ("unpublish_package_from_catalog", "catalog"): "unpublishPackageFromCatalog",
+        ("detach_from_catalog", "catalog"): "detachFromCatalog",
+    }
+)
+
 
 # Actions whose public method exists only in the SDK: these orchestrate several
 # real operations and have no single operation of their own.

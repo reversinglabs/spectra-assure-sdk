@@ -2,6 +2,47 @@
 
 A detailed summary of changes.
 
+## Changes in 1.2.0
+
+Compared with 1.1.0, the previous published version.
+
+**New**
+
+- The Catalog API (see [Catalog](./Operations.md#catalog)), seven calls named after the operation ids of the Portal API:
+  - `get_external_catalog`: read the document of an external catalog: its software, their streams and versions.
+  - `list_catalog_packages`: list the packages published in the group's software catalog.
+  - `import_from_catalog`: create a package from software in an external catalog and import versions into it;
+    the project is created if it does not exist.
+  - `update_from_catalog`: import newer versions from the external catalog a package is linked to.
+  - `publish_package_to_catalog` and `unpublish_package_from_catalog`: add a package to the group's software catalog,
+    or remove it.
+  - `detach_from_catalog`: unlink a package from its external catalog; the package and its versions are kept.
+
+  The request bodies are built from named arguments; an optional argument left at `None` is not sent,
+  so the Portal's default applies. Lengths and counts are checked by the Portal, as for the other calls.
+  An empty `software_id` or `stream` raises `SpectraAssureInvalidAction` before anything is sent.
+- A reference page for each Catalog call in `doc/`.
+- New fields from the updated Portal API specification, passed as keyword arguments like the others:
+  `architecture` for `scan`, `url_import`, `purl_import`, `filestream_scan`, `filestream_url_import`,
+  `filestream_purl_import` and for `edit` on a version; `overview` and `external_catalog`
+  (`{"automatic_sync": True}`) for `edit` on a package. Before, the SDK dropped them, as it drops every name the
+  specification does not declare.
+- The operation entries, File Stream and Catalog included, moved from the README to their own page,
+  [Operations](./Operations.md); the README's Operations section links to it.
+- The example program has a Catalog section, switched on and off with `USE_CATALOG_API`:
+  it imports a small package from the `reversinglabs` catalog, updates it, approves its first version,
+  publishes, unpublishes and detaches it, and checks the result of each step.
+  Turn it off for an endpoint that does not offer the Catalog API.
+  The integration tests can run that section alone: `make tests-staging ONLY_CATALOG=1`
+  (see [tests/README.md](./tests/README.md)).
+
+**Build**
+
+- `etc/spectra-assure-portal-public-api.yaml` is the updated Portal API specification, which includes the Catalog.
+  It is the only YAML in `etc/`; the operation table is compiled from every `etc/spectra-assure-*.yaml`.
+- The wheel's include pattern is anchored to the top-level `spectra_assure_api_client/`. Before, a wheel built in a
+  tree with the test virtual environments also took in the copies of the package installed in them.
+
 ## Changes in 1.1.0
 
 Compared with 1.0.14, the previous published version.
@@ -9,7 +50,7 @@ Compared with 1.0.14, the previous published version.
 **New**
 
 - The File Stream: scan or import standalone files, follow their analysis, approve, reject or revoke them,
-  and download their reports, RL-SAFE archives and the files themselves (see [File Stream](./README.md#file-stream)).
+  and download their reports, RL-SAFE archives and the files themselves (see [File Stream](./Operations.md#file-stream)).
 - One HTTP session per client, reused by every call. The client can be used as
   `with SpectraAssureApiOperations(...) as client:`, which closes it at the end
   and keeps the client's type for type checkers (see [Sessions](./README.md#sessions)).

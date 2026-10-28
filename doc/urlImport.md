@@ -33,6 +33,7 @@ This operation always needs the URL to the file to be provided in the parameter 
 | category      | `string`              | "Other"   | Enum: |
 | license       | `string`              | "Unknown" | Enum: |
 | platform      | `string`              | "Other"   | Enum: |
+| architecture  | `string`              | "Generic" | Enum; must be valid for the platform, otherwise the API answers 400 |
 | release_date  | `string` <date-time>  |           |       |
 
 &nbsp;

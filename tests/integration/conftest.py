@@ -145,10 +145,18 @@ def artifact() -> Path:
 
 
 @pytest.fixture(scope="session")
-def results_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Where downloads go: the run's results folder when the Makefile gives one, else a temporary folder."""
+def run_results_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """The run's results folder when the Makefile gives one (kept until `make clean`), else a temporary folder."""
     given = os.environ.get("RLPORTAL_RESULTS")
-    path = Path(given).resolve() / "downloads" if given else tmp_path_factory.mktemp("downloads")
+    path = Path(given).resolve() if given else tmp_path_factory.mktemp("results")
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+@pytest.fixture(scope="session")
+def results_dir(run_results_dir: Path) -> Path:
+    """Where downloads go: `downloads/` in the run's results folder."""
+    path = run_results_dir / "downloads"
     path.mkdir(parents=True, exist_ok=True)
     return path
 

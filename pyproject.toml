@@ -66,8 +66,10 @@
 [tool.hatch.build]
     only-packages = true
 
+    # Anchored with a leading "/": unanchored, the pattern also matches the
+    # installed copies inside the virtual environments under vtmp/ and tests/.
     include = [
-        "spectra_assure_api_client/",
+        "/spectra_assure_api_client/",
     ]
 
     exclude = [
